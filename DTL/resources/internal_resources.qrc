@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="16_app_exit.png">images/16x16/application-exit.png</file>
+        <file alias="ss_checkbox.png">images/stylesheet/checkbox.png</file>
+        <file alias="ss_down_arrow.png">images/stylesheet/down_arrow.png</file>
+        <file alias="ss_handle.png">images/stylesheet/handle.png</file>
+    </qresource>
+</RCC>
