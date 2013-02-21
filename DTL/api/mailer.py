@@ -5,12 +5,20 @@ from email.MIMEBase import MIMEBase
 from email import Encoders
 import smtplib
 
-from . import Settings, Singleton
+from . import Settings
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class Mailer(Singleton):
+class Mailer(object):
     '''Class to handle common mailing routines'''
+    _instance = None
+    #------------------------------------------------------------
+    @classmethod
+    def instance(cls):
+        if not cls._instance:
+            cls._instance = cls()
+        return cls._instance  
+    
     #------------------------------------------------------------
     def send_mail(self, subject, message):
         if not Settings.ENABLEMAILER :

@@ -1,8 +1,11 @@
 import json
+import re
 from PyQt4 import QtXml
 
-from .properties import StringProperty, FloatProperty, IntegerProperty, BooleanProperty
-from .. import InternalError
+from DTL.api import InternalError
+
+from .properties import BaseProperty, StringProperty, FloatProperty, IntegerProperty, BooleanProperty
+
 
 RESERVED_PROPERTY_NAME = re.compile('^__.*__$')
 
@@ -41,7 +44,7 @@ def check_reserved_word(attr_name):
             "Cannot define property.  All names both beginning and "
             "ending with '__' are reserved.")
 
-    if attr_name in RESERVED_WORDS or attr_name in dir(Model):
+    if attr_name in RESERVED_WORDS or attr_name in dir(BaseData):
         raise ReservedWordError(
             "Cannot define property using reserved word '%(attr_name)s'. "
             "If you would like to use this name in the datastore consider "
@@ -64,10 +67,10 @@ class PropertiedClass(type):
                     cls._properties.update(base.properties())
                     
         for name, attr in dct.items():
-            if isinstance(attr, Property):
+            if isinstance(attr, BaseProperty) or issubclass(attr.__class__, BaseProperty):
                 check_reserved_word(name)
                 cls._properties[name] = attr
-                attr.__property_config__(cls, name)
+                attr.__property_config__(name)
 
 
 #------------------------------------------------------------

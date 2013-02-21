@@ -16,6 +16,6 @@ class TimerDecorator(SafeCall):
     #------------------------------------------------------------
     def post_call(self, *a, **kw):
         elapsed  = (time.time() - self._time)
-        Logger().log(2,
-                     self.func.__name__,
-                     elapsed)
+        Logger.instance().log(2,
+                              self.func.__name__,
+                              elapsed)

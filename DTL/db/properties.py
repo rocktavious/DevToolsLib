@@ -11,7 +11,7 @@ class BaseProperty(object):
     #------------------------------------------------------------
     def __property_config__(self, property_name):
         """Configure property, connecting it to its data instance."""
-        super(Property, self).__init__()
+        super(BaseProperty, self).__init__()
         if self.name is None:
             self.name = property_name
         

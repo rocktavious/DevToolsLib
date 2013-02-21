@@ -4,16 +4,24 @@ import os
 import threading
 import time
 
-from . import Settings, Singleton, Enum
+from . import Settings, Enum
 
 
 LogTypes = Enum('Info','Testing','Timing','Warning','Errors')
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class Logger(Singleton):
+class Logger(object):
     _log_dir = None
     _log_types = ['[Info]','[Testing]','[Timing]','[Warning]','[Errors]']
+    
+    _instance = None
+    #------------------------------------------------------------
+    @classmethod
+    def instance(cls):
+        if not cls._instance:
+            cls._instance = cls()
+        return cls._instance  
     
     #------------------------------------------------------------
     def __init__(self):

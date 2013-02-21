@@ -74,11 +74,7 @@ class Path(object):
     def validate_dirs(self):
         import errno
         try:
-            dirpath, ext = os.path.splitext(self.path)
-            if ext :
-                os.makedirs(os.path.dirname(self.path))
-            else:
-                os.makedirs(dirpath)
+            os.makedirs(self.dir)
         except os.error as e:
             if e.errno != errno.EEXIST:
                 raise
@@ -95,16 +91,29 @@ class Path(object):
     
     #------------------------------------------------------------
     @property
+    def isFile(self):
+        return os.path.isfile(self._path)
+    
+    #------------------------------------------------------------
+    @property
     def file(self):
-        if os.path.isfile(self._path) :
+        if self.isFile :
             return os.path.split(self._path)[1]
         else:
             return None
+    
+    #------------------------------------------------------------
+    @property
+    def dir(self):
+        if os.path.isdir(self._path):
+            return self._path
+        else:
+            return os.path.dirname(self._path)
         
     #------------------------------------------------------------
     @property
     def ext(self):
-        if os.path.isfile(self._path) :
+        if self.isFile :
             return os.path.splitext(self._path)[1]
         else:
             return None

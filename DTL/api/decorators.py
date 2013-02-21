@@ -36,6 +36,6 @@ class SafeCall(object):
 
     #------------------------------------------------------------
     def error(self, retval, *a, **kw):
-        Logger().log(-1)
+        Logger.instance().log(-1)
 
         
