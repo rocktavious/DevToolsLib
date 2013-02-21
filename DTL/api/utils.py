@@ -4,6 +4,7 @@ Utility Funcs for DTL
 These are imported into the DTL namespace upon import
 '''
 import os
+import sys
 import subprocess
 from PyQt4 import QtCore, QtGui
 
@@ -70,10 +71,11 @@ def runFile( filepath, basePath=None, cmd=None, debug=False ):
         if filepath.ext in ['.py','.pyw']:
             if debug:
                 cmd = 'python.exe "%s"' % filepath.path
-                status = subprocess.Popen( cmd, shell=True, cwd=basePath)
             else:
-                cmd = 'python.exe "%s"' % filepath.path
-                status = subprocess.Popen('cmd.exe /k %s' % cmd, cwd=basePath)
+                cmd = 'pythonw.exe "%s"' % filepath.path
+            
+            status = subprocess.Popen( cmd, stdout=sys.stdout, stderr=sys.stderr, shell=debug, cwd=basePath)
+            #status = subprocess.Popen('cmd.exe /k %s' % cmd, cwd=basePath)
 
     if not status :
         try:
@@ -111,7 +113,7 @@ def getConfirmDialog(msg='', parent=None):
 def getFileFromUser(parent=None):
     file_dialog = QtGui.QFileDialog(parent)
     file_dialog.setViewMode(QtGui.QFileDialog.Detail)
-    return Core._return_file(file_dialog)
+    return _return_file(file_dialog)
 
 #------------------------------------------------------------
 def getDirFromUser(parent=None):
@@ -119,18 +121,18 @@ def getDirFromUser(parent=None):
     file_dialog.setFileMode(QtGui.QFileDialog.Directory)
     file_dialog.setOption(QtGui.QFileDialog.ShowDirsOnly)
     file_dialog.setViewMode(QtGui.QFileDialog.Detail)
-    return Core._return_file(file_dialog)    
+    return _return_file(file_dialog)    
 
 #------------------------------------------------------------
 def getSaveFileFromUser(parent=None):
     file_dialog = QtGui.QFileDialog(parent)
     file_dialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
     file_dialog.setViewMode(QtGui.QFileDialog.Detail)
-    return Core._return_file(file_dialog)
+    return _return_file(file_dialog)
 
 #------------------------------------------------------------
 def _return_file(file_dialog):
     if file_dialog.exec_():
         returned_file = str(file_dialog.selectedFiles()[0])
-        return returned_file
+        return Path(returned_file)
     return None

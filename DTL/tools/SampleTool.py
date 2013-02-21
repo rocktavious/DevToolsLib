@@ -1,38 +1,20 @@
 from PyQt4 import QtCore, QtGui
 
-from DTL.api import Tool, Start
+from DTL.api import Utils, SubTool, Start
 
 
-class SampleTool(Tool):
+class SampleTool(SubTool):
     
     def onInit(self):
-        QtGui.QPushButton(parent=self)
-        self.setObjectName('Sample 1')
-        self.setWindowTitle('Sample 1')
-        SampleTool2()
+        self.ui_file = 'c:\\dev-tools\\DTL\\tools\\SampleTool.ui'
         
-
+    def onFinalize(self):
+        self.pushButton.clicked.connect(self.test)
         
-class SampleTool2(Tool):
+    def test(self):
+        user_file = Utils.getDirFromUser(self)
+        print user_file
     
-    def onInit(self):
-        QtGui.QPushButton(parent=self)
-        QtGui.QPushButton(parent=self)
-        self.setObjectName('Sample 2')
-        self.setWindowTitle('Sample 2')
-        SampleTool3()
-        
-    def isModal(self):
-        return True    
-        
-class SampleTool3(Tool):
-    
-    def onInit(self):
-        QtGui.QPushButton(parent=self)
-        QtGui.QPushButton(parent=self)
-        QtGui.QPushButton(parent=self)
-        self.setObjectName('Sample 3')
-        self.setWindowTitle('Sample 3')
 
 if __name__ == '__main__':
     SampleTool()

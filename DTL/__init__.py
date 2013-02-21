@@ -11,5 +11,6 @@ try:
 except:
     raise Exception('DTL Module Requires PyQt4!')
 
+from .resources import internal_resources
 from . import api, db
 

@@ -12,7 +12,7 @@ from .mailer import Mailer
 from .timer import TimerDecorator
 from . import utils as Utils
 from .cores import Core
-from .tool import Tool
+from .tool import Tool, MainTool, SubTool
 
 _appHasExec = False
 _app = Core.instance().init()
