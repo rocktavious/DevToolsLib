@@ -1,65 +1,4 @@
-#------------------------------------------------------------
-#------------------------------------------------------------
-class BaseProperty(object):
-    #------------------------------------------------------------
-    def __init__(self, default=None, name=None, required=False, choices=None):
-        self.default = default
-        self.name = name
-        self.required = required
-        self.choices = choices
-    
-    #------------------------------------------------------------
-    def __property_config__(self, property_name):
-        """Configure property, connecting it to its data instance."""
-        super(BaseProperty, self).__init__()
-        if self.name is None:
-            self.name = property_name
-        
-    #------------------------------------------------------------
-    def __get__(self, instance, cls):
-        if instance is None:
-            return self
-        try:
-            return getattr(instance, self._attr_name())
-        except AttributeError:
-            self.__set__(instance, self.default)
-            return self.default       
-    
-    #------------------------------------------------------------
-    def __set__(self, instance, new_value):
-        new_value = self.validate(new_value)
-        setattr(instance, self._attr_name(), new_value)
-    
-    #------------------------------------------------------------
-    def get_value(self, model_instance):
-        """Looks for this property in the given model instance, and returns the value"""
-        return self.__get__(model_instance, model_instance.__class__)
-        
-    #------------------------------------------------------------
-    def empty(self, value):
-        """Determine if value is empty in the context of this property.
-        For most kinds, this is equivalent to "not value", but for kinds like
-        bool, the test is more subtle, so subclasses can override this method
-        if necessary."""
-        return not value
-    
-    #------------------------------------------------------------
-    def validate(self, value):
-        """Assert that provided value is compatible with this property."""
-        if self.empty(value):
-            if self.required:
-                raise ValueError('Property %s is required' % self.name)
-        else:
-            if self.choices:
-                if value not in self.choices:
-                    raise ValueError('Property %s is %r; must be one of %r' %
-                                     (self.name, value, self.choices))
-        return value
-    
-    #------------------------------------------------------------
-    def _attr_name(self):
-        """Attribute name we use for this property in model instances."""
-        return '_' + self.name
+from .base import BaseData, BaseProperty
 
 
 #------------------------------------------------------------
@@ -144,3 +83,108 @@ class BooleanProperty(BaseProperty):
     def empty(self, value):
         """False is not an empty value."""
         return value is None
+
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+class CustomProperty(BaseProperty):
+    data_type = object
+    #------------------------------------------------------------
+    def __init__(self, reference_class, default=None, **kwds):
+        if not isinstance(reference_class, type) or issubclass(reference_class, self.data_type.__class__):
+            raise ValueError('reference_class must be object or type')
+        self.reference_class = reference_class
+        
+        if default is None:
+            raise ValueError('Default must have a value of the type given')
+        
+        super(CustomProperty, self).__init__(default=default,
+                                             **kwds)
+        
+    #------------------------------------------------------------
+    def validate(self, value):
+        """
+        Raises:
+          ValueError if property is not an instance of
+          the reference_class given to the constructor.
+        """
+        value = super(CustomProperty, self).validate(value)
+
+        if not isinstance(value, self.reference_class) and not issubclass(value.__class__, self.reference_class):
+            raise ValueError('Value %s of property must be instance of %s' % (value, self.reference_class.__class__.__name__))
+        return value
+    
+    #------------------------------------------------------------
+    def empty(self, value):
+        """[] is not an empty value."""
+        return value is None
+
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+class ListProperty(CustomProperty):
+    data_type = list
+    #------------------------------------------------------------
+    def __init__(self, reference_class, default=None, **kwds):
+        if default is None:
+            default = []
+
+        super(ListProperty, self).__init__(reference_class=reference_class,
+                                           default=default,
+                                           **kwds)
+        
+    #------------------------------------------------------------
+    def __set__(self, model_instance, value):
+        if not isinstance(value, list):
+            if self.__get__(model_instance, model_instance.__class__):
+                new_value = [value] + self.__get__(model_instance, model_instance.__class__)
+            else:
+                new_value = [value]
+        else:
+            new_value = value
+            
+        super(ListProperty, self).__set__(model_instance, new_value)
+        
+    #------------------------------------------------------------
+    def validate(self, value):
+        """
+        Raises:
+          ValueError if property is not a list whose items are instances of
+          the reference_class given to the constructor.
+        """
+        #value = super(ListProperty, self).validate(value)
+        if value is not None:
+            if not isinstance(value, list):
+                raise ValueError('Property %s must be a list' % self.name)
+
+            value = self.validate_list_contents(value)
+        return value
+    
+    #------------------------------------------------------------
+    def validate_list_contents(self, value):
+        """Validates that all items in the list are of the correct type.
+        Raises:
+          ValueError if the list has items are not instances of the
+          reference_class given to the constructor.
+        """
+        for item in value:
+            if not isinstance(item, self.reference_class) and not issubclass(item.__class__, self.reference_class.__class__):
+                raise ValueError('Items in the %s list must all be %s instances' %
+                                 (self.name, self.reference_class.__class__.__name__))
+        return value
+    
+    #------------------------------------------------------------
+    def empty(self, value):
+        """[] is not an empty value."""
+        return value is None
+    
+    #------------------------------------------------------------
+    def default_value(self):
+        """Because the property supplied to 'default' is a static value,
+        that value must be shallow copied to prevent all fields with
+        default values from sharing the same instance.
+
+        Returns:
+          Copy of the default value.
+        """
+        return list(super(ListProperty, self).default_value())

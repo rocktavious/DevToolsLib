@@ -135,4 +135,4 @@ def _return_file(file_dialog):
     if file_dialog.exec_():
         returned_file = str(file_dialog.selectedFiles()[0])
         return Path(returned_file)
-    return None
+    return Path()

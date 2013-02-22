@@ -91,6 +91,16 @@ class Path(object):
     
     #------------------------------------------------------------
     @property
+    def exists(self):
+        return os.path.exists(self._path)
+    
+    #------------------------------------------------------------
+    @property
+    def isEmpty(self):
+        return self._path is None
+    
+    #------------------------------------------------------------
+    @property
     def isFile(self):
         return os.path.isfile(self._path)
     
