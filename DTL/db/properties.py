@@ -1,30 +1,83 @@
 from .base import BaseData, BaseProperty
 
+#------------------------------------------------------------
+def typename(obj):
+    """Returns the type of obj as a string. More descriptive and specific than
+    type(obj), and safe for any object, unlike __class__."""
+    if hasattr(obj, '__class__'):
+        return getattr(obj, '__class__').__name__
+    else:
+        return type(obj).__name__
+
+#------------------------------------------------------------
+def validateString(value,
+                   name='unused',
+                   empty_ok=False):
+    """Raises an exception if value is not a valid string or a subclass thereof.
+
+    A string is valid if it's not empty, no more than _MAX_STRING_LENGTH bytes,
+    and not a Blob.
+
+    Args:
+      value: the value to validate.
+      name: the name of this value; used in the exception message.
+      empty_ok: allow empty value.
+    """
+    if value is None and empty_ok:
+        return
+    if not isinstance(value, basestring):
+        raise ValueError('%s should be a string; received %s (a %s):' %
+                        (name, value, typename(value)))
+    if not value and not empty_ok:
+        raise ValueError('%s must not be empty.' % name)
+
+#------------------------------------------------------------
+def validateInteger(value,
+                    name='unused',
+                    empty_ok=False,
+                    zero_ok=True,
+                    negative_ok=False):
+    """Raises an exception if value is not a valid integer.
+
+    An integer is valid if it's not negative or empty and is an integer
+    (either int or long).
+
+    Args:
+      value: the value to validate.
+      name: the name of this value; used in the exception message.
+      empty_ok: allow None value.
+      zero_ok: allow zero value.
+      negative_ok: allow negative value.
+    """
+    if value is None and empty_ok:
+        return
+    if not isinstance(value, (int, long)):
+        raise ValueError('%s should be an integer; received %s (a %s).' %
+                        (name, value, typename(value)))
+    if not value and not zero_ok:
+        raise ValueError('%s must not be 0 (zero)' % name)
+    if value < 0 and not negative_ok:
+        raise ValueError('%s must not be negative.' % name)
+    if not (-0x8000000000000000 <= value <= 0x7fffffffffffffff):
+        raise OverflowError('%d is out of bounds for int64' % value)   
+
 
 #------------------------------------------------------------
 #------------------------------------------------------------
 class StringProperty(BaseProperty):
     """A textual property, which can be multi- or single-line."""
-    MAX_LENGTH = 500
     data_type = basestring
     #------------------------------------------------------------
     def __init__(self, multiline=False, **kwds):
         super(StringProperty, self).__init__(**kwds)
         self.multiline = multiline
-    
+
     #------------------------------------------------------------
     def validate(self, value):
         value = super(StringProperty, self).validate(value)
-        if value is not None and not isinstance(value, basestring):
-            raise ValueError(
-                'Property %s must be a str or unicode instance, not a %s'
-                % (self.name, type(value).__name__))
+        validateString(value, self.name, True)
         if not self.multiline and value and value.find('\n') != -1:
             raise ValueError('Property %s is not multi-line' % self.name)
-        if value is not None and len(value) > self.MAX_LENGTH:
-            raise ValueError(
-                'Property %s is %d characters long; it must be %d or less.'
-                % (self.name, len(value), self.MAX_LENGTH))
         return value
 
 
@@ -35,16 +88,9 @@ class IntegerProperty(BaseProperty):
     #------------------------------------------------------------
     def validate(self, value):
         value = super(IntegerProperty, self).validate(value)
-        if value is None:
-            return value
-
-        if not isinstance(value, (int, long)) or isinstance(value, bool):
-            raise ValueError('Property %s must be an int or long, not a %s'
-                             % (self.name, type(value).__name__))
-        if value < -0x8000000000000000 or value > 0x7fffffffffffffff:
-            raise ValueError('Property %s must fit in 64 bits' % self.name)
+        validateInteger(value, self.name)
         return value
-    
+
     #------------------------------------------------------------
     def empty(self, value):
         """0 is not an empty value."""
@@ -61,7 +107,7 @@ class FloatProperty(BaseProperty):
         if value is not None and not isinstance(value, float):
             raise ValueError('Property %s must be a float' % self.name)
         return value
-    
+
     #------------------------------------------------------------
     def empty(self, value):
         """0.0 is not an empty value."""
@@ -78,7 +124,7 @@ class BooleanProperty(BaseProperty):
         if value is not None and not isinstance(value, bool):
             raise ValueError('Property %s must be a bool' % self.name)
         return value
-    
+
     #------------------------------------------------------------
     def empty(self, value):
         """False is not an empty value."""
@@ -87,52 +133,25 @@ class BooleanProperty(BaseProperty):
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class CustomProperty(BaseProperty):
-    data_type = object
-    #------------------------------------------------------------
-    def __init__(self, reference_class, default=None, **kwds):
-        if not isinstance(reference_class, type) or issubclass(reference_class, self.data_type.__class__):
-            raise ValueError('reference_class must be object or type')
-        self.reference_class = reference_class
-        
-        if default is None:
-            raise ValueError('Default must have a value of the type given')
-        
-        super(CustomProperty, self).__init__(default=default,
-                                             **kwds)
-        
-    #------------------------------------------------------------
-    def validate(self, value):
-        """
-        Raises:
-          ValueError if property is not an instance of
-          the reference_class given to the constructor.
-        """
-        value = super(CustomProperty, self).validate(value)
-
-        if not isinstance(value, self.reference_class) and not issubclass(value.__class__, self.reference_class):
-            raise ValueError('Value %s of property must be instance of %s' % (value, self.reference_class.__class__.__name__))
-        return value
-    
-    #------------------------------------------------------------
-    def empty(self, value):
-        """[] is not an empty value."""
-        return value is None
-
-
-#------------------------------------------------------------
-#------------------------------------------------------------
-class ListProperty(CustomProperty):
+class ListProperty(BaseProperty):
     data_type = list
+    allowed_types = set([basestring,str,unicode,bool,int,long,float,list,tuple])
     #------------------------------------------------------------
-    def __init__(self, reference_class, default=None, **kwds):
-        if default is None:
-            default = []
-
-        super(ListProperty, self).__init__(reference_class=reference_class,
-                                           default=default,
-                                           **kwds)
+    def __init__(self, item_type, default=None, **kwds):
+        if item_type is str:
+            item_type = basestring
+        if not isinstance(item_type, type):
+            raise TypeError('Item type should be a type object')       
+        if item_type not in self.allowed_types:
+            raise ValueError('Item type %s is not acceptable' % item_type.__name__)   
         
+        if default is None:
+            default = []        
+
+        self.item_type = item_type
+        super(ListProperty, self).__init__(default=default,
+                                           **kwds)
+
     #------------------------------------------------------------
     def __set__(self, model_instance, value):
         if not isinstance(value, list):
@@ -142,9 +161,9 @@ class ListProperty(CustomProperty):
                 new_value = [value]
         else:
             new_value = value
-            
+
         super(ListProperty, self).__set__(model_instance, new_value)
-        
+
     #------------------------------------------------------------
     def validate(self, value):
         """
@@ -152,14 +171,14 @@ class ListProperty(CustomProperty):
           ValueError if property is not a list whose items are instances of
           the reference_class given to the constructor.
         """
-        #value = super(ListProperty, self).validate(value)
+        value = super(ListProperty, self).validate(value)
         if value is not None:
             if not isinstance(value, list):
                 raise ValueError('Property %s must be a list' % self.name)
 
             value = self.validate_list_contents(value)
         return value
-    
+
     #------------------------------------------------------------
     def validate_list_contents(self, value):
         """Validates that all items in the list are of the correct type.
@@ -167,17 +186,25 @@ class ListProperty(CustomProperty):
           ValueError if the list has items are not instances of the
           reference_class given to the constructor.
         """
+        if self.item_type in (int, long):
+            item_type = (int, long)
+        else:
+            item_type = self.item_type
+            
         for item in value:
-            if not isinstance(item, self.reference_class) and not issubclass(item.__class__, self.reference_class.__class__):
-                raise ValueError('Items in the %s list must all be %s instances' %
-                                 (self.name, self.reference_class.__class__.__name__))
-        return value
-    
+            if not isinstance(item, item_type):
+                if item_type == (int, long):
+                    raise BadValueError('Items in the %s list must all be integers.' %
+                                        self.name)
+                else:
+                    raise BadValueError('Items in the %s list must all be %s instances' %
+                                        (self.name, self.item_type.__name__))
+
     #------------------------------------------------------------
     def empty(self, value):
         """[] is not an empty value."""
         return value is None
-    
+
     #------------------------------------------------------------
     def default_value(self):
         """Because the property supplied to 'default' is a static value,
@@ -188,3 +215,28 @@ class ListProperty(CustomProperty):
           Copy of the default value.
         """
         return list(super(ListProperty, self).default_value())
+    
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+class CustomDataProperty(BaseProperty):
+    """A Property that can be given values of the constructors data_type value"""
+    data_type = str
+    #------------------------------------------------------------
+    def __init__(self, item_type, **kwds):
+        self.data_type = item_type
+        super(CustomDataProperty, self).__init__(**kwds)
+    
+    #------------------------------------------------------------
+    def validate(self, value):
+        """Coerce values (except None) to self.data_type(which is set by the ctor).
+        If the value given to the property is not of the data_type it will coerced to that type during validate
+    
+        Actual value Validation is left up to the type to handle constructor values of any type incoming
+
+        """
+        value = super(_CoercingProperty, self).validate(value)
+        if value is not None and not isinstance(value, self.data_type):
+            value = self.data_type(value)
+
+        return value

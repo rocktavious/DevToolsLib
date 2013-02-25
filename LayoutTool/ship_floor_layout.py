@@ -7,7 +7,7 @@ from PyQt4.QtGui import QGraphicsView, QGraphicsScene, QColor, QSizePolicy, QGra
 
 from DTL.api import Path, MainTool, Utils, Start
 
-from models import Map
+from models import Map, Object, Tile
 from objects import ObjectsDock
 from layers import LayersDock
 from tile import Tile
@@ -25,6 +25,7 @@ class ShipFloorLayout(MainTool):
 
     def onFinalize(self):
         self.model = None
+        self.model_file = None
         self.view = GraphicsView(self)
         self.main_layout.addWidget(self.view)
         self.layers_dock = LayersDock(self, self.view)
@@ -42,7 +43,7 @@ class ShipFloorLayout(MainTool):
         self.action_New.triggered.connect(self.new)
         self.action_Open.triggered.connect(self.open)
         self.action_Save.triggered.connect(self.save)
-        self.action_Save_As.triggered.connect(self.save_as)
+        self.action_Save_As.triggered.connect(self.save)
         self.action_Export_Cry_Layout.triggered.connect(self.export_cry_layout)
 
         self.toolbar.addAction(self.action_Select)
@@ -97,48 +98,27 @@ class ShipFloorLayout(MainTool):
     def new(self):
         self.check_save()
         self.model = Map('New',10,10)
-        self.layers_dock.load_map(self.model)
-        
-        #pixmap = QPixmap(QString('e:\\CIG_programmer\\main\\tools\\arttools\\DTL\\tools\\ship_floor_layout\\carrier_ship.jpg'))
-        #print pixmap
-        #self.view.scene().addPixmap(pixmap)          
+        self.model.add_layer('Default')
+        self.layers_dock.load_map(self.model)          
     
     def open(self):
         self.check_save()
-        selected_file = Utils.getFileFromUser()
-        if selected_file.isEmpty :
-            return
-        new_model = Map(filepath=selected_file.path)
-        new_model.read()
+        new_model = Map()
+        new_model.readJson()
         
         self.layers_dock.load_map(new_model)
         self.model = new_model
-        
-        #pixmap = QPixmap(QString('e:\\CIG_programmer\\main\\tools\\arttools\\DTL\\tools\\ship_floor_layout\\carrier_ship.jpg'))
-        #print pixmap
-        #self.view.scene().addPixmap(pixmap)         
-        
+
     def check_save(self):
         if self.model :
-            if self.model.filepath :
-                if Utils.getConfirmDialog("Do you want to save the current map file?") :
-                    self.save()           
+            if Utils.getConfirmDialog("Do you want to save the current map file?") :
+                self.save()           
     
     def save(self):
-        try:
-            self.model.save()
-        except:
-            self.save_as()
-            
-    def save_as(self):
-        selected_file = Utils.getSaveFileFromUser()
-        if selected_file.isEmpty :
-            return            
-        selected_file = os.path.splitext(selected_file.path)[0] + '.json'
-        self.model.filepath = Path(selected_file)
-        self.model.save()    
+        self.model.saveXml()  
     
     def export_cry_layout(self):
+        ###This should get moved into the map model and export.py should be merged into it too
         selected_file = Utils.getSaveFileFromUser()
         if selected_file is None :
             return
@@ -326,13 +306,13 @@ class GraphicsView(QGraphicsView):
             self.obj_stamp.setPos(self.obj_stamp.test_pos(self.position()))
                 
     def load_layer(self, layer_model):
-        for tile_model in layer_model.Tiles:
-            new_obj = TileGraphic(tile_model)
-            self.scene().addItem(new_obj)
-            
-        for obj_model in layer_model.Objects:
-            new_obj = ObjectGraphic(obj_model)
-            self.scene().addItem(new_obj)
+        for item in layer_model.children():
+            if isinstance(item.__class__, Tile.__class__):
+                new_obj = TileGraphic(item)
+                self.scene().addItem(new_obj)
+            #if isinstance(item.__class__, Object.__class__):
+            #    new_obj = ObjectGraphic(item)
+            #    self.scene().addItem(new_obj)
             
         self.scene().layer_rect = self.scene().itemsBoundingRect()
         
@@ -393,7 +373,7 @@ class ObjectGraphic(QGraphicsItem):
         self.brush = QBrush()
         self.brush.setColor(self.active_color)
         self.brush.setStyle(Qt.SolidPattern)
-        self.setPos(model.X, model.Y)
+        self.setPos(model.x, model.y)
         self.setVisible(True)        
         self.setZValue(2)
         self.setFlags(QGraphicsItem.ItemIsSelectable|QGraphicsItem.ItemIsMovable|QGraphicsItem.ItemIsFocusable|QGraphicsItem.ItemSendsGeometryChanges)

@@ -6,37 +6,8 @@ from DTL.api import InternalError, Path
 
 
 from .base import BaseData
-from .properties import StringProperty, FloatProperty, IntegerProperty, BooleanProperty, ListProperty, CustomProperty
+from .properties import StringProperty, FloatProperty, IntegerProperty, BooleanProperty, ListProperty, CustomDataProperty
 
-
-
-
-#------------------------------------------------------------
-#------------------------------------------------------------
-class JsonData(BaseData):
-    '''Custom Model Class that uses a JSON file as the datastore'''
-    filepath = CustomProperty(Path, default='')
-    #------------------------------------------------------------
-    def __init__(self, filepath='', *a):
-        super(JsonData, self).__init__(*a)
-        self.filepath = Path(filepath)
-    
-    #------------------------------------------------------------
-    def save(self):
-        '''Writes the dict data to the json file'''
-        self.filepath.validate_dirs()
-        with open(self.filepath.path,'wb') as json_file :
-            json_data = self.asJson()
-            json_file.write(json_data)
-            print "Saving...", self.filepath.path
-    
-    #------------------------------------------------------------
-    def read(self):
-        '''Reads from a json file the dictionary data'''
-        if self.filepath.exists :
-            with open(self.filepath.path,'r') as json_file :
-                data = json.load(json_file)
-                self.readJson(data)
 
 #------------------------------------------------------------
 #------------------------------------------------------------

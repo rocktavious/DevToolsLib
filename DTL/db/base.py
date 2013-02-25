@@ -1,8 +1,9 @@
+import sys
 import json
 import re
 from PyQt4 import QtXml
 
-from DTL.api import InternalError
+from DTL.api import InternalError, Utils, Path
 
 RESERVED_PROPERTY_NAME = re.compile('^__.*__$')
 
@@ -25,6 +26,16 @@ RESERVED_WORDS = ['addChild',
 class ReservedWordError(InternalError):
     """Raised when a property is defined for a reserved word."""
 
+
+#------------------------------------------------------------
+def obj_for_name(module_name, class_name):
+    try:
+        return getattr(sys.modules[module_name], class_name)
+    except KeyError:
+        module = __import__(module_name, globals(), locals(), class_name)
+        return getattr(module, class_name)
+    except Exception, e:
+        raise Exception(e)
 
 #------------------------------------------------------------
 def check_reserved_word(attr_name):
@@ -153,8 +164,9 @@ class JsonModelEncoder(json.JSONEncoder):
 class BaseData(object):
     __metaclass__ = PropertiedClass
     #------------------------------------------------------------
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, filepath=None):
         super(BaseData, self).__init__()
+        self._filepath = Path(filepath)
         self._parent = parent
         self._children = []
         
@@ -198,6 +210,10 @@ class BaseData(object):
         return self._children[row]
     
     #------------------------------------------------------------
+    def children(self):
+        return self._children
+    
+    #------------------------------------------------------------
     def childCount(self):
         return len(self._children)
     
@@ -210,6 +226,10 @@ class BaseData(object):
         return self.__class__.__name__
     
     #------------------------------------------------------------
+    def moduleInfo(self):
+        return self.__class__.__module__
+    
+    #------------------------------------------------------------
     def row(self):
         if self._parent is not None:
             return self._parent._children.index(self)
@@ -219,66 +239,120 @@ class BaseData(object):
         return None
     
     #------------------------------------------------------------
-    def asXml(self):
-        doc = QtXml.QDomDocument()
-        node = doc.createElement(self.typeInfo())
-        doc.appendChild(node)
-       
-        for i in self._children:
-            i._recurseXml(doc, node)
-
-        return doc.toString(indent=4)
+    def _getFile(self, ext=[]):
+        if self._filepath.isEmpty :
+            self._filepath = Utils.getFileFromUser(ext=ext)
+            if self._filepath.isEmpty :
+                return False
+        return True
     
     #------------------------------------------------------------
-    def _recurseXml(self, doc, parent):
-        node = doc.createElement(self.typeInfo())
-        parent.appendChild(node)
+    def _getSaveFile(self, ext=[]):
+        if self._filepath.isEmpty :
+            self._filepath = Utils.getSaveFileFromUser(ext=ext)
+            if self._filepath.isEmpty :
+                return False
+        return True        
+    
+    #------------------------------------------------------------
+    def readXml(self):
+        if self._getFile(ext=['.xml']) is False:
+            return
+        with open(self._filepath.path,'r') as xml_file :
+            xml_data = xml_file.read()
+        
+        xml_doc = QtXml.QDomDocument()
+        xml_doc = xml_doc.documentElement()
+        xml_doc.setContent(xml_data)
+        self._readXml(doc_element.firstChild())
+        
+    #------------------------------------------------------------
+    def saveXml(self):
+        if self._getSaveFile(ext=['.xml']) is False :
+            return        
+        self._filepath.validate_dirs()
+        xml_data = self._asXml(QtXml.QDomDocument(), None)
+        with open(self._filepath.path,'wb') as xml_file :
+            xml_file.write(xml_data)
+    
+    #------------------------------------------------------------
+    def readJson(self):
+        if self._getFile(ext=['.json']) is False:
+            return        
+        with open(self._filepath.path,'r') as json_file :
+            json_data = json.load(json_file)
+        
+        self._readJson(json_data)
+        
+    #------------------------------------------------------------
+    def saveJson(self):
+        '''Writes the dict data to the json file'''
+        if self._getSaveFile(ext=['.json']) is False:
+            return           
+        self._filepath.validate_dirs()
+        with open(self._filepath.path,'wb') as json_file :
+            json_data = json.dumps(self._asJson(), sort_keys=True, indent=4, cls=JsonModelEncoder)
+            json_file.write(json_data)
+    
+    #------------------------------------------------------------
+    def _readXML(self, current_node):
+        for prop in self.properties().values():
+            if current_node.hasAttribute(prop.name):
+                attr_value = current_node.attribute(prop.name)
+                prop.__set__(self, attr_value)        
 
+        
+        for child in current_node.childNodes():
+            module_name = child.attribute('module_name')
+            class_name = child.attribute('class_name')
+            child_class = obj_for_name(module_name, class_name)
+            new_child = child_class(parent=self)
+            new_child._readXML(child)        
+    
+    #------------------------------------------------------------
+    def _asXml(self, xml_doc, parent):
+        node = xml_doc.createElement(self.typeInfo())
+        if parent :
+            parent.appendChild(node)
+        else:
+            xml_doc.appendChild(node)
+       
         for k, v in self.properties_dict().items():
             node.setAttribute(k, v)
+        
+        node.setAttribute('module_name', self.typeInfo())
+        node.setAttribute('class_name', self.moduleInfo())
 
         for i in self._children:
-            i._recurseXml(doc, node)
+            i._asXml(xml_doc, node)
+
+        return xml_doc.toString(indent=4)
     
     #------------------------------------------------------------
-    def readJson(self, dictionary):
+    def _readJson(self, json_data):
         for prop in self.properties().values():
-            if prop.name in dictionary:
-                data = dictionary[prop.name]
-                if prop.data_type is list :
-                    for item in data:
-                        print item
-                        new_model = prop.reference_class()
-                        new_model.readJson(item)
-                        prop.__set__(self, new_model)
-                elif prop.data_type is object :
-                    new_obj = prop.reference_class(data)
-                    prop.__set__(self, new_obj)
-                else:
-                    prop.__set__(self, data)
-            
+            if prop.name in json_data:
+                prop_data = json_data[prop.name]
+                prop.__set__(self, prop_data)        
+
+        for child in json_data.get('children',[]):
+            module_name = child.pop('module_name')
+            class_name = child.pop('class_name')
+            child_class = obj_for_name(module_name, class_name)
+            new_child = child_class(parent=self)
+            new_child._readJson(child)
+    
     #------------------------------------------------------------
-    def asJson(self):
+    def _asJson(self):
         dictionary = self.properties_dict()
-        dictionary['type'] = self.typeInfo()
+        dictionary['class_name'] = self.typeInfo()
+        dictionary['module_name'] = self.moduleInfo()
         children_data = list()
         for i in self._children:
-            children_data.append(i._recuresJson())
+            children_data.append(i._asJson())
         
         dictionary['children'] = children_data
 
-        return json.dumps(dictionary, sort_keys=True, indent=4, cls=JsonModelEncoder)
-    
-    #------------------------------------------------------------
-    def _recurseJson(self):
-        dictionary = self.properties_dict()
-        dictionary['type'] = self.typeInfo()
-        children_data = list()
-        for i in self._children:
-            children_data.append(i._recuresJson())
-        
-        dictionary['children'] = children_data
-        
         return dictionary
     
     #------------------------------------------------------------

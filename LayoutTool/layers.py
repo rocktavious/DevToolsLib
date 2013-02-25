@@ -46,7 +46,7 @@ class LayersDock(QWidget):
         self.model = None
         self.model = map_model
          
-        for layer_model in sorted(self.model.Layers, key=attrgetter('Index')) :
+        for layer_model in sorted(self.model.children(), key=attrgetter('Index')) :
             self.layers_list.addItem(QListWidgetItem(layer_model.Name))
         
         

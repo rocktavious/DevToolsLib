@@ -110,7 +110,7 @@ def getConfirmDialog(msg='', parent=None):
         return False
 
 #------------------------------------------------------------
-def getFileFromUser(parent=None):
+def getFileFromUser(parent=None, ext=[]):
     file_dialog = QtGui.QFileDialog(parent)
     file_dialog.setViewMode(QtGui.QFileDialog.Detail)
     return _return_file(file_dialog)
@@ -124,7 +124,7 @@ def getDirFromUser(parent=None):
     return _return_file(file_dialog)    
 
 #------------------------------------------------------------
-def getSaveFileFromUser(parent=None):
+def getSaveFileFromUser(parent=None, ext=[]):
     file_dialog = QtGui.QFileDialog(parent)
     file_dialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
     file_dialog.setViewMode(QtGui.QFileDialog.Detail)
