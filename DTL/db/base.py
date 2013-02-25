@@ -1,6 +1,7 @@
 import sys
 import json
 import re
+from copy import deepcopy
 from PyQt4 import QtXml
 
 from DTL.api import InternalError, Utils, Path
@@ -164,7 +165,7 @@ class JsonModelEncoder(json.JSONEncoder):
 class BaseData(object):
     __metaclass__ = PropertiedClass
     #------------------------------------------------------------
-    def __init__(self, parent=None, filepath=None):
+    def __init__(self, parent=None, filepath=None, *args, **kwds):
         super(BaseData, self).__init__()
         self._filepath = Path(filepath)
         self._parent = parent
@@ -172,6 +173,10 @@ class BaseData(object):
         
         if parent is not None:
             parent.addChild(self)
+            
+        if args or kwds :
+            raise Exception('Unhandled Args:\n' + str(a) + '\n' + str(kwds))
+            
     
     #------------------------------------------------------------
     def __repr__(self):
@@ -180,6 +185,10 @@ class BaseData(object):
             output += str(key) + '=' + str(prop.get_value(self)) + ', '
         output = output[:-2] + ' )'
         return str(output)
+    
+    #------------------------------------------------------------
+    def copy(self):
+        return deepcopy(self)
             
     #------------------------------------------------------------
     def addChild(self, child):
@@ -300,7 +309,6 @@ class BaseData(object):
             if current_node.hasAttribute(prop.name):
                 attr_value = current_node.attribute(prop.name)
                 prop.__set__(self, attr_value)        
-
         
         for child in current_node.childNodes():
             module_name = child.attribute('module_name')

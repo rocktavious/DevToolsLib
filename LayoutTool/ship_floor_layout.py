@@ -368,7 +368,7 @@ class ObjectGraphic(QGraphicsItem):
     def __init__(self, model=None):
         super(ObjectGraphic, self).__init__()
         
-        self.model = model.dup_object()
+        self.model = model.copy()
         self.rect = QRectF(0,0,10,10)
         self.brush = QBrush()
         self.brush.setColor(self.active_color)
