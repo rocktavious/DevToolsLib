@@ -25,7 +25,7 @@ class Node(BaseData):
     
     #------------------------------------------------------------
     def setData(self, column, value):
-        if   column is 0: self.name = value.toPyObject()
+        if   column is 0: self.name = str(value.toPyObject())
         elif column is 1: pass
 
 
@@ -66,12 +66,12 @@ class Layer(Node):
     
     #------------------------------------------------------------
     def __init__(self, index=0, **kwds):
-        super(TransformNode, self).__init__(**kwds)
+        super(Layer, self).__init__(**kwds)
         self.index = index
     
     #------------------------------------------------------------
     def data(self, column):
-        r = super(TransformNode, self).data(column)
+        r = super(Layer, self).data(column)
         
         if   column is 2: r = self.index
         
@@ -79,7 +79,7 @@ class Layer(Node):
     
     #------------------------------------------------------------
     def setData(self, column, value):
-        super(TransformNode, self).setData(column, value)
+        super(Layer, self).setData(column, value)
         
         if   column is 2: self.index = value.toPyObject()
 

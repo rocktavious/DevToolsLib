@@ -1,23 +1,26 @@
-import os.path
 from PyQt4 import QtCore, QtGui, uic
 
-from . import Core, Utils
+from . import Path, Core, Utils
 
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class Tool(object):  
+class Tool(object):
+    
     #------------------------------------------------------------
-    def init(self):
+    def init(self, register=True):
         self.ui_file = None
         self.onInit()
-        if self.ui_file :
-            if os.path.exists(self.ui_file):
-                self = uic.loadUi(self.ui_file, self)
-            else:
-                raise ValueError('Ui Files does not exist: %s' % self.ui_file)
+        self.ui_file = Path(self.ui_file)
+        if self.ui_file.isEmpty :
+            raise Exception('No UI File was specified in onInit()')
+        if not self.ui_file.exists :
+            raise ValueError('Ui Files does not exist: %s' % self.ui_file.path)
+        
+        self = uic.loadUi(self.ui_file.path, self)
         self.onFinalize()
-        Core.instance().registerTool(self)
+        if register :
+            Core.instance().registerTool(self)
         
     #------------------------------------------------------------
     def _saveSettings(self):
@@ -49,16 +52,16 @@ class Tool(object):
 class MainTool(QtGui.QMainWindow, Tool):
     """Tool for ui files the inherit from QMainWindow"""
     #------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, register=True):
         super(QtGui.QMainWindow, self).__init__()
-        self.init()
+        self.init(register=register)
         
 class SubTool(QtGui.QWidget, Tool):
     """Tool for ui files that inherit from QWidget"""
     #------------------------------------------------------------
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, register=True):
         super(QtGui.QWidget, self).__init__(parent=parent)
-        self.init()
+        self.init(register=register)
         
         
 
