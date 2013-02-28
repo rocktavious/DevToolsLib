@@ -1,4 +1,5 @@
 from PyQt4 import QtCore, QtGui
+from PyQt4.QtCore import Qt
 
 from .data import Node
 
@@ -21,13 +22,13 @@ class TableModel(QtCore.QAbstractTableModel):
     
     #------------------------------------------------------------
     def flags(self, index):
-        return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+        return Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable
     
     #------------------------------------------------------------
     def headerData(self, section, orientation, role):
-        if role == QtCore.Qt.DisplayRole:
+        if role == Qt.DisplayRole:
             
-            if orientation == QtCore.Qt.Horizontal :
+            if orientation == Qt.Horizontal :
                 if section < len(self._headers):
                     return self.__headers[section]
                 else:
@@ -41,16 +42,16 @@ class TableModel(QtCore.QAbstractTableModel):
         column = index.column()
         value = self.__data[row][column]
         
-        if role == QtCore.Qt.EditRole :
+        if role == Qt.EditRole :
             return value
         
-        if role == QtCore.Qt.DisplayRole :
+        if role == Qt.DisplayRole :
             return value
         
-        if role == QtCore.Qt.ToolTipRole :
+        if role == Qt.ToolTipRole :
             return value
         
-        if role == QtCore.Qt.DecorationRole:
+        if role == Qt.DecorationRole:
             pixmap = QtGui.QPixmap(26, 26)
             pixmap.fill(QtGui.QColor(0,0,0))
             icon = QtGui.QIcon(pixmap)
@@ -121,13 +122,13 @@ class ListModel(QtCore.QAbstractListModel):
     
     #------------------------------------------------------------
     def flags(self, index):
-        return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+        return Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable
     
     #------------------------------------------------------------
     def headerData(self, section, orientation, role):
-        if role == QtCore.Qt.DisplayRole:
+        if role == Qt.DisplayRole:
             
-            if orientation == QtCore.Qt.Horizontal :
+            if orientation == Qt.Horizontal :
                 return QtCore.QString("%1").arg(section)
             else:
                 return QtCore.QString("%1").arg(section)
@@ -137,16 +138,16 @@ class ListModel(QtCore.QAbstractListModel):
         row = index.row()
         value = self.__data[row]
         
-        if role == QtCore.Qt.EditRole :
+        if role == Qt.EditRole :
             return value
         
-        if role == QtCore.Qt.DisplayRole :
+        if role == Qt.DisplayRole :
             return value
         
-        if role == QtCore.Qt.ToolTipRole :
+        if role == Qt.ToolTipRole :
             return value
         
-        if role == QtCore.Qt.DecorationRole:
+        if role == Qt.DecorationRole:
             pixmap = QtGui.QPixmap(26, 26)
             pixmap.fill(QtGui.QColor(0,0,0))
             icon = QtGui.QIcon(pixmap)
@@ -177,8 +178,8 @@ class ListModel(QtCore.QAbstractListModel):
 #------------------------------------------------------------
 #------------------------------------------------------------
 class SceneGraphModel(QtCore.QAbstractItemModel):
-    sortRole   = QtCore.Qt.UserRole
-    filterRole = QtCore.Qt.UserRole + 1
+    sortRole   = Qt.UserRole
+    filterRole = Qt.UserRole + 1
     #------------------------------------------------------------
     def __init__(self, root, parent=None):
         super(SceneGraphModel, self).__init__(parent)
@@ -204,10 +205,10 @@ class SceneGraphModel(QtCore.QAbstractItemModel):
 
         node = index.internalPointer()
 
-        if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
+        if role == Qt.DisplayRole or role == Qt.EditRole:
             return node.data(index.column())
  
-        if role == QtCore.Qt.DecorationRole:
+        if role == Qt.DecorationRole:
             if index.column() == 0:
                 resource = node.resource()
                 return QtGui.QIcon(QtGui.QPixmap(resource))
@@ -219,12 +220,12 @@ class SceneGraphModel(QtCore.QAbstractItemModel):
             return node.typeInfo()
 
     #------------------------------------------------------------
-    def setData(self, index, value, role=QtCore.Qt.EditRole):
+    def setData(self, index, value, role=Qt.EditRole):
         if index.isValid():
             
             node = index.internalPointer()
             
-            if role == QtCore.Qt.EditRole:
+            if role == Qt.EditRole:
                 node.setData(index.column(), value)
                 self.dataChanged.emit(index, index)
                 return True
@@ -233,7 +234,7 @@ class SceneGraphModel(QtCore.QAbstractItemModel):
     
     #------------------------------------------------------------
     def headerData(self, section, orientation, role):
-        if role == QtCore.Qt.DisplayRole:
+        if role == Qt.DisplayRole:
             if section == 0:
                 return "Scenegraph"
             else:
@@ -241,7 +242,7 @@ class SceneGraphModel(QtCore.QAbstractItemModel):
     
     #------------------------------------------------------------
     def flags(self, index):
-        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable
+        return Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
     
     #------------------------------------------------------------
     def parent(self, index):
@@ -272,13 +273,16 @@ class SceneGraphModel(QtCore.QAbstractItemModel):
         return self._rootNode
     
     #------------------------------------------------------------
-    def insertRows(self, position, rows, parent=QtCore.QModelIndex()):
+    def insertRows(self, position, rows, parent=QtCore.QModelIndex(), node=None):
         parentNode = self.getNode(parent)
         self.beginInsertRows(parent, position, position + rows - 1)
         for row in range(rows):
             
             childCount = parentNode.childCount()
-            childNode = Node("untitled" + str(childCount))
+            if node :
+                childNode = node
+            else:
+                childNode = Node(name="untitled" + str(childCount))
             success = parentNode.insertChild(position, childNode)
         
         self.endInsertRows()

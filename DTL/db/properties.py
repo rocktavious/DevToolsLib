@@ -27,7 +27,7 @@ def validateString(value,
         return
     if not isinstance(value, basestring):
         raise ValueError('%s should be a string; received %s (a %s):' %
-                        (name, value, typename(value)))
+                         (name, value, typename(value)))
     if not value and not empty_ok:
         raise ValueError('%s must not be empty.' % name)
 
@@ -36,7 +36,7 @@ def validateInteger(value,
                     name='unused',
                     empty_ok=False,
                     zero_ok=True,
-                    negative_ok=False):
+                    negative_ok=True):
     """Raises an exception if value is not a valid integer.
 
     An integer is valid if it's not negative or empty and is an integer
@@ -53,7 +53,7 @@ def validateInteger(value,
         return
     if not isinstance(value, (int, long)):
         raise ValueError('%s should be an integer; received %s (a %s).' %
-                        (name, value, typename(value)))
+                         (name, value, typename(value)))
     if not value and not zero_ok:
         raise ValueError('%s must not be 0 (zero)' % name)
     if value < 0 and not negative_ok:
@@ -64,7 +64,22 @@ def validateInteger(value,
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class StringProperty(BaseProperty):
+class _CoercingProperty(BaseProperty):
+    """A BaseProperty subclass that extends validate() to coerce to self.data_type."""
+    #------------------------------------------------------------
+    def validate(self, value):
+        """Coerce values (except None) to self.data_type."""
+        value = super(_CoercingProperty, self).validate(value)
+        if value is not None and not isinstance(value, self.data_type):
+            if self.data_type == basestring :
+                value = str(value)
+            else:
+                value = self.data_type(value)
+        return value
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+class StringProperty(_CoercingProperty):
     """A textual property, which can be multi- or single-line."""
     data_type = basestring
     #------------------------------------------------------------
@@ -83,7 +98,7 @@ class StringProperty(BaseProperty):
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class IntegerProperty(BaseProperty):
+class IntegerProperty(_CoercingProperty):
     data_type = int
     #------------------------------------------------------------
     def validate(self, value):
@@ -99,7 +114,7 @@ class IntegerProperty(BaseProperty):
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class FloatProperty(BaseProperty):
+class FloatProperty(_CoercingProperty):
     data_type = float
     #------------------------------------------------------------
     def validate(self, value):
@@ -116,7 +131,7 @@ class FloatProperty(BaseProperty):
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class BooleanProperty(BaseProperty):
+class BooleanProperty(_CoercingProperty):
     data_type = bool
     #------------------------------------------------------------
     def validate(self, value):
@@ -144,7 +159,7 @@ class ListProperty(BaseProperty):
             raise TypeError('Item type should be a type object')       
         if item_type not in self.allowed_types:
             raise ValueError('Item type %s is not acceptable' % item_type.__name__)   
-        
+
         if default is None:
             default = []        
 
@@ -190,7 +205,7 @@ class ListProperty(BaseProperty):
             item_type = (int, long)
         else:
             item_type = self.item_type
-            
+
         for item in value:
             if not isinstance(item, item_type):
                 if item_type == (int, long):
@@ -215,7 +230,7 @@ class ListProperty(BaseProperty):
           Copy of the default value.
         """
         return list(super(ListProperty, self).default_value())
-    
+
 
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -226,12 +241,12 @@ class CustomDataProperty(BaseProperty):
     def __init__(self, item_type, **kwds):
         self.data_type = item_type
         super(CustomDataProperty, self).__init__(**kwds)
-    
+
     #------------------------------------------------------------
     def validate(self, value):
         """Coerce values (except None) to self.data_type(which is set by the ctor).
         If the value given to the property is not of the data_type it will coerced to that type during validate
-    
+
         Actual value Validation is left up to the type to handle constructor values of any type incoming
 
         """

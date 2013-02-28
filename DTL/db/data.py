@@ -31,20 +31,20 @@ class Node(BaseData):
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class TransformNode(Node):
+class FloatTransformNode(Node):
     x = FloatProperty(default=0.0)
     y = FloatProperty(default=0.0)
     z = FloatProperty(default=0.0)
     #------------------------------------------------------------
     def __init__(self, x=0.0, y=0.0, z=0.0, **kwds):
-        super(TransformNode, self).__init__(**kwds)
+        super(FloatTransformNode, self).__init__(**kwds)
         self.x = x
         self.y = y
         self.z = z
     
     #------------------------------------------------------------
     def data(self, column):
-        r = super(TransformNode, self).data(column)
+        r = super(FloatTransformNode, self).data(column)
         
         if   column is 2: r = self.x
         elif column is 3: r = self.y
@@ -54,13 +54,47 @@ class TransformNode(Node):
     
     #------------------------------------------------------------
     def setData(self, column, value):
-        super(TransformNode, self).setData(column, value)
+        super(FloatTransformNode, self).setData(column, value)
+        
+        if   column is 2: self.x = value.toPyObject()
+        elif column is 3: self.y = value.toPyObject()
+        elif column is 4: self.z = value.toPyObject()
+        
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+class IntTransformNode(Node):
+    x = IntegerProperty(default=0)
+    y = IntegerProperty(default=0)
+    z = IntegerProperty(default=0)
+    #------------------------------------------------------------
+    def __init__(self, x=0, y=0, z=0, **kwds):
+        super(IntTransformNode, self).__init__(**kwds)
+        self.x = x
+        self.y = y
+        self.z = z
+    
+    #------------------------------------------------------------
+    def data(self, column):
+        r = super(IntTransformNode, self).data(column)
+        
+        if   column is 2: r = self.x
+        elif column is 3: r = self.y
+        elif column is 4: r = self.z
+        
+        return r
+    
+    #------------------------------------------------------------
+    def setData(self, column, value):
+        super(IntTransformNode, self).setData(column, value)
         
         if   column is 2: self.x = value.toPyObject()
         elif column is 3: self.y = value.toPyObject()
         elif column is 4: self.z = value.toPyObject()
 
 
+#------------------------------------------------------------
+#------------------------------------------------------------
 class Layer(Node):
     index = IntegerProperty(default=0)
     

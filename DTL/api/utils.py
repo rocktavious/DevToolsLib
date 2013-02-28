@@ -108,6 +108,11 @@ def getConfirmDialog(msg='', parent=None):
         return True
     else:
         return False
+    
+#------------------------------------------------------------
+def getUserInput(msg='', parent=None):
+    text, success = QtGui.QInputDialog.getText(parent, 'Input Dialog', msg)
+    return str(text), success
 
 #------------------------------------------------------------
 def getFileFromUser(parent=None, ext=[]):

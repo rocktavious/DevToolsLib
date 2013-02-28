@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>314</width>
-    <height>52</height>
+    <width>317</width>
+    <height>34</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,28 +30,13 @@
     <number>3</number>
    </property>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QLabel" name="label_2">
-       <property name="minimumSize">
-        <size>
-         <width>75</width>
-         <height>0</height>
-        </size>
-       </property>
+      <widget class="QCheckBox" name="prop_active">
        <property name="text">
-        <string>Position</string>
+        <string>Active</string>
        </property>
       </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="prop_x"/>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="prop_y"/>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="prop_z"/>
      </item>
     </layout>
    </item>

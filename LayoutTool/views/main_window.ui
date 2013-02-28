@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -51,9 +51,6 @@
     <property name="title">
      <string>&amp;View</string>
     </property>
-    <addaction name="action_View_Grid"/>
-    <addaction name="action_View_Walls"/>
-    <addaction name="separator"/>
     <addaction name="action_Zoom_In"/>
     <addaction name="action_Zoom_Out"/>
     <addaction name="separator"/>
@@ -77,6 +74,8 @@
     <addaction name="action_Lower_Layer"/>
     <addaction name="action_Remove_Layer"/>
     <addaction name="action_Duplicate_Layer"/>
+    <addaction name="separator"/>
+    <addaction name="action_Add_Tile"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_Edit"/>
@@ -131,14 +130,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
-   </property>
-  </action>
-  <action name="action_View_Grid">
-   <property name="text">
-    <string>View &amp;Grid</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+G</string>
    </property>
   </action>
   <action name="action_Zoom_In">
@@ -230,12 +221,9 @@
     <string>Export Cry Layout</string>
    </property>
   </action>
-  <action name="action_View_Walls">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
+  <action name="action_Add_Tile">
    <property name="text">
-    <string>View Walls</string>
+    <string>Add Tile</string>
    </property>
   </action>
  </widget>

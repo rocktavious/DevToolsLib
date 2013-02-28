@@ -271,9 +271,10 @@ class BaseData(object):
             xml_data = xml_file.read()
         
         xml_doc = QtXml.QDomDocument()
-        xml_doc = xml_doc.documentElement()
         xml_doc.setContent(xml_data)
-        self._readXml(doc_element.firstChild())
+        xml_doc = xml_doc.documentElement()
+        
+        self._readXml(xml_doc)
         
     #------------------------------------------------------------
     def saveXml(self):
@@ -304,18 +305,20 @@ class BaseData(object):
             json_file.write(json_data)
     
     #------------------------------------------------------------
-    def _readXML(self, current_node):
+    def _readXml(self, current_node):
         for prop in self.properties().values():
             if current_node.hasAttribute(prop.name):
                 attr_value = current_node.attribute(prop.name)
                 prop.__set__(self, attr_value)        
         
-        for child in current_node.childNodes():
-            module_name = child.attribute('module_name')
-            class_name = child.attribute('class_name')
+        nodeList = current_node.childNodes()
+        for child in [nodeList.item(i).toElement() for i in range(nodeList.count())]:
+            module_name = str(child.attribute('module_name'))
+            class_name = str(child.attribute('class_name'))
+            node_name = str(child.attribute('name'))
             child_class = obj_for_name(module_name, class_name)
-            new_child = child_class(parent=self)
-            new_child._readXML(child)        
+            new_child = child_class(name=node_name, parent=self)
+            new_child._readXml(child)        
     
     #------------------------------------------------------------
     def _asXml(self, xml_doc, parent):
@@ -328,8 +331,8 @@ class BaseData(object):
         for k, v in self.properties_dict().items():
             node.setAttribute(k, v)
         
-        node.setAttribute('module_name', self.typeInfo())
-        node.setAttribute('class_name', self.moduleInfo())
+        node.setAttribute('module_name', self.moduleInfo())
+        node.setAttribute('class_name', self.typeInfo())
 
         for i in self._children:
             i._asXml(xml_doc, node)

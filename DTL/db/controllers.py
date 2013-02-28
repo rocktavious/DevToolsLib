@@ -25,7 +25,8 @@ class PropertiesEditor(SubTool):
     def setEditors(self):
         '''For subclass to implement all of the editors'''
         self._editors['Node'] = NodeEditor()
-        self._editors['TransformNode'] = TransformNodeEditor()
+        self._editors['FloatTransformNode'] = FloatTransformNodeEditor()
+        self._editors['IntTransformNode'] = IntTransformNodeEditor()
         self._editors['Layer'] = LayerEditor()
         pass
     
@@ -40,19 +41,25 @@ class PropertiesEditor(SubTool):
     def setModel(self, model):
         for key, editor in self._editors.items() :
             editor.setModel(model)
+            
+    #------------------------------------------------------------
+    def clearSelection(self):
+        for key, editor in self._editors.items():
+            editor.setVisible(False)          
     
     #------------------------------------------------------------
-    def setSelection(self, current, old):
+    def setSelection(self, index):
         if self._proxyModel is not None :
-            current = self._proxyModel.mapToSource(current)
+            index = self._proxyModel.mapToSource(index)
 
-        node = current.internalPointer()
+        self.clearSelection()
+
+        node = index.internalPointer()
         if node is None :
             return
         
         for key, editor in self._editors.items():
-            editor.setVisible(False)
-            editor.setSelection(current)
+            editor.setSelection(index)
             
         for item in node.__class__.__mro__ :
             if not hasattr(item, '__name__') :
@@ -75,6 +82,7 @@ class Editor(SubTool):
         self._model = None
         self._proxyModel = None
         self._dataMapper = QtGui.QDataWidgetMapper()
+        #self._dataMapper.setSubmitPolicy(QtGui.QDataWidgetMapper.ManualSubmit)
     
     #------------------------------------------------------------
     def setProxyModel(self, proxyModel):
@@ -99,11 +107,11 @@ class Editor(SubTool):
         pass
         
     #------------------------------------------------------------
-    def setSelection(self, current):
-        parent = current.parent()
+    def setSelection(self, index):
+        parent = index.parent()
         self._dataMapper.setRootIndex(parent)
         
-        self._dataMapper.setCurrentModelIndex(current)
+        self._dataMapper.setCurrentModelIndex(index)
 
 
 #------------------------------------------------------------
@@ -121,11 +129,26 @@ class NodeEditor(Editor):
         
 #------------------------------------------------------------
 #------------------------------------------------------------
-class TransformNodeEditor(Editor):
+class FloatTransformNodeEditor(Editor):
     #------------------------------------------------------------
     def onInit(self):
-        super(TransformNodeEditor, self).onInit()
-        self.ui_file = os.path.join(os.path.dirname(__file__),'views','transformnode_editor.ui')
+        super(FloatTransformNodeEditor, self).onInit()
+        self.ui_file = os.path.join(os.path.dirname(__file__),'views','floattransformnode_editor.ui')
+    
+    #------------------------------------------------------------
+    def setMappings(self):
+        self._dataMapper.addMapping(self.prop_x, 2)
+        self._dataMapper.addMapping(self.prop_y, 3)
+        self._dataMapper.addMapping(self.prop_z, 4)
+        
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+class IntTransformNodeEditor(Editor):
+    #------------------------------------------------------------
+    def onInit(self):
+        super(IntTransformNodeEditor, self).onInit()
+        self.ui_file = os.path.join(os.path.dirname(__file__),'views','inttransformnode_editor.ui')
     
     #------------------------------------------------------------
     def setMappings(self):
