@@ -7,7 +7,7 @@ Description
 
 Usage Example
 =============
-    >>> json_store = JsonDocument('c:/temp/test.json/')
+    >>> json_store = JsonDocument('c:/temp/test.json')
     >>> print json_store['Json Data Item']
 
 """
@@ -50,11 +50,12 @@ class JsonDocument(dict):
     #------------------------------------------------------------
     def read(self):
         '''Reads from a json file the dictionary data'''
-        if os.path.exists(self._file.path):
-            with open(self._file.path,'r') as json_file :
-                data = json.load(json_file)
-            for key, value in data.items():
-                self.__setitem__(key, value)
+        if not self._file.exists :
+            return
+        with open(self._file.path,'r') as json_file :
+            data = json.load(json_file)
+        for key, value in data.items():
+            self.__setitem__(key, value)
                 
     #------------------------------------------------------------
     def defaults(self, defaults={}):

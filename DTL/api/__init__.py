@@ -4,6 +4,7 @@ from . import constants as Constants
 from .version import Version
 from .path import Path
 from .jsondocument import JsonDocument
+from .xmldocument import XmlDocument
 from .settings import Settings
 from .logger import Logger
 from .decorators import SafeCall
