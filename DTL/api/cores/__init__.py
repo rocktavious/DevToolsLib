@@ -8,7 +8,6 @@ Core = None
 try:
 	from .maya.core import MayaCore as Core
 except:
-	print "Maya Core Failed"
 	pass
 
 # initialize the system for 3d Studio Max

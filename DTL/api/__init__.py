@@ -7,10 +7,9 @@ from .jsondocument import JsonDocument
 from .xmldocument import XmlDocument
 from .settings import Settings
 from .logger import Logger
-from .decorators import SafeCall
-from .thread_helpers import DaemonThread
+from .decorators import SafeCall, TimerDecorator
+#from .daemon import Daemon, DaemonThread
 from .mailer import Mailer
-from .timer import TimerDecorator
 from . import utils as Utils
 from .cores import Core
 from .tool import Tool, MainTool, SubTool

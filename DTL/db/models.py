@@ -425,8 +425,16 @@ class GraphicsSceneModel(QtGui.QGraphicsScene):
         return new_index
     
     #------------------------------------------------------------
-    def removeNode(self):
-        pass
+    def removeNode(self, row, parent=QtCore.QModelIndex()):
+        if parent.isValid() :
+            childCount = parent.internalPointer().childCount()
+        else:
+            childCount = 0
+        
+        for i in range(childCount) :
+            child_index = self.model.index(i, 0, parent)
+            self.removeIndex(child_index)
+            self.model.removeRows(i, 1, parent)
     
     #------------------------------------------------------------
     def populateScene(self):
@@ -434,5 +442,9 @@ class GraphicsSceneModel(QtGui.QGraphicsScene):
     
     #------------------------------------------------------------
     def addIndex(self, index):
+        pass
+    
+    #------------------------------------------------------------
+    def removeIndex(self, index):
         pass
         
