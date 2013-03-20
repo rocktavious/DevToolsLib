@@ -20,3 +20,15 @@
 *.PDF	 diff=astextplain
 *.rtf	 diff=astextplain
 *.RTF	 diff=astextplain
+
+# Explicitly declare text files we want to always be normalized and converted 
+# to native line endings on checkout.
+*.c text
+*.h text
+*.py text
+*.ui text
+*.qrc text
+
+# Denote all files that are truly binary and should not be modified.
+*.png binary
+*.jpg binary

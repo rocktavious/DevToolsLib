@@ -82,6 +82,7 @@ def setupLogging():
     #File Out
     kwargs = dict(maxBytes = 1024*1024, backupCount=64, delay=True)
     handler = SafeRotatingFileHandler(logfile, **kwargs)
+    print logfile
     handler.setFormatter(formatter)
     handler.setLevel(logging.DEBUG)
     logger.addHandler(handler)

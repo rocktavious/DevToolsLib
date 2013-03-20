@@ -1,100 +1,149 @@
+import os
 import uuid
 from xml.etree import ElementTree as xml
+from xml.dom import Node
 from xml.dom.minidom import parseString
+
+from DTL.api import XmlDocument, Utils
 
 WIDTH_UNIT = 4.8
 WALL_ADJUST = 2.4
 HEIGHT_UNIT = 5.38
 
-def prettify(elem):
-    """Return a pretty-printed XML string for the Element.
-    """
-    rough_string = xml.tostring(elem, 'utf-8')
-    reparsed = parseString(rough_string)
-    return reparsed.toprettyxml(indent="  ")
-
+#------------------------------------------------------------
+#------------------------------------------------------------
+#Start Export Utils
+#------------------------------------------------------------
+#------------------------------------------------------------
 def generate_guid():
     return '{' + str(uuid.UUID(bytes=uuid.uuid4().bytes)).upper() + '}'
 
-def save_doc(doc, filepath):
-    print prettify(doc)
-    with open(filepath, 'w') as file_spec :
-        file_spec.write(prettify(doc))
+#------------------------------------------------------------
+def add_prefab(xmlnode, new_prefab):
+    #Validate Unique else remove existing
+    prefabList = xmlnode.get('Prefab',[])
+    if not isinstance(prefabList, list):
+        prefabList = [prefabList]
+    for prefab in prefabList:
+        if prefab.get('@Name','') == new_prefab['@Name'] :
+            prefabList.remove(prefab)
+    
+    
+    prefabList.append(new_prefab)
+    xmlnode['Prefab'] = prefabList
+    
+#------------------------------------------------------------
+def generate_entity_link(entityLinksList, name, targetId=None):
+    if targetId is None :
+        return
+    entityLinksList.append({'@TargetId':str(targetId),
+                            '@Name':name,
+                            '@RelPos':'0,0,0',
+                            '@RelRot':'1,0,0,0'})
 
-def read_doc():
-    doc = xml.Element('PrefabsLibrary')
-    doc.set('Name','Hanger')
-    return doc
+#------------------------------------------------------------
+def generate_section_entity(pos, location, parentId=None):
+    data = {'@Id':generate_guid(),
+            '@CastShadow':'0',
+            '@Type':'Entity',
+            '@HiddenInGame':'1',
+            '@Name':location,
+            '@Pos':pos,
+            '@Rotate':'1,0,0,0',
+            '@ViewDistRatio':"255",
+            '@EntityClass':'HangerSectionEntity',
+            'Properties':{'@bShowFloor':'1',
+                          '@bShowCeiling':'1',
+                          '@bShowNorthWall':'1',
+                          '@bShowSouthWall':'1',
+                          '@bShowEastWall':'1',
+                          '@bShowWestWall':'1'},
+            'EntityLinks':{'Link':[]}
+            }
+    if parentId :
+        data['@Parent'] = str(parentId)
+    
+    return data
 
-def create_prefab(doc, prefab_name):
-    prefab = xml.SubElement(doc, 'Prefab')
-    print "prefab_name", prefab_name
-    prefab.set('Name', prefab_name)
-    prefab.set('Id',generate_guid())
-    prefab.set('Library', doc.get('Name'))
-    xml.SubElement(prefab,'Objects')
-    return prefab
+#------------------------------------------------------------
+def generate_section_root(objects):
+    output = {}
+    
+    new_section_root = generate_section_entity("0.0,0.0,0.0", "Root")
+    objects.append(new_section_root)
+    output["Root"] = new_section_root
+    
+    data = [("0.0,0.0,-3.0","Floor"),
+            ("0.0,0.0,2.38", "Ceiling"),
+            ("0.0,-2.4,0.0", "North"),
+            ("0.0,2.4,0.0", "South"),
+            ("-2.4,0.0,0.0", "East"),
+            ("2.4,0.0,0.0", "West")]
+    
+    
+    for item in data :
+        new_section_entity = generate_section_entity(item[0], item[1], new_section_root['@Id'])
+        output[item[1]] = new_section_entity
+        generate_entity_link(new_section_root['EntityLinks']['Link'], item[1], new_section_entity.get('@Id',None))
+        objects.append(new_section_entity)
+    
+    return output
 
-def convert_map(model):
-    #Request Doc
-    #Read Doc or create new one
-    doc = read_doc()
-    new_prefab = create_prefab(doc, model.Name)
-    for layer in model.Layers :
-        convert_layer(new_prefab, layer)
-        
-    return doc
+#------------------------------------------------------------
+def generate_new_object():
+    data = {'@Id':generate_guid(),
+            '@CastShadow':'1',
+            '@Type':'GeomEntity',
+            '@EntityClass':'GeomEntity',
+            '@Scale':'1,1,1',
+            '@ViewDistRatio':"255"}  
     
-def convert_layer(prefab, layer):
-    objects = prefab.find('Objects')
-    for tile in layer.Tiles :
-        if tile.active :
-            new_object = generate_new_object(objects)
-            #Custom
-            tile_name = str(tile.x) + '_' + str(tile.y)
-            new_object.set('Name', tile_name)
-            tile_pos = (tile.x * -WIDTH_UNIT,
-                        tile.x * WIDTH_UNIT,
-                        layer.Index * -HEIGHT_UNIT)
-            new_object.set('Pos',str(tile_pos[0]) + ',' + str(tile_pos[1]) + ',' + str(tile_pos[2]))
-            new_object.set('Rotate','1,0,0,0')
-            new_object.set('Material','Materials/dev/512x_grey')
-            new_object.set('Geometry','objects/Modules/Floors/01A.cgf')
-            
-            generate_ceiling(layer, tile, tile_name, tile_pos, objects)
-            generate_walls(layer, tile, tile_name, tile_pos, objects)
-            
-def generate_new_object(objects):
-    new_object = xml.SubElement(objects,'Object')
-    
-    #Generic
-    new_object.set('Id',generate_guid())
-    new_object.set('CastShadow','1')
-    new_object.set('Type','GeomEntity')
-    new_object.set('EntityClass','GeomEntity')  
-    
-    return new_object
-            
-def generate_ceiling(layer, tile, tile_name, tile_pos, objects):
-    new_object = generate_new_object(objects)
-    #Custom
-    new_object.set('Name', tile_name + '_ceiling')
-    new_object.set('Pos',str(tile_pos[0]) + ',' + str(tile_pos[1]) + ',' + str(tile_pos[2] + HEIGHT_UNIT))
-    new_object.set('Rotate','1,0,0,0')
-    new_object.set('Material','Materials/dev/512x_grey')
-    new_object.set('Geometry','objects/Modules/Ceiling/01A.cgf')
-      
-    
-            
-def make_wall(objects):
-    new_object = generate_new_object(objects)
-    #Custom
-    new_object.set('Material','Materials/dev/512x_grey')
-    new_object.set('Geometry','objects/Modules/Walls/02A.cgf')
-    
-    return new_object
-            
-def generate_walls(layer, tile, tile_name, tile_pos, objects):
+    return data
+
+#------------------------------------------------------------
+def generate_floor(layer, tile, tile_name, tile_pos, prefabObjects, hangerSectionEntityMap):
+    floor = (tile.x, tile.y,1)
+    floor_name = tile_name + '_floor'
+    floor_pos = (tile_pos[0], tile_pos[1], tile_pos[2])
+    floor_rotate = '1,0,0,0'    
+    #floor
+    tile = layer.get_tile(*floor)
+    if tile is None:
+        new_object = generate_new_object()
+        new_object.update({'@Name':floor_name,
+                           '@Pos':str(floor_pos[0]) + ',' + str(floor_pos[1]) + ',' + str(floor_pos[2]),
+                           '@Rotate':floor_rotate,
+                           '@Parent':hangerSectionEntityMap['Root'].get('@Id',None),
+                           '@Material':'Materials/dev/512x_grey',
+                           '@Geometry':'objects/Modules/Floors/01A.cgf'})
+        generate_entity_link(hangerSectionEntityMap['Floor']['EntityLinks']['Link'],
+                             new_object.get('@Name','UNDEFINED'),
+                             new_object.get('@Id',None))
+        prefabObjects.append(new_object)
+
+#------------------------------------------------------------
+def generate_ceiling(layer, tile, tile_name, tile_pos, prefabObjects, hangerSectionEntityMap):
+    ceiling = (tile.x, tile.y,-1)
+    ceiling_name = tile_name + '_ceiling'
+    ceiling_pos = (tile_pos[0], tile_pos[1], tile_pos[2] + HEIGHT_UNIT)
+    ceiling_rotate = '1,0,0,0'    
+    #Ceiling
+    tile = layer.get_tile(*ceiling)
+    if tile is None:    
+        new_object = generate_new_object()
+        new_object.update({'@Name':ceiling_name,
+                           '@Pos':str(ceiling_pos[0]) + ',' + str(ceiling_pos[1]) + ',' + str(ceiling_pos[2]),
+                           '@Rotate':ceiling_rotate,
+                           '@Parent':hangerSectionEntityMap['Root'].get('@Id',None),
+                           '@Material':'Materials/dev/512x_grey',
+                           '@Geometry':'objects/Modules/Ceiling/01A.cgf'})
+        generate_entity_link(hangerSectionEntityMap['Ceiling']['EntityLinks']['Link'],
+                             new_object.get('@Name','UNDEFINED'),
+                             new_object.get('@Id',None))
+        prefabObjects.append(new_object) 
+
+#------------------------------------------------------------
+def generate_walls(layer, tile, tile_name, tile_pos, prefabObjects, hangerSectionEntityMap):
     north = (tile.x, tile.y - 1)
     north_name = tile_name + '_north'
     north_pos = (tile_pos[0], tile_pos[1] - WALL_ADJUST, tile_pos[2])
@@ -104,79 +153,119 @@ def generate_walls(layer, tile, tile_name, tile_pos, objects):
     south_pos = (tile_pos[0], tile_pos[1] + WALL_ADJUST, tile_pos[2])
     south_rotate = '1,0,0,0'
     
-    #East and West Position data is reveresed
-    east = (tile.x - 1, tile.y)
+    east = (tile.x + 1, tile.y)
     east_name = tile_name + '_east'
-    east_pos = (tile_pos[0] + WALL_ADJUST, tile_pos[1], tile_pos[2])
-    east_rotate = '0.707106,0,0,-0.707106'    
-    west = (tile.x + 1, tile.y)
+    east_pos = (tile_pos[0] - WALL_ADJUST, tile_pos[1], tile_pos[2])
+    east_rotate = '0.707106,0,0,0.707106'    
+    west = (tile.x - 1, tile.y)
     west_name = tile_name + '_west'
-    west_pos = (tile_pos[0] - WALL_ADJUST, tile_pos[1], tile_pos[2])
-    west_rotate = '0.707106,0,0,0.707106'    
+    west_pos = (tile_pos[0] + WALL_ADJUST, tile_pos[1], tile_pos[2])
+    west_rotate = '0.707106,0,0,-0.707106'    
     
     #North
     tile = layer.get_tile(*north)
-    if tile :
-        if not tile.active :
-            new_wall = make_wall(objects)
-            new_wall.set('Name',north_name)
-            new_wall.set('Pos',str(north_pos[0]) + ',' + str(north_pos[1]) + ',' + str(north_pos[2]))
-            new_wall.set('Rotate',north_rotate)            
-    else:
-        new_wall = make_wall(objects)
-        new_wall.set('Name',north_name)
-        new_wall.set('Pos',str(north_pos[0]) + ',' + str(north_pos[1]) + ',' + str(north_pos[2]))
-        new_wall.set('Rotate',north_rotate)
+    if tile is None :
+        new_wall = generate_new_object()
+        new_wall.update({'@Material':'Materials/dev/512x_grey',
+                         '@Geometry':'objects/Modules/Walls/01A.cgf',
+                         '@Name':north_name,
+                         '@Pos':str(north_pos[0]) + ',' + str(north_pos[1]) + ',' + str(north_pos[2]),
+                         '@Rotate':north_rotate,
+                         '@Parent':hangerSectionEntityMap['Root'].get('@Id',None)})
+        generate_entity_link(hangerSectionEntityMap['North']['EntityLinks']['Link'],
+                             new_wall.get('@Name','UNDEFINED'),
+                             new_wall.get('@Id',None))
+        prefabObjects.append(new_wall)        
         
         
     #South
     tile = layer.get_tile(*south)
-    if tile :
-        if not tile.active:
-            new_wall = make_wall(objects)
-            new_wall.set('Name',south_name)
-            new_wall.set('Pos',str(south_pos[0]) + ',' + str(south_pos[1]) + ',' + str(south_pos[2]))
-            new_wall.set('Rotate',south_rotate)        
-    else:
-        new_wall = make_wall(objects)
-        new_wall.set('Name',south_name)
-        new_wall.set('Pos',str(south_pos[0]) + ',' + str(south_pos[1]) + ',' + str(south_pos[2]))
-        new_wall.set('Rotate',south_rotate)
+    if tile is None:
+        new_wall = generate_new_object()
+        new_wall.update({'@Material':'Materials/dev/512x_grey',
+                         '@Geometry':'objects/Modules/Walls/01A.cgf',
+                         '@Name':south_name,
+                         '@Pos':str(south_pos[0]) + ',' + str(south_pos[1]) + ',' + str(south_pos[2]),
+                         '@Rotate':south_rotate,
+                         '@Parent':hangerSectionEntityMap['Root'].get('@Id',None)})
+        generate_entity_link(hangerSectionEntityMap['South']['EntityLinks']['Link'],
+                             new_wall.get('@Name','UNDEFINED'),
+                             new_wall.get('@Id',None))
+        prefabObjects.append(new_wall)   
         
         
     #East
     tile = layer.get_tile(*east)
-    if tile :
-        if not tile.active:
-            new_wall = make_wall(objects)
-            new_wall.set('Name',east_name)
-            new_wall.set('Pos',str(east_pos[0]) + ',' + str(east_pos[1]) + ',' + str(east_pos[2]))
-            new_wall.set('Rotate',east_rotate)        
-    else:
-        new_wall = make_wall(objects)
-        new_wall.set('Name',east_name)
-        new_wall.set('Pos',str(east_pos[0]) + ',' + str(east_pos[1]) + ',' + str(east_pos[2]))
-        new_wall.set('Rotate',east_rotate)
+    if tile is None:
+        new_wall = generate_new_object()
+        new_wall.update({'@Material':'Materials/dev/512x_grey',
+                         '@Geometry':'objects/Modules/Walls/01A.cgf',
+                         '@Name':east_name,
+                         '@Pos':str(east_pos[0]) + ',' + str(east_pos[1]) + ',' + str(east_pos[2]),
+                         '@Rotate':east_rotate,
+                         '@Parent':hangerSectionEntityMap['Root'].get('@Id',None)})
+        generate_entity_link(hangerSectionEntityMap['East']['EntityLinks']['Link'],
+                             new_wall.get('@Name','UNDEFINED'),
+                             new_wall.get('@Id',None))
+        prefabObjects.append(new_wall)
         
         
     #West
     tile = layer.get_tile(*west)
-    if tile :
-        if not tile.active:
-            new_wall = make_wall(objects)
-            new_wall.set('Name',west_name)
-            new_wall.set('Pos',str(west_pos[0]) + ',' + str(west_pos[1]) + ',' + str(west_pos[2]))
-            new_wall.set('Rotate',west_rotate)        
-    else:
-        new_wall = make_wall(objects)
-        new_wall.set('Name',west_name)
-        new_wall.set('Pos',str(west_pos[0]) + ',' + str(west_pos[1]) + ',' + str(west_pos[2]))
-        new_wall.set('Rotate',west_rotate)
-        
+    if tile is None:
+        new_wall = generate_new_object()
+        new_wall.update({'@Material':'Materials/dev/512x_grey',
+                         '@Geometry':'objects/Modules/Walls/01A.cgf',
+                         '@Name':west_name,
+                         '@Pos':str(west_pos[0]) + ',' + str(west_pos[1]) + ',' + str(west_pos[2]),
+                         '@Rotate':west_rotate,
+                         '@Parent':hangerSectionEntityMap['Root'].get('@Id',None)})
+        generate_entity_link(hangerSectionEntityMap['West']['EntityLinks']['Link'],
+                             new_wall.get('@Name','UNDEFINED'),
+                             new_wall.get('@Id',None))
+        prefabObjects.append(new_wall)
         
 
+#------------------------------------------------------------
+#------------------------------------------------------------
+#Begin Real Work
+#------------------------------------------------------------
+#------------------------------------------------------------
+def exportMap(model, filepath):
+    xmldoc = XmlDocument(filepath)
+    if not xmldoc.get('PrefabsLibrary', None):
+        text, success = Utils.getUserInput('Enter new prefab library name:')
+        if success:
+            xmldoc['PrefabsLibrary'] = {'@Name',text}
+        else:
+            xmldoc['PrefabsLibrary'] = {'@Name','Default'}
             
-
-
-
-
+    #Get the Root Node
+    prefabLibNode = xmldoc['PrefabsLibrary']
+    
+    #Add a new prefab
+    prefab_name = prefabLibNode.get('@Name','') + '.' + model.name
+    new_prefab = {'@Name':prefab_name,
+                  '@Id':generate_guid(),
+                  '@Library':prefabLibNode.get('@Name',''),
+                  'Objects':{'Object':[]}}
+    add_prefab(prefabLibNode, new_prefab)
+    
+    prefabObjects = new_prefab['Objects']['Object']
+    
+    #Generate the Section Entity
+    hangerSectionEntityMap = generate_section_root(prefabObjects)
+    
+    #Handle the models layers
+    for layer in model.children() :    
+        for tile in layer.children() :
+            tile_name = str(tile.x) + '_' + str(tile.y)
+            tile_pos = (tile.x * -WIDTH_UNIT,
+                        tile.y * WIDTH_UNIT,
+                        layer.index * -HEIGHT_UNIT)
+            generate_floor(layer, tile, tile_name, tile_pos, prefabObjects, hangerSectionEntityMap)
+            generate_ceiling(layer, tile, tile_name, tile_pos, prefabObjects, hangerSectionEntityMap)
+            generate_walls(layer, tile, tile_name, tile_pos, prefabObjects, hangerSectionEntityMap)
+    
+    #Finally...Save the XML file
+    xmldoc.save()

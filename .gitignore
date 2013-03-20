@@ -10,9 +10,7 @@
 
 # Folders #
 ############
-Art_Tools/*
-DTL/resources/images/*
-DTL/tool/*
+*/resources/images/*
 *WIP*
 
 # Packages #

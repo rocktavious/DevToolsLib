@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -62,8 +62,9 @@
      <string>Tool</string>
     </property>
     <addaction name="action_Select"/>
-    <addaction name="action_Place"/>
+    <addaction name="action_Drag"/>
     <addaction name="action_Draw"/>
+    <addaction name="action_Place"/>
    </widget>
    <widget class="QMenu" name="menuLayers">
     <property name="title">
@@ -177,7 +178,7 @@
     <string>Place</string>
    </property>
    <property name="shortcut">
-    <string>2</string>
+    <string>4</string>
    </property>
   </action>
   <action name="action_Draw">
@@ -194,6 +195,9 @@
   <action name="action_Add_Layer">
    <property name="text">
     <string>Add Layer</string>
+   </property>
+   <property name="shortcut">
+    <string>L</string>
    </property>
   </action>
   <action name="action_Raise_Layer">
@@ -224,6 +228,17 @@
   <action name="action_Add_Tile">
    <property name="text">
     <string>Add Tile</string>
+   </property>
+   <property name="shortcut">
+    <string>T</string>
+   </property>
+  </action>
+  <action name="action_Drag">
+   <property name="text">
+    <string>Hand Drag</string>
+   </property>
+   <property name="shortcut">
+    <string>2</string>
    </property>
   </action>
  </widget>
