@@ -265,7 +265,7 @@ class BaseData(object):
     
     #------------------------------------------------------------
     def readXml(self):
-        if self._getFile(ext=['.xml']) is False:
+        if self._getFile(ext='*.xml') is False:
             return
         with open(self._filepath.path,'r') as xml_file :
             xml_data = xml_file.read()
@@ -278,16 +278,16 @@ class BaseData(object):
         
     #------------------------------------------------------------
     def saveXml(self):
-        if self._getSaveFile(ext=['.xml']) is False :
+        if self._getSaveFile(ext='*.xml') is False :
             return        
-        self._filepath.validate_dirs()
+        self._filepath.makedirs()
         xml_data = self._asXml(QtXml.QDomDocument(), None)
         with open(self._filepath.path,'wb') as xml_file :
             xml_file.write(xml_data)
     
     #------------------------------------------------------------
     def readJson(self):
-        if self._getFile(ext=['.json']) is False:
+        if self._getFile(ext='*.json') is False:
             return        
         with open(self._filepath.path,'r') as json_file :
             json_data = json.load(json_file)
@@ -297,9 +297,9 @@ class BaseData(object):
     #------------------------------------------------------------
     def saveJson(self):
         '''Writes the dict data to the json file'''
-        if self._getSaveFile(ext=['.json']) is False:
+        if self._getSaveFile(ext='*.json') is False:
             return           
-        self._filepath.validate_dirs()
+        self._filepath.makedirs()
         with open(self._filepath.path,'wb') as json_file :
             json_data = json.dumps(self._asJson(), sort_keys=True, indent=4, cls=JsonModelEncoder)
             json_file.write(json_data)

@@ -5,42 +5,81 @@ These are imported into the DTL namespace upon import
 '''
 import os
 import sys
+import imp
+import types
+import re
 import subprocess
-from PyQt4 import QtCore, QtGui
 
-from . import Settings, Path
+from DTL import __pkgname__, __company__, __pkgresources__
+from DTL.api.path import Path
+
+#------------------------------------------------------------
+def mainIsFrozen():
+    """Returns whether we are frozen via py2exe.
+    This will affect how we find out where we are located."""
+    return (hasattr(sys, "frozen") or # new py2exe
+            hasattr(sys, "importers") # old py2exe
+            or imp.is_frozen("__main__")) # tools/freeze
+
+#------------------------------------------------------------
+def getMainDir():
+    """ This will get us the program's directory,
+    even if we are frozen using py2exe"""
+    if mainIsFrozen():
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(sys.argv[0])
+
+#------------------------------------------------------------
+def quickReload(modulename):
+    """
+    Searches through the loaded sys modules and looks up matching module names 
+    based on the imported module.
+    """
+    expr = re.compile( str(modulename).replace( '.', '\.' ).replace( '*', '[A-Za-z0-9_]*' ) )
+
+    # reload longer chains first
+    keys = sys.modules.keys()
+    keys.sort()
+    keys.reverse()
+
+    for key in keys:
+        module = sys.modules[key]
+        if ( expr.match(key) and module != None ):
+            print 'reloading', key
+            reload( module )
+
 
 
 #------------------------------------------------------------
-def getAppSettings():
-    return QtCore.QSettings(Settings['COMPANY'], Settings._pkg)
+def synthesize(object, name, value):
+    """
+    Convenience method to create getters and setters for a instance. 
+    Should be called from within __init__. Creates [name], set[Name], 
+    _[name] on object.
 
-#------------------------------------------------------------
-def activeWindow():
-    if QtGui.QApplication.instance():
-        return QtGui.QApplication.instance().activeWindow()
-    return None
+    :param object: An instance of the class to add the methods to.
+    :param name: The base name to build the function names, and storage variable.
+    :param value: The initial state of the created variable.
 
-#------------------------------------------------------------
-def getStyleSheet():
-    ss_file = Settings._resources_dir.new_path_join('darkorange.stylesheet')
-    data = ''
-    with open(ss_file.path, 'r') as filespec :
-        data = filespec.read()
-    return '%s' % data
-
-#------------------------------------------------------------
-def rootWindow():
-    window = None
-    if (QtGui.QApplication.instance()):
-        window = QtGui.QApplication.instance().activeWindow()
-
-        # grab the root window
-        if (window):
-            while (window.parent()):
-                window = window.parent()
-
-    return window
+    """
+    storageName = '_%s' % name
+    setterName = 'set%s%s' % (name[0].capitalize(), name[1:])
+    if hasattr(object, name):
+        raise KeyError('The provided name already exists')
+    # add the storeage variable to the object
+    setattr(object, storageName, value)
+    # define the getter
+    def customGetter(self):
+        return getattr(self, storageName)
+    # define the Setter
+    def customSetter(self, state):
+        setattr(self, storageName, state)
+    # add the getter to the object, if it does not exist
+    if not hasattr(object, name):
+        setattr(object, name, types.MethodType(customGetter, object))
+    # add the setter to the object, if it does not exist
+    if not hasattr(object, setterName):
+        setattr(object, setterName, types.MethodType(customSetter, object))
 
 #------------------------------------------------------------
 def runFile( filepath, basePath=None, cmd=None, debug=False ):
@@ -54,8 +93,7 @@ def runFile( filepath, basePath=None, cmd=None, debug=False ):
 
     """
     status = False
-    if not isinstance(filepath, Path):
-        filepath = Path(filepath)
+    filepath = Path(filepath)
 
     # make sure the filepath we're running is a file 
     if not filepath.isFile:
@@ -64,7 +102,7 @@ def runFile( filepath, basePath=None, cmd=None, debug=False ):
     # determine the base path for the system
     if basePath is None:
         basePath = filepath.dir
-        
+
     options = { 'filepath': filepath.path, 'basepath': basePath }
 
     if cmd == None :
@@ -73,71 +111,13 @@ def runFile( filepath, basePath=None, cmd=None, debug=False ):
                 cmd = 'python.exe "%s"' % filepath.path
             else:
                 cmd = 'pythonw.exe "%s"' % filepath.path
-            
+
             status = subprocess.Popen( cmd, stdout=sys.stdout, stderr=sys.stderr, shell=debug, cwd=basePath)
-            #status = subprocess.Popen('cmd.exe /k %s' % cmd, cwd=basePath)
 
     if not status :
         try:
             status = os.startfile(filepath.path)
         except:
-            print 'Core.runFile] Cannot run type (*%s)' % filepath.ext
+            print 'Core.runFile Cannot run type (*%s)' % filepath.ext
 
     return status
-
-
-
-#------------------------------------------------------------
-def notifyUser(msg='', parent=None):
-    QtGui.QMessageBox.question(parent,
-                               'Message',
-                               msg,
-                               QtGui.QMessageBox.Ok,
-                               QtGui.QMessageBox.Ok)        
-
-#------------------------------------------------------------
-def getConfirmDialog(msg='', parent=None):
-    reply = QtGui.QMessageBox.question(parent,
-                                       'Message',
-                                       msg,
-                                       QtGui.QMessageBox.Yes | 
-                                       QtGui.QMessageBox.No,
-                                       QtGui.QMessageBox.No)
-    
-    if reply == QtGui.QMessageBox.Yes:
-        return True
-    else:
-        return False
-    
-#------------------------------------------------------------
-def getUserInput(msg='', parent=None):
-    text, success = QtGui.QInputDialog.getText(parent, 'Input Dialog', msg)
-    return str(text), success
-
-#------------------------------------------------------------
-def getFileFromUser(parent=None, ext=[]):
-    file_dialog = QtGui.QFileDialog(parent)
-    file_dialog.setViewMode(QtGui.QFileDialog.Detail)
-    return _return_file(file_dialog)
-
-#------------------------------------------------------------
-def getDirFromUser(parent=None):
-    file_dialog = QtGui.QFileDialog(parent)
-    file_dialog.setFileMode(QtGui.QFileDialog.Directory)
-    file_dialog.setOption(QtGui.QFileDialog.ShowDirsOnly)
-    file_dialog.setViewMode(QtGui.QFileDialog.Detail)
-    return _return_file(file_dialog)    
-
-#------------------------------------------------------------
-def getSaveFileFromUser(parent=None, ext=[]):
-    file_dialog = QtGui.QFileDialog(parent)
-    file_dialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
-    file_dialog.setViewMode(QtGui.QFileDialog.Detail)
-    return _return_file(file_dialog)
-
-#------------------------------------------------------------
-def _return_file(file_dialog):
-    if file_dialog.exec_():
-        returned_file = str(file_dialog.selectedFiles()[0])
-        return Path(returned_file)
-    return Path()

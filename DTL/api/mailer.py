@@ -5,7 +5,16 @@ from email.MIMEBase import MIMEBase
 from email import Encoders
 import smtplib
 
-from . import Settings
+from DTL import __pkgname__
+
+#Emailing Options
+ENABLEMAILER = False
+SMTPSERVER = ''
+SMTPUSER = ''
+SMTPPASSWORD = ''
+#distrobution list for receiving e-mails
+DISTROLIST = ['kyle.rockman@cloudimperiumgames.com']
+CC_DISTROLIST = []
 
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -21,14 +30,14 @@ class Mailer(object):
     
     #------------------------------------------------------------
     def send_mail(self, subject, message):
-        if not Settings.ENABLEMAILER :
+        if not ENABLEMAILER :
             return
         messageHTML = '<pre>\n'
         #Just inherit the regular message formatting
         messageHTML += message + '</pre>'
-        self._send(Settings.DISTROLIST,
-                   Settings.CCDISTORLIST,
-                   "[" + Settings.PKGNAME + "] - " + subject,
+        self._send(DISTROLIST,
+                   CCDISTORLIST,
+                   "[" + __pkgname__ + "] - " + subject,
                    message,
                    messageHTML)
 
@@ -38,7 +47,7 @@ class Mailer(object):
         # Create the root message and fill in the from, to, and subject headers
         msgRoot = MIMEMultipart('related')
         msgRoot['Subject'] = subject
-        msgRoot['From'] = Settings.SMTPUSER
+        msgRoot['From'] = SMTPUSER
         msgRoot['To'] = ', '.join(toAddrs)
         msgRoot['Cc'] = ', '.join(ccAddrs)
         if highImportance:
@@ -62,7 +71,7 @@ class Mailer(object):
 
         # Send the email
         smtp = smtplib.SMTP()
-        smtp.connect(Settings.SMTPSERVER)
-        smtp.login(Settings.SMTPUSER, Settings.SMTPPASSWORD)
-        smtp.sendmail(Settings.SMTPUSER, toAddrs, msgRoot.as_string())
+        smtp.connect(SMTPSERVER)
+        smtp.login(SMTPUSER, SMTPPASSWORD)
+        smtp.sendmail(SMTPUSER, toAddrs, msgRoot.as_string())
         smtp.quit()

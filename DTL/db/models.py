@@ -29,7 +29,7 @@ class TableModel(QtCore.QAbstractTableModel):
         if role == Qt.DisplayRole:
             
             if orientation == Qt.Horizontal :
-                if section < len(self._headers):
+                if section < len(self.__headers):
                     return self.__headers[section]
                 else:
                     return 'NONE'
@@ -51,11 +51,21 @@ class TableModel(QtCore.QAbstractTableModel):
         if role == Qt.ToolTipRole :
             return value
         
-        if role == Qt.DecorationRole:
-            pixmap = QtGui.QPixmap(26, 26)
-            pixmap.fill(QtGui.QColor(0,0,0))
-            icon = QtGui.QIcon(pixmap)
-            return icon
+        #if role == Qt.DecorationRole:
+            #pixmap = QtGui.QPixmap(26, 26)
+            #pixmap.fill(QtGui.QColor(0,0,0))
+            #icon = QtGui.QIcon(pixmap)
+            #return icon
+            
+    #------------------------------------------------------------
+    def setData(self, index, value, role=Qt.EditRole):
+        if index.isValid():
+            if role == Qt.EditRole:
+                self.__data[index.row()][index.column()] = value
+                self.dataChanged.emit(index, index)
+                return True
+            
+        return False
     
     #------------------------------------------------------------
     def insertRows(self, position, rows, parent=QtCore.QModelIndex()):

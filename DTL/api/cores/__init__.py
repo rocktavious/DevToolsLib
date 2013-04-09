@@ -1,7 +1,6 @@
 """
 Selects the appropreate core for the environment you are running in
 """
-
 Core = None
 
 # initialize the system for Maya
@@ -23,7 +22,5 @@ except:
 	pass
 
 # initialize the system for Standalone
-if not Core:
+if Core is None:
 	from .external import Core
-
-Core.instance()

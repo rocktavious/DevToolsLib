@@ -1,19 +1,167 @@
 import os
 import logging
 import logging.handlers
+import sqlite3
 import threading
 import time
 
+from DTL import __pkgname__, __appdata__
+from DTL.api.path import Path
+
 #------------------------------------------------------------
 #------------------------------------------------------------
-class Logger(type):
+class Logger(object):
+    LOGFILE = os.path.join(__appdata__,'logs',__pkgname__ + '.log')
+    DATABASEFILE = os.path.join(__appdata__,'logs',__pkgname__ + '.db')
+    
+    VERBOSE = logging.Formatter('[%(levelname)s]%(asctime)s | [%(name)s][%(module)s][%(funcName)s][line:%(lineno)s] \n\t %(message)s', '%b %d %I:%M:%S %p')
+    SIMPLE = logging.Formatter('[%(levelname)s] %(message)s')    
+    
+    #------------------------------------------------------------
+    @staticmethod
+    def getMetaClass():
+        return LoggerMetaclass
+    
+    #------------------------------------------------------------
+    @staticmethod
+    def getLogger():
+        return logging.getLogger(__pkgname__)
+    
+    #------------------------------------------------------------
+    @staticmethod
+    def getSubLogger(name):
+        return logging.getLogger('{0}.{1}'.format(__pkgname__, name))
+    
+    #------------------------------------------------------------
+    @staticmethod
+    def setupLogger():
+        logger = Logger.getLogger()
+        logger.setLevel(logging.DEBUG)
+        
+        #Database Out
+        handler = SQLiteHandler(Logger.DATABASEFILE)
+        handler.setLevel(logging.WARNING)
+        logger.addHandler(handler)
+    
+        #File Out
+        kwargs = dict(maxBytes = 1024*1024, backupCount=64, delay=True)
+        handler = SafeRotatingFileHandler(Logger.LOGFILE, **kwargs)
+        handler.setFormatter(Logger.VERBOSE)
+        handler.setLevel(logging.DEBUG)
+        logger.addHandler(handler)        
+
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+class LoggerMetaclass(type):
     """
     Metaclass for Logging, will add self.logger to the class
     """
     #------------------------------------------------------------
     def __init__(cls, name, bases, attrs):
-        super(Logger, cls).__init__(name, bases, attrs)
-        cls.logger = logging.getLogger('{0}.{1}'.format(attrs['__module__'], name))
+        super(LoggerMetaclass, cls).__init__(name, bases, attrs)
+        cls.logger = Logger.getLogger()
+
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+class SQLiteHandler(logging.Handler):
+    """
+    Logging handler for SQLite.
+
+    Based on Vinay Sajip's DBHandler class (http://www.red-dove.com/python_logging.html)
+
+    This version sacrifices performance for thread-safety:
+    Instead of using a persistent cursor, we open/close connections for each entry.
+
+    AFAIK this is necessary in multi-threaded applications, 
+    because SQLite doesn't allow access to objects across threads.
+    """
+
+    initial_sql = """CREATE TABLE IF NOT EXISTS log(
+                        Created text,
+                        Name text,
+                        LogLevel int,
+                        LogLevelName text,    
+                        Message text,
+                        Args text,
+                        Module text,
+                        FuncName text,
+                        LineNo int,
+                        Exception text,
+                        Process int,
+                        Thread text,
+                        ThreadName text
+                   )"""
+
+    insertion_sql = """INSERT INTO log(
+                        Created,
+                        Name,
+                        LogLevel,
+                        LogLevelName,
+                        Message,
+                        Args,
+                        Module,
+                        FuncName,
+                        LineNo,
+                        Exception,
+                        Process,
+                        Thread,
+                        ThreadName
+                   )
+                   VALUES (
+                        '%(dbtime)s',
+                        '%(name)s',
+                        %(levelno)d,
+                        '%(levelname)s',
+                        '%(msg)s',
+                        '%(args)s',
+                        '%(module)s',
+                        '%(funcName)s',
+                        %(lineno)d,
+                        '%(exc_text)s',
+                        %(process)d,
+                        '%(thread)s',
+                        '%(threadName)s'
+                   );
+                   """
+
+    #------------------------------------------------------------
+    def __init__(self, db=None):
+
+        logging.Handler.__init__(self)
+        if db is None:
+            self.db = ':memory:Temp.db'
+        else:
+            self.db = Path(db)
+            self.db.makedirs()
+            self.db = self.db.path
+        # Create table if needed:
+        conn = sqlite3.connect(self.db)
+        conn.execute(SQLiteHandler.initial_sql)
+        conn.commit()
+
+    #------------------------------------------------------------
+    def formatDBTime(self, record):
+        record.dbtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(record.created))
+
+    #------------------------------------------------------------
+    def emit(self, record):
+
+        # Use default formatting:
+        self.format(record)
+        # Set the database time up:
+        self.formatDBTime(record)
+        if record.exc_info:
+            record.exc_text = logging._defaultFormatter.formatException(record.exc_info)
+        else:
+            record.exc_text = ""
+        # Insert log record:
+        sql = SQLiteHandler.insertion_sql % record.__dict__
+        conn = sqlite3.connect(self.db)
+        conn.execute(sql)
+        conn.commit()
+
 
 
 #------------------------------------------------------------
@@ -65,27 +213,3 @@ class SafeRotatingFileHandler (logging.handlers.RotatingFileHandler):
             rename (self.baseFilename, dfn)
         self.mode = 'w'
         self.stream = self._open()
-
-
-def setupLogging():
-    formatter = logging.Formatter('[%(levelname)s]%(asctime)s | %(message)s', '%b %d %I:%M:%S %p')
-    logfile = os.path.join(os.path.dirname(__file__),'logs','Output.log')
-    
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-    #Stream Out
-    handler = logging.StreamHandler()
-    handler.setFormatter(formatter)
-    handler.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-    
-    #File Out
-    kwargs = dict(maxBytes = 1024*1024, backupCount=64, delay=True)
-    handler = SafeRotatingFileHandler(logfile, **kwargs)
-    print logfile
-    handler.setFormatter(formatter)
-    handler.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-    
-setupLogging()
-
