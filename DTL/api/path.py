@@ -60,7 +60,10 @@ class Path(object):
     # --- Path object properties
     #------------------------------------------------------------
     def _get_path(self):
-        return self._path
+        if sys.platform == 'win32' :
+            return self._path
+        else:
+            return self.caseSensative
     
     #------------------------------------------------------------
     def _set_path(self, path):
@@ -75,7 +78,7 @@ class Path(object):
     #------------------------------------------------------------
     @property
     def exists(self):
-        return os.path.exists(self._path)
+        return os.path.exists(self.path)
     
     #------------------------------------------------------------
     @property
@@ -88,7 +91,7 @@ class Path(object):
     #------------------------------------------------------------
     @property
     def isFile(self):
-        return os.path.isfile(self.caseSensative)
+        return os.path.isfile(self.path)
     
     #------------------------------------------------------------
     @property
@@ -201,13 +204,13 @@ class Path(object):
         """ Set the access/modified times of this file to the current time.
         Create the file if it does not exist.
         """
-        fd = os.open(self._path, os.O_WRONLY | os.O_CREAT, 0666)
+        fd = os.open(self.path, os.O_WRONLY | os.O_CREAT, 0666)
         os.close(fd)
-        os.utime(self._path, None)
+        os.utime(self.path, None)
     def remove(self):
-        os.remove(self._path)
+        os.remove(self.path)
     def unlink(self):
-        os.unlink(self._path)
+        os.unlink(self.path)
         
     #------------------------------------------------------------
     # --- Operations on path strings.
