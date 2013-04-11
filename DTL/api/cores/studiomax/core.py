@@ -16,4 +16,5 @@ class StudioMaxCore(Core):
     
     #------------------------------------------------------------
     def setupLogging(self):
-        Logger.setupLogger()
+        Logger.setupFileLogger()
+        Logger.setupDatabaseLogger()

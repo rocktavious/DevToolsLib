@@ -64,13 +64,11 @@ class Core(object):
     #------------------------------------------------------------
     def setupLogging(self):
         #Setup Defaults
-        Logger.setupLogger()
+        Logger.setupFileLogger()
+        Logger.setupDatabaseLogger()
+        Logger.setupStreamLogger()
         
-        #External cores get a stream Out
-        handler = logging.StreamHandler()
-        handler.setFormatter(Logger.SIMPLE)
-        handler.setLevel(logging.INFO)
-        self.logger.addHandler(handler)
+
 
     #------------------------------------------------------------
     def rootWindow(self):

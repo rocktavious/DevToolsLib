@@ -20,7 +20,8 @@ class MayaCore(Core):
     
     #------------------------------------------------------------
     def setupLogging(self):
-        Logger.setupLogger()
+        Logger.setupFileLogger()
+        Logger.setupDatabaseLogger()
     
     #------------------------------------------------------------
     def rootWindow(self):

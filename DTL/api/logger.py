@@ -15,7 +15,7 @@ class Logger(object):
     DATABASEFILE = os.path.join(__appdata__,'logs',__pkgname__ + '.db')
     
     VERBOSE = logging.Formatter('[%(levelname)s]%(asctime)s | [%(name)s][%(module)s][%(funcName)s][line:%(lineno)s] \n\t %(message)s', '%b %d %I:%M:%S %p')
-    SIMPLE = logging.Formatter('[%(levelname)s] %(message)s')    
+    SIMPLE = logging.Formatter('[%(levelname)s] %(message)s')
     
     #------------------------------------------------------------
     @staticmethod
@@ -34,21 +34,43 @@ class Logger(object):
     
     #------------------------------------------------------------
     @staticmethod
-    def setupLogger():
+    def addHandler(handler):
         logger = Logger.getLogger()
         logger.setLevel(logging.DEBUG)
-        
-        #Database Out
-        handler = SQLiteHandler(Logger.DATABASEFILE)
-        handler.setLevel(logging.WARNING)
         logger.addHandler(handler)
     
-        #File Out
+    #------------------------------------------------------------
+    @staticmethod
+    def setupFileLogger(filepath=None, level=None, formatter=None):
+        filepath = filepath or Logger.LOGFILE
+        level = level or logging.INFO
+        formatter = formatter or Logger.VERBOSE
+        
         kwargs = dict(maxBytes = 1024*1024, backupCount=64, delay=True)
-        handler = SafeRotatingFileHandler(Logger.LOGFILE, **kwargs)
-        handler.setFormatter(Logger.VERBOSE)
-        handler.setLevel(logging.DEBUG)
-        logger.addHandler(handler)        
+        handler = SafeRotatingFileHandler(filepath, **kwargs)
+        handler.setFormatter(formatter)
+        handler.setLevel(level)
+    
+    #------------------------------------------------------------
+    @staticmethod
+    def setupDatabaseLogger(filepath=None, level=None):
+        filepath = filepath or Logger.LOGFILE
+        level = level or logging.WARNING
+        
+        handler = SQLiteHandler(filepath)
+        handler.setLevel(level)
+        Logger.addHandler(handler)
+    
+    #------------------------------------------------------------
+    @staticmethod
+    def setupStreamLogger(level=None, formatter=None):
+        level = level or logging.INFO
+        formatter = formatter or Logger.SIMPLE
+        
+        handler = logging.StreamHandler()
+        handler.setFormatter(formatter)
+        handler.setLevel(level)
+        Logger.addHandler(handler) 
 
 
 #------------------------------------------------------------
