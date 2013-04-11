@@ -65,7 +65,7 @@ def synthesize(object, name, value):
     storageName = '_%s' % name
     setterName = 'set%s%s' % (name[0].capitalize(), name[1:])
     if hasattr(object, name):
-        raise KeyError('The provided name already exists')
+        raise KeyError('The provided attr {0} already exists'.format(name))
     # add the storeage variable to the object
     setattr(object, storageName, value)
     # define the getter

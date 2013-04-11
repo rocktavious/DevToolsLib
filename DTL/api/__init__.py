@@ -5,6 +5,7 @@ from .enum import Enum
 from .version import Version
 from .path import Path
 from .logger import Logger
+from .importlib import ImportModule
 from .rollbackimporter import RollbackImporter
 from .commandticker import CommandTicker
 from .jsondocument import JsonDocument
