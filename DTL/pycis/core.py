@@ -6,8 +6,6 @@ from argparse import ArgumentParser
 
 from DTL.api import Logger, Utils, ImportModule
 
-_instance = None
-
 class pycisArgumentParser(ArgumentParser):
     """ArgumentParser that doesn't exit on error"""
     class ArgParseError(Exception):
@@ -27,21 +25,16 @@ class pycisArgumentParser(ArgumentParser):
 class pyCis(object):
     '''pyCis - Python Console Intelligence System'''
     __metaclass__ = Logger.getMetaClass()
-
-    #------------------------------------------------------------
-    @classmethod
-    def instance(cls):
-        global _instance
-        if not _instance:
-            _instance = cls()
-        return _instance  
     
     #------------------------------------------------------------
     def __init__(self):
         Utils.synthesize(self, 'commands', None)
         Utils.synthesize(self, 'parser', None)
-        pass
-    
+        
+        self._setupLogging()
+        self._setupParser()
+        self._setupCommands()
+        
     #------------------------------------------------------------
     def _setupLogging(self):
         Logger.setupStreamLogger(formatter=logging.Formatter('\t%(message)s'))
@@ -50,7 +43,8 @@ class pyCis(object):
     def _setupParser(self):
         main_parser = pycisArgumentParser(prog='', add_help=False)
         self.setParser(main_parser)
-        
+    
+    #------------------------------------------------------------
     def loadCommandClass(self, name, module_name):
         """
         Given a command name and an application name, returns the Command
@@ -91,7 +85,7 @@ class pyCis(object):
         for name, module_name in self._getCommands().items():
             
             instance = self.loadCommandClass(name, module_name)
-            parser = subparsers.add_parser(name, help=instance.__doc__, description=instance.__doc__)
+            parser = subparsers.add_parser(name, add_help=instance.helpFlag(), description=instance.__doc__)
             instance.setupParser(parser)
     
     #------------------------------------------------------------
@@ -106,7 +100,7 @@ class pyCis(object):
     def print_help(self):
         self.parser().print_help()
         
-    #
+    #------------------------------------------------------------
     def print_command_help(self, commandName):
         for name, module_name in self.commands().items():
             if name == commandName :
@@ -115,12 +109,9 @@ class pyCis(object):
     
     #------------------------------------------------------------
     def run(self):
-        self._setupLogging()
-        self._setupParser()
-        self._setupCommands()        
         self._mainloop()
     
 
 if __name__ == '__main__':
-    main = pyCis.instance()
+    main = pyCis()
     main.run()

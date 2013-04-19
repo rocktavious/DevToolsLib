@@ -18,7 +18,7 @@ Usage Example
     False
     
 """
-from . import Enum
+from DTL.api.enum import Enum
 
 Status = Enum('Alpha','Beta','Gold')
 

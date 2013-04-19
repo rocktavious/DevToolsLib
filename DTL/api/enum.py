@@ -16,6 +16,7 @@ Usage Example
     2
     
 """
+__all__ = ['Enum']
 
 def Enum(*enumerated):
     enums = dict(zip(enumerated, range(len(enumerated))))

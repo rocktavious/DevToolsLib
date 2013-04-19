@@ -13,21 +13,7 @@ import subprocess
 from DTL import __pkgname__, __company__, __pkgresources__
 from DTL.api.path import Path
 
-#------------------------------------------------------------
-def mainIsFrozen():
-    """Returns whether we are frozen via py2exe.
-    This will affect how we find out where we are located."""
-    return (hasattr(sys, "frozen") or # new py2exe
-            hasattr(sys, "importers") # old py2exe
-            or imp.is_frozen("__main__")) # tools/freeze
 
-#------------------------------------------------------------
-def getMainDir():
-    """ This will get us the program's directory,
-    even if we are frozen using py2exe"""
-    if mainIsFrozen():
-        return os.path.dirname(sys.executable)
-    return os.path.dirname(sys.argv[0])
 
 #------------------------------------------------------------
 def quickReload(modulename):
@@ -121,3 +107,32 @@ def runFile( filepath, basePath=None, cmd=None, debug=False ):
             print 'Core.runFile Cannot run type (*%s)' % filepath.ext
 
     return status
+
+#------------------------------------------------------------
+def backup(path, suffix='.bak'):
+    """
+    Rename a file or directory safely without overwriting an existing
+    backup of the same name.
+
+    :param path: The path object to the file or directory to make a backup of.
+    :param suffix: The suffix to rename files with.
+    :returns: The new path of backed up file/directory
+    :rtype: str
+
+    """
+    count = -1
+    new_path = None
+    while True:
+        if path.exists :
+            if count == -1:
+                new_path = Path("%s%s") % (path.path, suffix)
+            else:
+                new_path = Path("%s%s.%s") % (path.path, suffix, count)
+            if new_path.exists:
+                count += 1
+                continue
+            else:
+                path.copy(new_path)
+        else:
+            break
+    return new_path

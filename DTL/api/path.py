@@ -1,227 +1,181 @@
 """
-Path helper classes
+path.py - An object representing a path to a file or directory.
 
-Special thanks to John Crocker and Jason Orendorff
+Current Author : Kyle Rockman
+
+Special thanks to:
+ John Crocker
+ Jason Orendorff
+ Mikhail Gusarov <dottedmag@dottedmag.net>
+ Marc Abramowitz <marc@marc-abramowitz.com>
+ Jason R. Coombs <jaraco@jaraco.com>
+ Jason Chu <jchu@xentac.net>
+ Vojislav Stojkovic <vstojkovic@syntertainment.com>
 """
-
 import os
+import imp
 import sys
+import shutil
+
+import re
+import fnmatch
+import glob
+
 import errno
 
+__all__ = ['Path']
+
+def mainIsFrozen():
+    """Returns whether we are frozen via py2exe.
+    This will affect how we find out where we are located."""
+    return (hasattr(sys, "frozen") or # new py2exe
+            hasattr(sys, "importers") # old py2exe
+            or imp.is_frozen("__main__")) # tools/freeze
+
 #------------------------------------------------------------
 #------------------------------------------------------------
-class Path(object):
+class ClassProperty(property):
+    def __get__(self, cls, owner):
+        return self.fget.__get__(None, owner)()
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+class Path(unicode):
+    """ Represents a filesystem path.
+
+    For documentation on individual methods, consult their
+    counterparts in os.path.
+    """
+    module = os.path #The module to use for path operations.
     _branch = None
     #------------------------------------------------------------
-    def __init__(self, path=None):
-        if isinstance(path, Path):
-            path = path.path
-        self._set_path(path)
-    
+    def __init__(self, value):
+        if not isinstance(value, basestring):
+            raise TypeError("path must be a string")
+
     #------------------------------------------------------------
-    # --- Path object internal python functions
+    # --- Path object class methods
+    @ClassProperty
+    @classmethod
+    def _next_class(cls):
+        """
+        What class should be used to construct new instances from this class
+        """
+        return cls
+    @classmethod
+    def getcwd(cls):
+        """ Return the current working directory as a path object. """
+        return cls(os.getcwdu())
+    @classmethod
+    def getMainDir(cls):
+        """ This will get us the program's directory,
+        even if we are frozen using py2exe"""
+        if mainIsFrozen():
+            return cls(os.path.dirname(sys.executable))
+        if sys.argv[0] == '' :
+            return cls.getcwd()
+        return cls(os.path.dirname(sys.argv[0]))
+
+    #------------------------------------------------------------
+    # --- Path object dunder methods
+    def __repr__(self):
+        return '%s(%s)' % (type(self).__name__, super(Path, self).__repr__())
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.path == other.path
+        return self.lower() == other.lower()
     def __ne__(self, other):
         return not self.__eq__(other)
-    def __hash__(self):
-        return hash(self.path)
-    def __repr__(self):
-        return 'Path( "{0}" )'.format(self.path)
-    def __str__(self):
-        return self.__repr__()
     def __add__(self, more):
         """Adding a path and a string yields a path."""
         try:
-            resultStr = str.__add__(self.path, more)
-        except TypeError:  #Python bug
-            resultStr = NotImplemented
-        if resultStr is NotImplemented:
-            return resultStr
-        return self.__class__(resultStr)
-    def __radd__(self, other):
-        if isinstance(other, basestring):
-            return self.__class__(other.__add__(self))
-        else:
+            return self._next_class(super(Path, self).__add__(more))
+        except TypeError:  # Python bug
             return NotImplemented
+    def __radd__(self, other):
+        if not isinstance(other, basestring):
+            return NotImplemented
+        return self._next_class(other.__add__(self))
     def __div__(self, rel):
         """ fp.__div__(rel) == fp / rel == fp.joinpath(rel)
 
         Join two path components, adding a separator character if
         needed.
         """
-        return self.__class__(os.path.join(self, rel))
-
+        return self._next_class(self.module.join(self, rel))
     # Make the / operator work even when true division is enabled.
-    __truediv__ = __div__
-    
-    
+    __truediv__ = __div__        
+    def __enter__(self):
+        self._old_dir = self.getcwd()
+        os.chdir(self)
+    def __exit__(self, *_):
+        os.chdir(self._old_dir)
+
     #------------------------------------------------------------
-    # --- Path object properties
+    # --- os module wrappers
+    def stat(self): return os.stat(self)
+    def lstat(self): return os.lstat(self)
+    def chmod(self, mode): os.chmod(self, mode)
+    def rename(self, new): os.rename(self, new); return self._next_class(new)
+    def unlink(self): os.unlink(self)
+
+    # --- os.path module wrappers
+    def isabs(self): return self.module.isabs(self)
+    def exists(self): return self.module.exists(self)
+    def isdir(self): return self.module.isdir(self)
+    def isfile(self): return self.module.isfile(self)
+    def islink(self): return self.module.islink(self)
+    def ismount(self): return self.module.ismount(self)
+    def samefile(self): return self.module.samefile(self)
+    def atime(self): return self.module.getatime(self)
+    def mtime(self): return self.module.getmtime(self)
+    def ctime(self): return self.module.getctime(self)
+    def size(self): return self.module.getsize(self)
+
+    # --- os.path module wrappers that returns path objects
+    def abspath(self): return self._next_class(self.module.abspath(self))
+    def normcase(self): return self._next_class(self.module.normcase(self))
+    def normpath(self): return self._next_class(self.module.normpath(self))
+    def realpath(self): return self._next_class(self.module.realpath(self))
+    def expanduser(self): return self._next_class(self.module.expanduser(self))
+    def expandvars(self): return self._next_class(self.module.expandvars(self))
+    def dirname(self): return self._next_class(self.module.dirname(self))
+    def basename(self):return self._next_class(self.module.basename(self))
     #------------------------------------------------------------
-    def _get_path(self):
-        if sys.platform == 'win32' :
-            return self._path
-        else:
-            return self.caseSensative
-    
+    def splitpath(self):
+        """ p.splitpath() -> Return (p.parent, p.name). """
+        parent, child = self.module.split(self)
+        return self._next_class(parent), child
     #------------------------------------------------------------
-    def _set_path(self, path):
-        if path is not None and path is not '':
-            normPath = os.path.normpath(os.path.abspath(path))
-            self._path = normPath.lower()
-        else:
-            self._path = None
-    
-    path = property(_get_path, _set_path)
-    
-    #------------------------------------------------------------
-    @property
-    def exists(self):
-        return os.path.exists(self.path)
-    
-    #------------------------------------------------------------
-    @property
-    def isEmpty(self):
-        if self._path is None or self._path == '':
-            return True
-        else:
-            return False
-    
-    #------------------------------------------------------------
-    @property
-    def isFile(self):
-        return os.path.isfile(self.path)
-    
-    #------------------------------------------------------------
-    @property
-    def ext(self):
-        if self.isFile :
-            return os.path.splitext(self._path)[1]
-        elif os.path.splitext(self._path)[1]:
-            return os.path.splitext(self._path)[1]
-        else:
-            return None
-    
-    #------------------------------------------------------------
-    @property
-    def parent(self):
-        """ The parent directory, as a new path object.
-        Example: path('/usr/local/lib/libpython.so').parent == path('/usr/local/lib')
+    def splitdrive(self):
+        """ p.splitdrive() -> Return (p.drive, <the rest of p>).
+
+        Split the drive specifier from this path.  If there is
+        no drive specifier, p.drive is empty, so the return value
+        is simply (path(''), p).  This is always the case on Unix.
         """
-        return self.__class__(os.path.dirname(self._path))
-    
+        drive, rel = self.module.splitdrive(self)
+        return self._next_class(drive), rel
     #------------------------------------------------------------
-    @property
-    def dir(self):
-        """ Validates if this path is a directory and returns it
-        if not then it returns the parent of this path
+    def splitext(self):
+        """ p.splitext() -> Return (p.stripext(), p.ext).
+
+        Split the filename extension from this path and return
+        the two parts.  Either part may be empty.
+
+        The extension is everything from '.' to the end of the
+        last path segment.  This has the property that if
+        (a, b) == p.splitext(), then a + b == p.
         """
-        if os.path.isdir(self._path):
-            return self
-        else:
-            return self.parent
-    
+        filename, ext = self.module.splitext(self)
+        return self._next_class(filename), ext
     #------------------------------------------------------------
-    @property
-    def name(self):
-        """ The name of this file or directory without the full path.
-        Example: path('/usr/local/lib/libpython.so').name == 'libpython.so'
+    def stripext(self):
+        """ p.stripext() -> Remove one file extension from the path.
+
+        For example, path('/home/guido/python.tar.gz').stripext()
+        returns path('/home/guido/python.tar').
         """
-        return os.path.basename(self._path)
-    
+        return self.splitext()[0]
     #------------------------------------------------------------
-    @property
-    def drive(self):
-        """ The drive specifier, for example 'C:'.
-        This is always empty on systems that don't use drive specifiers.
-        """
-        drive = ''
-        if sys.platform == "win32" :
-            drive, r = os.path.splitdrive(self._path)
-        return drive
-    
-    #------------------------------------------------------------
-    @property
-    def caseSensative(self):
-        """Path objects are stored in all lower with forward slashes
-        If you need a caseSensative path use this instead of .path
-        """
-        return self.__class__.getCaseSensativePath(self._path)
-    
-    #------------------------------------------------------------
-    @property
-    def branchRelative(self):
-        """Path objects are stored as absolute paths but the branch is stored on the class
-        if you need a branch relative path use this instead of .path
-        """
-        return self.__class__.getBranchRelativePath(self._path)
-    
-    @property
-    def mayaPath(self):
-        """Returns a path suitible for maya"""
-        return self.caseSensative.replace('\\','/')
-    
-    #------------------------------------------------------------
-    # --- Statistic opertaions on files and directories
-    def stat(self):
-        """ Perform a stat() system call on this path. """
-        return os.stat(self._path)
-    
-    def lstat(self):
-        """ Like path.stat(), but do not follow symbolic links. """
-        return os.lstat(self._path)
-    
-    #------------------------------------------------------------
-    # --- Modifying operations on files and directories
-    def chmod(self, mode):
-        os.chmod(self._path, mode)
-    def rename(self, new):
-        os.rename(self._path, new)
-        
-    #------------------------------------------------------------
-    # --- Create/delete operations on directories
-    def mkdir(self, mode=0777):
-        try:
-            os.mkdir(self.dir.path, mode)
-        except OSError as exception:
-            if exception.errno != errno.EEXIST:
-                raise
-    def makedirs(self, mode=0777):
-        try:
-            os.makedirs(self.dir.path, mode)
-        except OSError as exception:
-            if exception.errno != errno.EEXIST:
-                raise
-    def rmdir(self):
-        os.rmdir(self.dir.path)
-    def removedirs(self):
-        os.removedirs(self.dir.path)
-        
-    #------------------------------------------------------------
-    # --- Modifying operations on files
-    def touch(self):
-        """ Set the access/modified times of this file to the current time.
-        Create the file if it does not exist.
-        """
-        fd = os.open(self.path, os.O_WRONLY | os.O_CREAT, 0666)
-        os.close(fd)
-        os.utime(self.path, None)
-    def remove(self):
-        os.remove(self.path)
-    def unlink(self):
-        os.unlink(self.path)
-        
-    #------------------------------------------------------------
-    # --- Operations on path strings.
-    def abspath(self):       return self.__class__(os.path.abspath(self._path))
-    def normcase(self):      return self.__class__(os.path.normcase(self._path))
-    def normpath(self):      return self.__class__(os.path.normpath(self._path))
-    def realpath(self):      return self.__class__(os.path.realpath(self._path))
-    def expanduser(self):    return self.__class__(os.path.expanduser(self._path))
-    def expandvars(self):    return self.__class__(os.path.expandvars(self._path))
-    def dirname(self):       return self.__class__(os.path.dirname(self._path))
-    
     def expand(self):
         """ Clean up a filename by calling expandvars(),
         expanduser(), and normpath() on it.
@@ -230,16 +184,236 @@ class Path(object):
         read from a configuration file, for example.
         """
         return self.expandvars().expanduser().normpath()
-        
+    #------------------------------------------------------------
     def join(self, *args):
         """ Join two or more path components, adding a separator
         character (os.sep) if needed.  Returns a new path
         object.
         """
-        return self.__class__(os.path.join(self._path, *args))
+        return self._next_class(self.module.join(self, *args))
+    #------------------------------------------------------------
+    def listdir(self, pattern=None):
+        """ D.listdir() -> List of items in this directory.
+
+        Use D.files() or D.dirs() instead if you want a listing
+        of just files or just subdirectories.
+
+        The elements of the list are path objects.
+
+        With the optional 'pattern' argument, this only lists
+        items whose names match the given pattern.
+        """
+        names = os.listdir(self)
+        if pattern is not None:
+            names = fnmatch.filter(names, pattern)
+        return [self / child for child in names]
+    #------------------------------------------------------------
+    def dirs(self, pattern=None):
+        """ D.dirs() -> List of this directory's subdirectories.
+
+        The elements of the list are path objects.
+        This does not walk recursively into subdirectories
+        (but see path.walkdirs).
+
+        With the optional 'pattern' argument, this only lists
+        directories whose names match the given pattern.  For
+        example, ``d.dirs('build-*')``.
+        """
+        return [p for p in self.listdir(pattern) if p.isdir()]
+    #------------------------------------------------------------
+    def files(self, pattern=None):
+        """ D.files() -> List of the files in this directory.
+
+        The elements of the list are path objects.
+        This does not walk into subdirectories (see path.walkfiles).
+
+        With the optional 'pattern' argument, this only lists files
+        whose names match the given pattern.  For example,
+        ``d.files('*.pyc')``.
+        """
+        return [p for p in self.listdir(pattern) if p.isfile()]
+    #------------------------------------------------------------
+    def walk(self, pattern=None, topdown=False):
+        """Returns children files and dirs recusively as path objects"""
+        for root, dirs, files in os.walk(self, topdown=topdown):
+            for name in files:
+                next_path = self._next_class(os.path.join(root, name))
+                if pattern is None or next_path.fnmatch(pattern):
+                    yield next_path
+            for name in dirs:
+                next_path = self._next_class(os.path.join(root, name))
+                if pattern is None or next_path.fnmatch(pattern):
+                    yield next_path
+    #------------------------------------------------------------
+    def regexMatch(self, pattern, inclusive=False):
+        """ Return a list of path objects that match the pattern,
+        
+        pattern - a regular expression
+        
+        """
+        output_files = []
+        output_dirs = []
+        regexObj = re.compile(pattern)
+        for root, dirs, files in os.walk(path, topdown=False):
+            for name in files:
+                next_path = self._next_class(os.path.join(root, name))
+                if bool(regexObj.search(next_path)) == bool(not inclusive):
+                    output_files.append(next_path)
+            for name in dirs:
+                next_path = self._next_class(os.path.join(root, name))
+                if pattern is None or next_path.fnmatch(pattern):
+                    output_dirs.append(next_path)
+        return output_files, output_dirs
+    #------------------------------------------------------------
+    def fnmatch(self, pattern):
+        """ Return True if self.name matches the given pattern.
+
+        pattern - A filename pattern with wildcards,
+            for example ``'*.py'``.
+        """
+        return fnmatch.fnmatch(self.name, pattern)
+    #------------------------------------------------------------
+    def glob(self, pattern):
+        """ Return a list of path objects that match the pattern.
+
+        pattern - a path relative to this directory, with wildcards.
+
+        For example, path('/users').glob('*/bin/*') returns a list
+        of all the files users have in their bin directories.
+        """
+        cls = self._next_class
+        return [cls(s) for s in glob.glob(self / pattern)]
+    #------------------------------------------------------------
+    def open(self, mode='r'):
+        """ Open this file.  Return a file object. """
+        return open(self, mode)
+
+
+    #------------------------------------------------------------
+    # --- Modifying operations on files and directories    
+    def mkdir(self, mode=0777):
+        try:
+            os.mkdir(self.dir.path, mode)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+    #------------------------------------------------------------
+    def makedirs(self, mode=0777):
+        try:
+            os.makedirs(self.dir.path, mode)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+    #------------------------------------------------------------
+    def rmdir(self):
+        try:
+            self.rmdir()
+        except OSError, e:
+            if e.errno != errno.ENOTEMPTY and e.errno != errno.EEXIST:
+                raise
+    #------------------------------------------------------------
+    def removedirs(self):
+        try:
+            self.removedirs()
+        except OSError, e:
+            if e.errno != errno.ENOTEMPTY and e.errno != errno.EEXIST:
+                raise
+    #------------------------------------------------------------
+    def rmtree(self):
+        try:
+            shutil.rmtree(self)
+        except OSError, e:
+            if e.errno != errno.ENOENT:
+                raise   
+
+    copyfile = shutil.copyfile
+    copymode = shutil.copymode
+    copystat = shutil.copystat
+    copy = shutil.copy
+    copy2 = shutil.copy2
+    copytree = shutil.copytree 
+    #------------------------------------------------------------
+    def touch(self):
+        """ Set the access/modified times of this file to the current time.
+        Create the file if it does not exist.
+        """
+        fd = os.open(self, os.O_WRONLY | os.O_CREAT, 0666)
+        os.close(fd)
+        os.utime(self, None)
+    #------------------------------------------------------------
+    def remove(self):
+        try:
+            self.unlink()
+        except OSError, e:
+            if e.errno != errno.ENOENT:
+                raise
+
+    #------------------------------------------------------------
+    # --- Path Object Properties
+    @property
+    def ext(self):
+        return self.splitext()[-1]
+
+    #------------------------------------------------------------
+    @property
+    def parent(self):
+        """ The parent directory, as a new path object.
+        Example: path('/usr/local/lib/libpython.so').parent == path('/usr/local/lib')
+        """
+        return self.dirname()
     
     #------------------------------------------------------------
-    # --- Operations used by paths but not limited to path objects
+    @property
+    def name(self):
+        """ The name of this file or directory without the full path.
+        Example: path('/usr/local/lib/libpython.so').name == 'libpython.so'
+        """
+        return self.basename()
+
+    #------------------------------------------------------------
+    @property
+    def drive(self):
+        """ The drive specifier, for example 'C:'.
+        This is always empty on systems that don't use drive specifiers.
+        """
+        return self.splitdrive()[0]
+
+    #------------------------------------------------------------
+    # --- Misc utility methods
+    def dir(self):
+        """ Validates if this path is a directory and returns it
+        if not then it returns the parent of this path
+        """
+        if not self.exists() :
+            head, tail = self.splitpath()
+            return head
+        if self.isdir():
+            return self
+        else:
+            return self.parent
+    
+    #------------------------------------------------------------
+    def caseSensative(self):
+        """Path objects are stored in all lower with forward slashes
+        If you need a caseSensative path use this instead of .path
+        """
+        return self.__class__.getCaseSensativePath(self)
+
+    #------------------------------------------------------------
+    def branchRelative(self):
+        """Path objects are stored as absolute paths but the branch is stored on the class
+        if you need a branch relative path use this instead of .path
+        """
+        return self.__class__.getBranchRelativePath(self)
+    
+    #------------------------------------------------------------
+    def mayaPath(self):
+        """Returns a path suitible for maya"""
+        return self.caseSensative.replace('\\','/')
+
+
+    #------------------------------------------------------------
+    # --- Utilties used for paths but not limited to path objects
     @staticmethod
     def branch():
         '''Returns the directory of the Project Root for use in branch relative paths
@@ -255,9 +429,9 @@ class Path(object):
                     path = ""
                     break
             Path._branch = path
-        
+
         return Path._branch
-    
+
     #------------------------------------------------------------
     @staticmethod
     def getCaseSensativePath(path):
@@ -290,14 +464,20 @@ class Path(object):
             path = path.replace(Path.branch(),'')
         return os.path.normpath(path)
 
+
 if __name__ == "__main__" :
-    myPath = Path('c:/Users/kylerockman/Downloads/blur3d.tgz.zip.bin')
+    myPath = Path(r'C:\Users\krockman\documents\StarCitizen\Client\blur3d.tgz.zip.bin'.lower())
+    print "documents" in myPath
+    print myPath != myPath
     print myPath
     print myPath.name
-    print myPath.caseSensative
+    print "case sensative", myPath.caseSensative()
     print myPath.drive
-    print myPath.parent
+    print "parent", myPath.parent
     print myPath.ext
     myPath = myPath.join("agent.rar")
     print myPath
     print myPath.ext
+    print {"MyVar": myPath} == {"MyVar":'c:/users/Krockman/Documents/sTaRcItIzeN/client/blur3d.tgz.zip.bin/agent.rar'}
+    print {"MyVar": myPath}
+    print Path.getMainDir()

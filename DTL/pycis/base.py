@@ -1,7 +1,7 @@
 from functools import partial
 from DTL.api import Utils
 
-from .core import pyCis
+from DTL.pycis.core import pyCis
 
 class pyCisCommandError(Exception):
     """
@@ -22,6 +22,7 @@ class pyCisCommand(object):
     '''The base class form which all pycis commands ultimately derive'''
     
     def __init__(self):
+        Utils.synthesize(self, "helpFlag", True)
         Utils.synthesize(self, "args", '')
         Utils.synthesize(self, "parentParser", '')
         Utils.synthesize(self, "parser", '')

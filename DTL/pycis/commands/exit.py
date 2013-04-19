@@ -1,6 +1,7 @@
 import sys
 
-from ..base import pyCisCommand, pyCisCommandError
+from DTL.pycis.core import pyCis
+from DTL.pycis.base import pyCisCommand, pyCisCommandError
 
 #------------------------------------------------------------
 class Command(pyCisCommand):

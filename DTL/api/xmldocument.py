@@ -38,7 +38,73 @@ try:
 except NameError:
     _unicode = str
     
-from . import Path
+import path
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+class dotdictify(dict):
+    #------------------------------------------------------------
+    def __init__(self, value=None):
+        if value is None:
+            pass
+        elif isinstance(value, dict):
+            for key in value:
+                self.__setitem__(key, value[key])
+        else:
+            raise TypeError, 'expected dict'
+    
+    #------------------------------------------------------------
+    def __setitem__(self, key, value):
+        if '.' in key:
+            myKey, restOfKey = key.split('.', 1)
+            target = self.setdefault(myKey, dotdictify())
+            if not isinstance(target, dotdictify):
+                raise KeyError, 'cannot set "%s" in "%s" (%s)' % (restOfKey, myKey, repr(target))
+            target[restOfKey] = value
+        else:
+            if isinstance(value, dict) and not isinstance(value, dotdictify):
+                value = dotdictify(value)
+            dict.__setitem__(self, key, value)
+    
+    #------------------------------------------------------------
+    def __getitem__(self, key):
+        if '.' not in key:
+            return dict.__getitem__(self, key)
+        myKey, restOfKey = key.split('.', 1)
+        target = dict.__getitem__(self, myKey)
+        if not isinstance(target, dotdictify):
+            raise KeyError, 'cannot get "%s" in "%s" (%s)' % (restOfKey, myKey, repr(target))
+        return target[restOfKey]
+    
+    #------------------------------------------------------------
+    def __contains__(self, key):
+        if '.' not in key:
+            return dict.__contains__(self, key)
+        myKey, restOfKey = key.split('.', 1)
+        target = dict.__getitem__(self, myKey)
+        if not isinstance(target, dotdictify):
+            return False
+        return restOfKey in target
+    
+    #------------------------------------------------------------
+    def get(self, key, default=None):
+        try:
+            return self.__getitem__(key)
+        except KeyError:
+            return default
+        except Exception, e:
+            raise Exception(e)
+    
+    #------------------------------------------------------------
+    def setdefault(self, key, default):
+        if key not in self:
+            self[key] = default
+        return self[key]
+    
+    #------------------------------------------------------------
+    __setattr__ = __setitem__
+    __getattr__ = __getitem__
+
 
 
 #------------------------------------------------------------
@@ -56,7 +122,7 @@ class _DictSAXHandler(object):
                  xml_attribs=True,
                  attr_prefix='@',
                  cdata_key='#text',
-                 force_cdata=False,
+                 force_cdata=True,
                  cdata_separator='',
                  postprocessor=None,
                  dict_constructor=OrderedDict,
@@ -153,6 +219,10 @@ class XmlDocument(dict):
         super(XmlDocument, self).__init__()
         self.setFilePath(file_path)
         self.read()
+        
+    #------------------------------------------------------------
+    def filePath(self):
+        return self._file.path
 
     #------------------------------------------------------------
     def setFilePath(self, file_path):
@@ -160,6 +230,10 @@ class XmlDocument(dict):
             self._file = file_path
         else :
             self._file = Path(file_path)
+            
+    #------------------------------------------------------------
+    def prettyprint(self):
+        print self._unparse(self)
 
     #------------------------------------------------------------
     def save(self):
@@ -259,7 +333,27 @@ class XmlDocument(dict):
                 value = value.decode(encoding)
             except AttributeError:
                 pass
-            return parseString(value).toprettyxml(indent="\t")    
+            return parseString(value).toprettyxml(indent="\t")
+    
+    #------------------------------------------------------------
+    @staticmethod
+    def getValuesAsList(dictionary, keyList, allowNone=True, keyErrorMsg='Unable to find key'):
+        dotified = dotdictify(dictionary)
+        dot_key = '.'.join(keyList[:-1])
+        if len(keyList) == 1 :
+            data = dictionary
+        else:
+            data = dotified.get(dot_key, None)
+            if data is None:
+                if allowNone :
+                    return []
+                raise KeyError(keyErrorMsg)
+        if not isinstance(data[keyList[-1]], list):
+            data = [data[keyList[-1]]]
+        else:
+            data = data[keyList[-1]]
+        
+        return data        
 
 
 

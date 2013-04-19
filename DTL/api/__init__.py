@@ -1,25 +1,25 @@
 import sys
 
-from .exceptions import InternalError
-from .enum import Enum
-from .version import Version
-from .path import Path
-from .logger import Logger
-from .importlib import ImportModule
-from .rollbackimporter import RollbackImporter
-from .commandticker import CommandTicker
-from .jsondocument import JsonDocument
-from .xmldocument import XmlDocument
-from . import utils as Utils
+from DTL.api.exceptions import InternalError
+from DTL.api.enum import Enum
+from DTL.api.version import Version
+from DTL.api.path import Path
+from DTL.api.logger import Logger
+from DTL.api.importlib import ImportModule
+from DTL.api.rollbackimporter import RollbackImporter
+from DTL.api.commandticker import CommandTicker
+from DTL.api.jsondocument import JsonDocument
+from DTL.api.xmldocument import XmlDocument
+from DTL.api import utils as Utils
 if sys.platform == 'win32' :
-    from . import envUtils
+    from DTL.api import envUtils
 
-from .stopwatch import Stopwatch
-from .decorators import SafeCall, TimerDecorator
-#from .daemon import Daemon, DaemonThread
-#from .mailer import Mailer
-from .cores import Core
-#from .tool import Tool
+from DTL.api.stopwatch import Stopwatch
+from DTL.api.decorators import SafeCall, TimerDecorator
+#from DTL.api.daemon import Daemon, DaemonThread
+#from DTL.api.mailer import Mailer
+from DTL.api.cores import Core
+#from DTL.api.tool import Tool
 
 
 #------------------------------------------------------------
