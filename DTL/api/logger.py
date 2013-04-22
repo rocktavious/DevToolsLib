@@ -157,7 +157,7 @@ class SQLiteHandler(logging.Handler):
         else:
             self.db = Path(db)
             self.db.makedirs()
-            self.db = self.db.path
+            self.db = self.db
         # Create table if needed:
         conn = sqlite3.connect(self.db)
         conn.execute(SQLiteHandler.initial_sql)

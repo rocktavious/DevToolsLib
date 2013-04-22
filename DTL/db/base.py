@@ -267,7 +267,7 @@ class BaseData(object):
     def readXml(self):
         if self._getFile(ext='*.xml') is False:
             return
-        with open(self._filepath.path,'r') as xml_file :
+        with open(self._filepath,'r') as xml_file :
             xml_data = xml_file.read()
         
         xml_doc = QtXml.QDomDocument()
@@ -282,14 +282,14 @@ class BaseData(object):
             return        
         self._filepath.makedirs()
         xml_data = self._asXml(QtXml.QDomDocument(), None)
-        with open(self._filepath.path,'wb') as xml_file :
+        with open(self._filepath,'wb') as xml_file :
             xml_file.write(xml_data)
     
     #------------------------------------------------------------
     def readJson(self):
         if self._getFile(ext='*.json') is False:
             return        
-        with open(self._filepath.path,'r') as json_file :
+        with open(self._filepath,'r') as json_file :
             json_data = json.load(json_file)
         
         self._readJson(json_data)
@@ -300,7 +300,7 @@ class BaseData(object):
         if self._getSaveFile(ext='*.json') is False:
             return           
         self._filepath.makedirs()
-        with open(self._filepath.path,'wb') as json_file :
+        with open(self._filepath,'wb') as json_file :
             json_data = json.dumps(self._asJson(), sort_keys=True, indent=4, cls=JsonModelEncoder)
             json_file.write(json_data)
     

@@ -87,22 +87,22 @@ def runFile( filepath, basePath=None, cmd=None, debug=False ):
 
     # determine the base path for the system
     if basePath is None:
-        basePath = filepath.dir
+        basePath = filepath.dir()
 
-    options = { 'filepath': filepath.path, 'basepath': basePath }
+    options = { 'filepath': filepath, 'basepath': basePath }
 
     if cmd == None :
         if filepath.ext in ['.py','.pyw']:
             if debug:
-                cmd = 'python.exe "%s"' % filepath.path
+                cmd = 'python.exe "%s"' % filepath
             else:
-                cmd = 'pythonw.exe "%s"' % filepath.path
+                cmd = 'pythonw.exe "%s"' % filepath
 
             status = subprocess.Popen( cmd, stdout=sys.stdout, stderr=sys.stderr, shell=debug, cwd=basePath)
 
     if not status :
         try:
-            status = os.startfile(filepath.path)
+            status = os.startfile(filepath)
         except:
             print 'Core.runFile Cannot run type (*%s)' % filepath.ext
 
@@ -123,12 +123,12 @@ def backup(path, suffix='.bak'):
     count = -1
     new_path = None
     while True:
-        if path.exists :
+        if path.exists() :
             if count == -1:
-                new_path = Path("%s%s") % (path.path, suffix)
+                new_path = Path("%s%s") % (path, suffix)
             else:
-                new_path = Path("%s%s.%s") % (path.path, suffix, count)
-            if new_path.exists:
+                new_path = Path("%s%s.%s") % (path, suffix, count)
+            if new_path.exists():
                 count += 1
                 continue
             else:

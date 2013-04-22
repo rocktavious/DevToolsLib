@@ -38,7 +38,7 @@ try:
 except NameError:
     _unicode = str
     
-import path
+from path import Path
 
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -222,7 +222,7 @@ class XmlDocument(dict):
         
     #------------------------------------------------------------
     def filePath(self):
-        return self._file.path
+        return self._file
 
     #------------------------------------------------------------
     def setFilePath(self, file_path):
@@ -239,15 +239,15 @@ class XmlDocument(dict):
     def save(self):
         '''Writes the dict data to the xml file'''
         data = self._unparse(self)
-        with open(self._file.path,'wb') as xml_file :
+        with open(self._file,'wb') as xml_file :
             xml_file.write(data)
     
     #------------------------------------------------------------
     def read(self):
         '''Reads from a xml file the dictionary data'''
-        if not self._file.exists :
+        if not self._file.exists() :
             return
-        with open(self._file.path,'r') as xml_file :
+        with open(self._file,'r') as xml_file :
             data = self._parse(xml_file.read())
         for key, value in data.items():
             self.__setitem__(key, value)

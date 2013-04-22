@@ -42,17 +42,17 @@ class JsonDocument(dict):
     #------------------------------------------------------------
     def save(self):
         '''Writes the dict data to the json file'''
-        with open(self._file.path,'wb') as json_file :
+        with open(self._file,'wb') as json_file :
             json_data = json.dumps(self, sort_keys=True, indent=4, cls=self._encoder)
             json_file.write(json_data)
-            #print "Saving...", self._file.path
+            #print "Saving...", self._file
     
     #------------------------------------------------------------
     def read(self):
         '''Reads from a json file the dictionary data'''
-        if not self._file.exists :
+        if not self._file.exists() :
             return
-        with open(self._file.path,'r') as json_file :
+        with open(self._file,'r') as json_file :
             data = json.load(json_file)
         for key, value in data.items():
             self.__setitem__(key, value)

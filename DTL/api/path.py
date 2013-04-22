@@ -54,7 +54,8 @@ class Path(unicode):
             raise TypeError("path must be a string")
 
     #------------------------------------------------------------
-    # --- Path object class methods
+    # Path object class methods
+    #------------------------------------------------------------
     @ClassProperty
     @classmethod
     def _next_class(cls):
@@ -77,7 +78,8 @@ class Path(unicode):
         return cls(os.path.dirname(sys.argv[0]))
 
     #------------------------------------------------------------
-    # --- Path object dunder methods
+    # Path object dunder methods
+    #------------------------------------------------------------
     def __repr__(self):
         return '%s(%s)' % (type(self).__name__, super(Path, self).__repr__())
     def __eq__(self, other):
@@ -110,14 +112,17 @@ class Path(unicode):
         os.chdir(self._old_dir)
 
     #------------------------------------------------------------
-    # --- os module wrappers
+    # os module wrappers
+    #------------------------------------------------------------
     def stat(self): return os.stat(self)
     def lstat(self): return os.lstat(self)
     def chmod(self, mode): os.chmod(self, mode)
     def rename(self, new): os.rename(self, new); return self._next_class(new)
     def unlink(self): os.unlink(self)
-
-    # --- os.path module wrappers
+    
+    #------------------------------------------------------------
+    # os.path module wrappers
+    #------------------------------------------------------------
     def isabs(self): return self.module.isabs(self)
     def exists(self): return self.module.exists(self)
     def isdir(self): return self.module.isdir(self)
@@ -130,7 +135,9 @@ class Path(unicode):
     def ctime(self): return self.module.getctime(self)
     def size(self): return self.module.getsize(self)
 
-    # --- os.path module wrappers that returns path objects
+    #------------------------------------------------------------
+    # os.path module wrappers that returns path objects
+    #------------------------------------------------------------
     def abspath(self): return self._next_class(self.module.abspath(self))
     def normcase(self): return self._next_class(self.module.normcase(self))
     def normpath(self): return self._next_class(self.module.normpath(self))
@@ -290,31 +297,32 @@ class Path(unicode):
 
 
     #------------------------------------------------------------
-    # --- Modifying operations on files and directories    
+    # Modifying operations on files and directories  
+    #------------------------------------------------------------
     def mkdir(self, mode=0777):
         try:
-            os.mkdir(self.dir.path, mode)
+            os.mkdir(self.dir(), mode)
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
     #------------------------------------------------------------
     def makedirs(self, mode=0777):
         try:
-            os.makedirs(self.dir.path, mode)
+            os.makedirs(self.dir(), mode)
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
     #------------------------------------------------------------
     def rmdir(self):
         try:
-            self.rmdir()
+            os.rmdir(self.dir())
         except OSError, e:
             if e.errno != errno.ENOTEMPTY and e.errno != errno.EEXIST:
                 raise
     #------------------------------------------------------------
     def removedirs(self):
         try:
-            self.removedirs()
+            os.removedirs(self.dir())
         except OSError, e:
             if e.errno != errno.ENOTEMPTY and e.errno != errno.EEXIST:
                 raise
@@ -331,7 +339,7 @@ class Path(unicode):
     copystat = shutil.copystat
     copy = shutil.copy
     copy2 = shutil.copy2
-    copytree = shutil.copytree 
+    copytree = shutil.copytree
     #------------------------------------------------------------
     def touch(self):
         """ Set the access/modified times of this file to the current time.
@@ -349,7 +357,8 @@ class Path(unicode):
                 raise
 
     #------------------------------------------------------------
-    # --- Path Object Properties
+    # Path Object Properties
+    #------------------------------------------------------------
     @property
     def ext(self):
         return self.splitext()[-1]
@@ -379,7 +388,8 @@ class Path(unicode):
         return self.splitdrive()[0]
 
     #------------------------------------------------------------
-    # --- Misc utility methods
+    # Misc utility methods
+    #------------------------------------------------------------
     def dir(self):
         """ Validates if this path is a directory and returns it
         if not then it returns the parent of this path
@@ -394,15 +404,15 @@ class Path(unicode):
     
     #------------------------------------------------------------
     def caseSensative(self):
-        """Path objects are stored in all lower with forward slashes
-        If you need a caseSensative path use this instead of .path
+        """Path objects are stored in all lower with python escaped backwards slashes
+        If you need a caseSensative path use this
         """
         return self.__class__.getCaseSensativePath(self)
 
     #------------------------------------------------------------
     def branchRelative(self):
         """Path objects are stored as absolute paths but the branch is stored on the class
-        if you need a branch relative path use this instead of .path
+        if you need a branch relative path use this
         """
         return self.__class__.getBranchRelativePath(self)
     
@@ -413,7 +423,8 @@ class Path(unicode):
 
 
     #------------------------------------------------------------
-    # --- Utilties used for paths but not limited to path objects
+    # Utilties used for paths but not limited to path objects
+    #------------------------------------------------------------
     @staticmethod
     def branch():
         '''Returns the directory of the Project Root for use in branch relative paths

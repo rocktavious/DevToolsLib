@@ -42,7 +42,7 @@ class PathWidget(QtGui.QWidget, BaseGUI):
         userInputPath = Path(self.widgetField.text())
         if userInputPath.isEmpty :
             return
-        subprocess.call('explorer ' + userInputPath.dir.path)
+        subprocess.call('explorer ' + userInputPath.dir())
         
     #------------------------------------------------------------
     def pickFile(self):
@@ -60,8 +60,7 @@ class PathWidget(QtGui.QWidget, BaseGUI):
                 picked = Utils.getDirFromUser()
             if picked.isEmpty :
                 return
-            picked = picked.path
-            
+        
         self.widgetField.setText(picked)
         
     #------------------------------------------------------------

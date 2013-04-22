@@ -44,7 +44,7 @@ class Dropbox(object):
         self._saveToken(self._accessKey, self._accessSecret)
     
     def getAccessToken(self):
-        if self._tokenPath.exists :
+        if self._tokenPath.exists() :
             self._readToken()
         else:
             self._requestToken()

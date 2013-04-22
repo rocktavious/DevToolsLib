@@ -84,11 +84,11 @@ class BaseGUI(object):
             path = Path(Utils.getMainDir())
         
         if not path.isEmpty :
-            ui_file = path.dir.join('views','{0}.ui'.format(self.__class__.__name__))
-            if ui_file.exists :
-                self = uic.loadUi(ui_file.path, self)
+            ui_file = path.dir().join('views','{0}.ui'.format(self.__class__.__name__))
+            if ui_file.exists() :
+                self = uic.loadUi(ui_file, self)
             else:
-                self.logger.warning('Unable to load ui file | {0}'.format(ui_file.path))
+                self.logger.warning('Unable to load ui file | {0}'.format(ui_file))
     
     #------------------------------------------------------------
     def setupStyle(self):
