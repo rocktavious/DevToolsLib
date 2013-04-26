@@ -15,7 +15,7 @@ Usage Example
 import os.path
 import json
 
-import path
+from DTL.api.path import Path
 
 #------------------------------------------------------------
 #------------------------------------------------------------

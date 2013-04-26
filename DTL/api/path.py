@@ -134,6 +134,9 @@ class Path(unicode):
     def mtime(self): return self.module.getmtime(self)
     def ctime(self): return self.module.getctime(self)
     def size(self): return self.module.getsize(self)
+    
+    #------------------------------------------------------------
+    def isdirEmpty(self): return len(self.listdir()) == 0
 
     #------------------------------------------------------------
     # os.path module wrappers that returns path objects
@@ -252,7 +255,7 @@ class Path(unicode):
                 if pattern is None or next_path.fnmatch(pattern):
                     yield next_path
     #------------------------------------------------------------
-    def regexMatch(self, pattern, inclusive=False):
+    def regex(self, pattern, inclusive=False, topdown=False):
         """ Return a list of path objects that match the pattern,
         
         pattern - a regular expression
@@ -261,7 +264,7 @@ class Path(unicode):
         output_files = []
         output_dirs = []
         regexObj = re.compile(pattern)
-        for root, dirs, files in os.walk(path, topdown=False):
+        for root, dirs, files in os.walk(self, topdown=topdown):
             for name in files:
                 next_path = self._next_class(os.path.join(root, name))
                 if bool(regexObj.search(next_path)) == bool(not inclusive):

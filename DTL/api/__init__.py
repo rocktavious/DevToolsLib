@@ -11,8 +11,8 @@ from DTL.api.commandticker import CommandTicker
 from DTL.api.jsondocument import JsonDocument
 from DTL.api.xmldocument import XmlDocument
 from DTL.api import utils as Utils
-if sys.platform == 'win32' :
-    from DTL.api import envUtils
+#if sys.platform == 'win32' :
+#    from DTL.api import envUtils
 
 from DTL.api.stopwatch import Stopwatch
 from DTL.api.decorators import SafeCall, TimerDecorator

@@ -20,6 +20,7 @@ class Logger(object):
     #------------------------------------------------------------
     @staticmethod
     def getMetaClass():
+        Logger.setupStreamLogger()
         return LoggerMetaclass
     
     #------------------------------------------------------------

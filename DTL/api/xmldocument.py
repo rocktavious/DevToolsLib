@@ -348,10 +348,10 @@ class XmlDocument(dict):
                 if allowNone :
                     return []
                 raise KeyError(keyErrorMsg)
-        if not isinstance(data[keyList[-1]], list):
+        if data.has_key(keyList[-1]) and not isinstance(data[keyList[-1]], list):
             data = [data[keyList[-1]]]
         else:
-            data = data[keyList[-1]]
+            data = data.get(keyList[-1],[])
         
         return data        
 

@@ -17,7 +17,7 @@ from DTL.api.path import Path
 def getApp():
     app = QtGui.QApplication.instance()
     if not app :
-        app = QtGui.QApplication([])
+        app = QtGui.QApplication(sys.argv)
         app.setStyle( 'Plastique' )
         #app.setStyleSheet(Utils.getStyleSheet())
     
