@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup( 
     name='DevTools',
-    version=open('VERSION.txt').read(),
+    version=open('DTL/VERSION.txt').read(),
     author='Kyle Rockman',
     author_email='kyle.rockman@.com',
     packages = find_packages(),

@@ -25,7 +25,7 @@ from DTL.api.cores import Core
 #------------------------------------------------------------
 def Start():
     if Core.instance().app :
-        Core.instance().app.exec_()
+        Core.instance().app().exec_()
 
 #------------------------------------------------------------
 def Run(modulename):

@@ -73,6 +73,7 @@ class Core(object):
     #------------------------------------------------------------
     def rootWindow(self):
         """returns the current applications root window"""
+        from PyQt4 import QtGui
         window = None
         
         #MFC apps there should be no root window

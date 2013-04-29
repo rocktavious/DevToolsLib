@@ -41,6 +41,13 @@ class BaseGUI(object):
             parent = Core.instance().rootWindow()
 
         return parent
+    
+    #------------------------------------------------------------
+    def center(self):
+        qr = self._qtclass.frameGeometry(self)
+        cp = QtGui.QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
 
     #------------------------------------------------------------
     def closeEvent( self, event ):
@@ -83,7 +90,7 @@ class BaseGUI(object):
         except:
             path = Path(Utils.getMainDir())
         
-        if not path.isEmpty :
+        if path :
             ui_file = path.dir().join('views','{0}.ui'.format(self.__class__.__name__))
             if ui_file.exists() :
                 self = uic.loadUi(ui_file, self)

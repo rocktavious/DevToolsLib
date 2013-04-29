@@ -5,8 +5,7 @@ import os
 import sys
 import getpass
 
-__versiontuple__ = (1,0,0)
-__version__ = '.'.join(str(x) for x in __versiontuple__)
+__version__ = open('VERSION.txt').read()
 __company__ = 'Cloud Imperium'
 __user__ = getpass.getuser()
 __authors__ = ['Kyle Rockman', 'John Crocker']
@@ -25,3 +24,4 @@ try:
     os.makedirs(__appdata__,0777)
 except:
     pass
+
