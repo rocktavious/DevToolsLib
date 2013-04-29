@@ -2,8 +2,8 @@ import sys
 from PyQt4 import QtGui, uic
 from PyQt4.QtCore import Qt
 
-from DTL.api import Core, Path, Logger, Utils
-from DTL.gui import guiUtils
+from DTL.api import Path, Logger, Utils
+from DTL.gui import Core, guiUtils
 
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -99,12 +99,6 @@ class BaseGUI(object):
     
     #------------------------------------------------------------
     def setupStyle(self):
-        #use the default palette
-        #palette = Core.instance().defaultPalette()
-        #if (palette):
-        #    self.setPalette(palette)
-        
-        # first, inherit the palette of the parent
         if self.parent():
             self.setPalette(self.parent().palette())        
 

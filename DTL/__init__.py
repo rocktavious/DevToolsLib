@@ -5,7 +5,7 @@ import os
 import sys
 import getpass
 
-__version__ = open('VERSION.txt').read()
+__version__ = '1.0.4'
 __company__ = 'Cloud Imperium'
 __user__ = getpass.getuser()
 __authors__ = ['Kyle Rockman', 'John Crocker']

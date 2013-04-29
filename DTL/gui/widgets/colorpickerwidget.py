@@ -185,8 +185,8 @@ class ColorPickerWidget( QWidget ):
         x = crect.x() + (self.saturation() / 255.0) * crect.width()
         y = crect.y() + (1 - (self.lightness() / 255.0)) * crect.height()
 
-        painter.setPen( Qt.black )
-        painter.setBrush( QColor( 255, 255, 255, 128 ) )
+        painter.setPen( Qt.white )
+        painter.setBrush( QColor.fromHsv( self.hue(), self.saturation(), self.lightness(), 50) )
 
         painter.setClipRect( crect )
         painter.setRenderHint( QPainter.Antialiasing )
@@ -357,19 +357,15 @@ class ColorPickerButton( QPushButton ):
             self._colorPickerWidget.setColor( self.color() )
             self._colorPickerWidget.show()
 
-def test():
-    import DTL.all as DTL
-    dlg = DTL.Dialog()
-    dlg.setWindowTitle( 'Color Test' )
+
+if ( __name__ == '__main__' ):
     from PyQt4.QtGui import QVBoxLayout
+    from DTL.gui import Core, Dialog
+    dlg = Dialog()
+    dlg.setWindowTitle('Color Test')
     layout = QVBoxLayout()
     layout.addWidget( ColorPickerWidget(dlg) )
     layout.addWidget( ColorPickerButton(dlg) )
     dlg.setLayout(layout)
-    return dlg
-
-if ( __name__ == '__main__' ):
-    import DTL.all as DTL
-    dlg = test()
     dlg.show()
-    DTL.Start()
+    Core.Start()

@@ -3,8 +3,10 @@ import subprocess
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import Qt
 
+from DTL.api import Utils, Path, Enum
+from DTL.gui import Core
 from DTL.gui.base import BaseGUI
-from DTL.api import Utils, Path, Enum, Core
+
 
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -89,15 +91,14 @@ class PathWidget(QtGui.QWidget, BaseGUI):
 
 if ( __name__ == '__main__' ):
     from PyQt4.QtGui import QVBoxLayout
-    import DTL.all as DTL
+    from DTL.gui import Core, Dialog
     from functools import partial
     
-    dlg = DTL.Dialog()
+    dlg = Dialog()
     dlg.setWindowTitle( 'Color Test' )
     
     layout = QVBoxLayout()
     pathWidget = PathWidget(dlg)
-    #pathWidget.widgetLabel.setText("Pick a File")
     pathWidget.widgetField.setText("c:/test/my/path.db")
     layout.addWidget(pathWidget)
     
@@ -110,4 +111,4 @@ if ( __name__ == '__main__' ):
     dlg.setLayout(layout)
     dlg.show()
     
-    DTL.Start()
+    Core.Start()

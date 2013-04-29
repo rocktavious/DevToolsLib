@@ -1,9 +1,13 @@
 import sys
 
 from DTL.api.exceptions import InternalError
+
+#Structures
 from DTL.api.enum import Enum
 from DTL.api.version import Version
 from DTL.api.path import Path
+
+#Objects
 from DTL.api.logger import Logger
 from DTL.api.importlib import ImportModule
 from DTL.api.rollbackimporter import RollbackImporter
@@ -18,14 +22,6 @@ from DTL.api.stopwatch import Stopwatch
 from DTL.api.decorators import SafeCall, TimerDecorator
 #from DTL.api.daemon import Daemon, DaemonThread
 #from DTL.api.mailer import Mailer
-from DTL.api.cores import Core
-#from DTL.api.tool import Tool
-
-
-#------------------------------------------------------------
-def Start():
-    if Core.instance().app :
-        Core.instance().app().exec_()
 
 #------------------------------------------------------------
 def Run(modulename):
@@ -76,10 +72,18 @@ def Launch(ctor, modal=False):
         # run the application if this item controls it and it hasnt been run before
         Start()
         return widget
-
-
+        
 #------------------------------------------------------------
-def Stop():
-    if Core.instance().app :
-        Core.instance().app.closeAllWindows()
-        Core.instance().app.quit()
+def CheckVersion(matching):
+    from DTL import __version__
+    
+    if __version__ != matching :
+        msg = 'You currently have version {0} of Dev Tools.  Please update to at least version {1}'.format(__version__, matching)
+        try:
+            from DTL.gui import utils as guiUtils
+            guiUtils.notifyUser(msg)
+            sys.exit(1)
+        except:
+            raise ValueError(msg)
+        
+        

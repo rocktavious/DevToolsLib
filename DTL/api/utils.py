@@ -10,10 +10,34 @@ import types
 import re
 import subprocess
 
-from DTL import __pkgname__, __company__, __pkgresources__
+from DTL import __appdata__
 from DTL.api.path import Path
 
+#------------------------------------------------------------
+def getTempFilepath(filename):
+    return Path(__appdata__).join(filename)
 
+#------------------------------------------------------------
+def isBinary(filepath):
+    """Return true if the given filepath appears to be binary."""
+    #------------------------------------------------------------
+    def has_binary_byte(filepath):
+        """File is considered to be binary if it contains a NULL byte."""
+        with open(filepath, 'rb') as f:
+            for block in f:
+                if '\0' in block:
+                    return True
+        return False
+    
+    #------------------------------------------------------------
+    def is_binary_string(filepath):
+        """File is considered to be binary if the data is binary."""
+        textchars = ''.join(map(chr, [7,8,9,10,12,13,27] + range(0x20, 0x100)))
+        string_test = lambda bytes: bool(bytes.translate(None, textchars))
+        return string_test(open(filepath).read(1024))
+    
+    #If information in the filepath has both binary data and the binary NULL byte then its safe to say its binary
+    return is_binary_string(filepath) == has_binary_byte(filepath)
 
 #------------------------------------------------------------
 def quickReload(modulename):
@@ -82,7 +106,7 @@ def runFile( filepath, basePath=None, cmd=None, debug=False ):
     filepath = Path(filepath)
 
     # make sure the filepath we're running is a file 
-    if not filepath.isFile:
+    if not filepath.isfile():
         return status
 
     # determine the base path for the system
@@ -94,9 +118,9 @@ def runFile( filepath, basePath=None, cmd=None, debug=False ):
     if cmd == None :
         if filepath.ext in ['.py','.pyw']:
             if debug:
-                cmd = 'python.exe "%s"' % filepath
+                cmd = 'python.exe "{0}"'.format(filepath)
             else:
-                cmd = 'pythonw.exe "%s"' % filepath
+                cmd = 'pythonw.exe "{0}"'.format(filepath)
 
             status = subprocess.Popen( cmd, stdout=sys.stdout, stderr=sys.stderr, shell=debug, cwd=basePath)
 
@@ -104,7 +128,7 @@ def runFile( filepath, basePath=None, cmd=None, debug=False ):
         try:
             status = os.startfile(filepath)
         except:
-            print 'Core.runFile Cannot run type (*%s)' % filepath.ext
+            print 'runFile cannot run type (*{0})'.format(filepath.ext)
 
     return status
 

@@ -2,9 +2,11 @@ import ez_setup
 ez_setup.use_setuptools()
 from setuptools import setup, find_packages
 
+import DTL
+
 setup( 
     name='DevTools',
-    version=open('DTL/VERSION.txt').read(),
+    version=DTL.__version__,
     author='Kyle Rockman',
     author_email='kyle.rockman@.com',
     packages = find_packages(),

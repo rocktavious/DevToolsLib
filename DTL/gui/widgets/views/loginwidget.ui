@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
+ <class>Login</class>
  <widget class="QDialog" name="Login">
   <property name="geometry">
    <rect>
@@ -81,6 +81,13 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="saveCredentials">
+       <property name="text">
+        <string>Rember Credentials</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="submit">
