@@ -21,3 +21,5 @@ except:
 
 if Core is None:
 	from external import Core
+
+Core = Core.instance()

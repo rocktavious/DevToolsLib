@@ -49,9 +49,8 @@ class PathWidget(QtGui.QWidget, BaseGUI):
     def pickFile(self):
         picked = None       
         if self.pickerType() == PathWidget.pickerTypes.Node :
-            print Core.instance()
-            if Core.instance().environment() == Core.EnvironmentTypes.Maya :
-                picked = Core.instance().getMayaSelection()[0]
+            if Core.environment() == Core.EnvironmentTypes.Maya :
+                picked = Core.getMayaSelection()[0]
             if picked is None:
                 return
         else: #Begin Testing for path types

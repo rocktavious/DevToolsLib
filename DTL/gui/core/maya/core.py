@@ -7,6 +7,10 @@ import maya.cmds as cmds
 from DTL.api import Logger, Utils
 from DTL.gui.core.external.core import Core
 
+#  TO DO:
+#      -MayaCore has a number of utility functions that should be in a mayaUtils module that can be accessed when you are in a maya environment
+#
+
 #------------------------------------------------------------
 #------------------------------------------------------------
 class MayaCore(Core):
@@ -85,9 +89,9 @@ class MayaCore(Core):
         for scheduler in cmds.ls(type='clipScheduler'):
             cmds.delete(scheduler)
         
-        MayaCore.instance().clearVisor()
+        MayaCore.clearVisor()
         cmds.select(cl=1)
-        MayaCore.instance().clearAllAnimCurves()
+        MayaCore.clearAllAnimCurves()
 
     #------------------------------------------------------------
     @staticmethod

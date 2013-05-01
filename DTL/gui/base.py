@@ -38,7 +38,7 @@ class BaseGUI(object):
     #------------------------------------------------------------
     def _validateParent(self, parent=None):
         if parent is None:
-            parent = Core.instance().rootWindow()
+            parent = Core.rootWindow()
 
         return parent
     

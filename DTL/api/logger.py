@@ -8,6 +8,8 @@ import time
 from DTL import __pkgname__, __appdata__
 from DTL.api.path import Path
 
+_streamLoggerSetupComplete = False
+
 #------------------------------------------------------------
 #------------------------------------------------------------
 class Logger(object):
@@ -20,16 +22,19 @@ class Logger(object):
     #------------------------------------------------------------
     @staticmethod
     def getMetaClass():
+        Logger.setupStreamLogger()
         return LoggerMetaclass
     
     #------------------------------------------------------------
     @staticmethod
     def getLogger():
+        Logger.setupStreamLogger()
         return logging.getLogger(__pkgname__)
     
     #------------------------------------------------------------
     @staticmethod
     def getSubLogger(name):
+        Logger.setupStreamLogger()
         return logging.getLogger('{0}.{1}'.format(__pkgname__, name))
     
     #------------------------------------------------------------
@@ -64,13 +69,17 @@ class Logger(object):
     #------------------------------------------------------------
     @staticmethod
     def setupStreamLogger(level=None, formatter=None):
-        level = level or logging.INFO
-        formatter = formatter or Logger.SIMPLE
-        
-        handler = logging.StreamHandler()
-        handler.setFormatter(formatter)
-        handler.setLevel(level)
-        Logger.addHandler(handler) 
+        global _streamLoggerSetupComplete
+        if not _streamLoggerSetupComplete :
+            level = level or logging.INFO
+            formatter = formatter or Logger.SIMPLE
+            
+            handler = logging.StreamHandler()
+            handler.setFormatter(formatter)
+            handler.setLevel(level)
+            Logger.addHandler(handler)
+            
+            _streamLoggerSetupComplete = True
 
 
 #------------------------------------------------------------
