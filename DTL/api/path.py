@@ -422,7 +422,7 @@ class Path(unicode):
     #------------------------------------------------------------
     def mayaPath(self):
         """Returns a path suitible for maya"""
-        return self.caseSensative.replace('\\','/')
+        return self.caseSensative().replace('\\','/')
 
 
     #------------------------------------------------------------

@@ -4,7 +4,7 @@ from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import Qt
 
 from DTL.api import Utils, Path, Enum
-from DTL.gui import Core
+from DTL.gui import Core, guiUtils
 from DTL.gui.base import BaseGUI
 
 
@@ -42,25 +42,24 @@ class PathWidget(QtGui.QWidget, BaseGUI):
     #------------------------------------------------------------
     def openPath(self):
         userInputPath = Path(self.widgetField.text())
-        if userInputPath.isEmpty :
-            return
-        subprocess.call('explorer ' + userInputPath.dir())
+        if userInputPath :
+            subprocess.call('explorer ' + userInputPath.dir())
         
     #------------------------------------------------------------
     def pickFile(self):
         picked = None       
         if self.pickerType() == PathWidget.pickerTypes.Node :
-            if Core.instance().environment() == Core.CoreEnvironments.Maya :
+            print Core.instance()
+            if Core.instance().environment() == Core.EnvironmentTypes.Maya :
                 picked = Core.instance().getMayaSelection()[0]
             if picked is None:
                 return
         else: #Begin Testing for path types
-            picked = Path()
             if self.pickerType() == PathWidget.pickerTypes.File :
-                picked = Utils.getFileFromUser(ext=self._ext)
+                picked = guiUtils.getFileFromUser(ext=self._ext)
             if self.pickerType() == PathWidget.pickerTypes.Folder :
-                picked = Utils.getDirFromUser()
-            if picked.isEmpty :
+                picked = guiUtils.getDirFromUser()
+            if not picked :
                 return
         
         self.widgetField.setText(picked)

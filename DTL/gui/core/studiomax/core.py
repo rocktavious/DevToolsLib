@@ -12,7 +12,7 @@ class StudioMaxCore(Core):
     #------------------------------------------------------------
     def __init__(self):
         super(StudioMaxCore, self).__init__()
-        self.setEnvironment(Core.CoreEnvironments.Max)
+        self.setEnvironment(Core.EnvironmentTypes.Max)
     
     #------------------------------------------------------------
     def setupLogging(self):

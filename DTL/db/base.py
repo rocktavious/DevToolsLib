@@ -249,17 +249,17 @@ class BaseData(object):
     
     #------------------------------------------------------------
     def _getFile(self, ext=[]):
-        if self._filepath.isEmpty :
+        if not self._filepath :
             self._filepath = Utils.getFileFromUser(ext=ext)
-            if self._filepath.isEmpty :
+            if not self._filepath :
                 return False
         return True
     
     #------------------------------------------------------------
     def _getSaveFile(self, ext=[]):
-        if self._filepath.isEmpty :
+        if not self._filepath :
             self._filepath = Utils.getSaveFileFromUser(ext=ext)
-            if self._filepath.isEmpty :
+            if not self._filepath :
                 return False
         return True        
     

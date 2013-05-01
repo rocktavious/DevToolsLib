@@ -4,18 +4,18 @@ from PyQt4 import QtCore, QtGui
 import maya.OpenMayaUI as OM_UI
 import maya.cmds as cmds
 
-from DTL.api.logger import Logger
-from DTL.api import utils as Utils
-from DTL.api.cores.external.core import Core
+from DTL.api import Logger, Utils
+from DTL.gui.core.external.core import Core
 
 #------------------------------------------------------------
 #------------------------------------------------------------
 class MayaCore(Core):
     '''Tool Environment Core for Maya'''
+    
     #------------------------------------------------------------
     def __init__(self):
         super(MayaCore, self).__init__()
-        self.setEnvironment(Core.CoreEnvironments.Maya)
+        self.setEnvironment(Core.EnvironmentTypes.Maya)
         print sys.path
     
     #------------------------------------------------------------

@@ -70,7 +70,6 @@ def Launch(ctor, modal=False):
     else:
         widget.show()
         # run the application if this item controls it and it hasnt been run before
-        Start()
         return widget
         
 #------------------------------------------------------------

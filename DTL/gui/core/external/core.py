@@ -16,7 +16,7 @@ class Core(object):
     #------------------------------------------------------------
     @classmethod
     def instance(cls):
-        if not cls._instance:
+        if cls._instance is None:
             cls._instance = cls()
         return cls._instance    
 
