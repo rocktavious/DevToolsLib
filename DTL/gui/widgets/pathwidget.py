@@ -41,9 +41,9 @@ class PathWidget(QtGui.QWidget, BaseGUI):
         
     #------------------------------------------------------------
     def openPath(self):
-        userInputPath = Path(self.widgetField.text())
+        userInputPath = Path(str(self.widgetField.text()))
         if userInputPath :
-            subprocess.call('explorer ' + userInputPath.dir())
+            subprocess.call('explorer ' + userInputPath.dir().caseSensative())
         
     #------------------------------------------------------------
     def pickFile(self):

@@ -61,6 +61,7 @@ class LoginWidget(QtGui.QDialog, BaseGUI):
             self.username.setText(base64.b64decode(data['Username']))
             self.password.setText(base64.b64decode(data['Password']))
             self.saveCredentials.setCheckState(True)
+            self._submitted = True
         
             
     #------------------------------------------------------------
@@ -68,7 +69,8 @@ class LoginWidget(QtGui.QDialog, BaseGUI):
     def getCredentials(*args, **kwds):
         success, username, password = False, '', ''
         widget = LoginWidget(*args, **kwds)
-        widget.exec_()
+        if not widget._submitted :
+            widget.exec_()
         success = widget._submitted
         if success :
             username = widget.username.text()

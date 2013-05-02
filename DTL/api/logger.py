@@ -70,7 +70,8 @@ class Logger(object):
     @staticmethod
     def setupStreamLogger(level=None, formatter=None):
         global _streamLoggerSetupComplete
-        if not _streamLoggerSetupComplete :
+        if _streamLoggerSetupComplete is False :
+            _streamLoggerSetupComplete = True
             level = level or logging.INFO
             formatter = formatter or Logger.SIMPLE
             
@@ -79,7 +80,7 @@ class Logger(object):
             handler.setLevel(level)
             Logger.addHandler(handler)
             
-            _streamLoggerSetupComplete = True
+            
 
 
 #------------------------------------------------------------

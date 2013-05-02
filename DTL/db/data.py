@@ -116,11 +116,31 @@ class Layer(Node):
         super(Layer, self).setData(column, value)
         
         if   column is 2: self.index = value.toPyObject()
-
-
         
+#------------------------------------------------------------
+#------------------------------------------------------------
+class Progress(Node):
+    total = IntegerProperty(default=1)
+    current = IntegerProperty(default=0)
+    
+    #------------------------------------------------------------
+    def __init__(self, total=1, current=0, **kwds):
+        super(Progress, self).__init__(**kwds):
+            self.total = total
+            self.current = current
+            
+    #------------------------------------------------------------
+    def data(self, column):
+        r = super(Progress, self).data(column)
         
+        if   column is 2: r = self.total
+        elif column is 3: r = self.current
         
+        return r
+    
+    #------------------------------------------------------------
+    def setData(self, column, value):
+        super(Progress, self).setData(column, value)
         
-
-        
+        if   column is 2: self.total = value.toPyObject()
+        elif column is 3: self.current = value.toPyObject()
