@@ -1,4 +1,4 @@
-from .base import BaseData, BaseProperty
+from DTL.db.base import BaseProperty
 
 #------------------------------------------------------------
 def typename(obj):

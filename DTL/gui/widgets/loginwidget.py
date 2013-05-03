@@ -14,12 +14,12 @@ class LoginWidget(QtGui.QDialog, BaseGUI):
     loginSubmitted = QtCore.pyqtSignal(QtCore.QString, QtCore.QString)
     
     #------------------------------------------------------------
-    def __init__(self, msg, credentialsFile='', *a, **kw):
+    def __init__(self, msg='Login', credentialsFile='', **kwds):
         self._qtclass = QtGui.QDialog
         self._msg = msg
         self._credentialsFile = Path(credentialsFile)
         self._submitted = False
-        BaseGUI.__init__(self, *a, **kw)
+        BaseGUI.__init__(self, **kwds)
         self.setModal(True)
         self.center()
         

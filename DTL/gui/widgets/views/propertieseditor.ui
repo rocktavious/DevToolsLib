@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <class>PropertiesEditor</class>
+ <widget class="QWidget" name="PropertiesEditor">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>100</width>
-    <height>100</height>
+    <width>332</width>
+    <height>207</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Properties Editor</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -30,8 +30,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>82</width>
-        <height>82</height>
+        <width>308</width>
+        <height>183</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">

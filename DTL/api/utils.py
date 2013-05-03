@@ -72,8 +72,8 @@ def synthesize(object, name, value):
     :param value: The initial state of the created variable.
 
     """
-    storageName = '_%s' % name
-    setterName = 'set%s%s' % (name[0].capitalize(), name[1:])
+    storageName = '_{0}'.format(name)
+    setterName = 'set{0}{1}'.format(name[0].capitalize(), name[1:])
     if hasattr(object, name):
         raise KeyError('The provided attr {0} already exists'.format(name))
     # add the storeage variable to the object

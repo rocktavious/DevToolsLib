@@ -13,16 +13,18 @@ from DTL.gui.base import BaseGUI
 class PathWidget(QtGui.QWidget, BaseGUI):
     pickerTypes = Enum('File','Folder','Node')
     
-    pathChanged	= QtCore.pyqtSignal( QtCore.QString )
+    pathChanged	= QtCore.pyqtSignal(QtCore.QString)
     editingFinished = QtCore.pyqtSignal()
     
     #------------------------------------------------------------
-    def __init__(self, *a, **kw):
+    def __init__(self, pickerType=None, ext='', **kwds):
         self._qtclass = QtGui.QWidget
-        BaseGUI.__init__(self, *a, **kw)
-
-        self._pickerType = PathWidget.pickerTypes.File
-        self._ext = ''
+        BaseGUI.__init__(self, **kwds)
+        if pickerType is None :
+            pickerType = PathWidget.pickerTypes.File
+        
+        Utils.synthesize(self, 'pickerType', pickerType)
+        Utils.synthesize(self, 'ext', ext)
         
     #------------------------------------------------------------
     def onFinalize(self):
@@ -64,10 +66,6 @@ class PathWidget(QtGui.QWidget, BaseGUI):
         self.widgetField.setText(picked)
         
     #------------------------------------------------------------
-    def pickerType(self):
-        return self._pickerType
-        
-    #------------------------------------------------------------
     def setPickerType(self, pickerType):
         temp = None
         if isinstance(pickerType, str):
@@ -77,15 +75,13 @@ class PathWidget(QtGui.QWidget, BaseGUI):
         
         if temp and PathWidget.pickerTypes.names[temp]:
             self._pickerType = temp
-    
-    #------------------------------------------------------------
-    def setExtFilter(self, ext):
-        self._ext = ext
 
     #------------------------------------------------------------
     def emitPathChanged(self, path):
         if not self.signalsBlocked():
             self.pathChanged.emit(QtCore.QString(path))
+
+
 
 if ( __name__ == '__main__' ):
     from PyQt4.QtGui import QVBoxLayout
@@ -93,14 +89,14 @@ if ( __name__ == '__main__' ):
     from functools import partial
     
     dlg = Dialog()
-    dlg.setWindowTitle( 'Color Test' )
+    dlg.setWindowTitle( 'Pathwidget Test' )
     
     layout = QVBoxLayout()
-    pathWidget = PathWidget(dlg)
+    pathWidget = PathWidget(ext='*.py', parent=dlg)
     pathWidget.widgetField.setText("c:/test/my/path.db")
     layout.addWidget(pathWidget)
     
-    pathWidget = PathWidget(dlg)
+    pathWidget = PathWidget(parent=dlg)
     pathWidget.widgetLabel.setText("Pick a Folder")
     pathWidget.widgetField.setText("c:/test/my/path")
     pathWidget.setPickerType(PathWidget.pickerTypes.Folder)

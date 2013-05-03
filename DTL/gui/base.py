@@ -8,21 +8,14 @@ from DTL.gui import Core, guiUtils
 #------------------------------------------------------------
 #------------------------------------------------------------
 class BaseGUI(object):
-    _instance = None
-    _qtclass = None
+    _qtclass = None  
 
     #------------------------------------------------------------
-    @classmethod
-    def instance(cls, parent=None):
-        """If you only want to have one instance of a window, use this method instead of creating a new window.
-        It will only create a new instance of the class if the class variable _instance is none."""
-        if not cls._instance:
-            cls._instance = cls(parent)
-        return cls._instance    
-
-    #------------------------------------------------------------
-    def __init__( self, parent=None, flags=0 ):
+    def __init__( self, parent=None, flags=0, *args, **kwds ):
         parent = self._validateParent(parent)
+        
+        if args or kwds :
+            raise Exception('Unhandled Args:\n' + str(a) + '\n' + str(kwds))       
 
         if flags:
             self._qtclass.__init__(self, parent, flags)

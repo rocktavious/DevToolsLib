@@ -4,7 +4,8 @@ import re
 from copy import deepcopy
 from PyQt4 import QtXml
 
-from DTL.api import InternalError, Utils, Path
+from DTL.api import InternalError, Path, Utils
+from DTL.gui import guiUtils
 
 RESERVED_PROPERTY_NAME = re.compile('^__.*__$')
 
@@ -67,17 +68,17 @@ def check_reserved_word(attr_name):
 class BaseProperty(object):
     #------------------------------------------------------------
     def __init__(self, default=None, name=None, required=False, choices=None):
-        self.default = default
-        self.name = name
-        self.required = required
-        self.choices = choices
+        Utils.synthesize(self, 'default', default)
+        Utils.synthesize(self, 'name', name)
+        Utils.synthesize(self, 'required', required)
+        Utils.synthesize(self, 'choices', choices)
     
     #------------------------------------------------------------
     def __property_config__(self, property_name):
         """Configure property, connecting it to its data instance."""
         super(BaseProperty, self).__init__()
-        if self.name is None:
-            self.name = property_name
+        if self._name is None:
+            self._name = property_name
         
     #------------------------------------------------------------
     def __get__(self, instance, cls):
@@ -86,8 +87,8 @@ class BaseProperty(object):
         try:
             return getattr(instance, self._attr_name())
         except AttributeError:
-            self.__set__(instance, self.default)
-            return self.default       
+            self.__set__(instance, self._default)
+            return self._default       
     
     #------------------------------------------------------------
     def __set__(self, instance, new_value):
@@ -111,23 +112,22 @@ class BaseProperty(object):
     def validate(self, value):
         """Assert that provided value is compatible with this property."""
         if self.empty(value):
-            if self.required:
-                raise ValueError('Property %s is required' % self.name)
+            if self._required:
+                raise InternalError('Property {0} is required'.format(self._name))
         else:
-            if self.choices:
-                if value not in self.choices:
-                    raise ValueError('Property %s is %r; must be one of %r' %
-                                     (self.name, value, self.choices))
+            if self.choices():
+                if value not in self.choices():
+                    raise InternalError('Property {0} is {1}; must be one of {2}'.format(self._name, value, self._choices))
         return value
     
     #------------------------------------------------------------
     def default_value(self):
-        return self.default
+        return self._default
     
     #------------------------------------------------------------
     def _attr_name(self):
         """Attribute name we use for this property in model instances."""
-        return '_' + self.name
+        return '_' + self._name
 
 
 #------------------------------------------------------------
@@ -152,11 +152,11 @@ class PropertiedClass(type):
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class JsonModelEncoder(json.JSONEncoder):
+class JsonBaseDataEncoder(json.JSONEncoder):
     #------------------------------------------------------------
     def default(self, obj):
         if issubclass(obj.__class__, BaseData):
-            return obj.properties_dict()
+            return obj.properties()
         return json.JSONEncoder.default(self, obj)
 
 
@@ -165,24 +165,23 @@ class JsonModelEncoder(json.JSONEncoder):
 class BaseData(object):
     __metaclass__ = PropertiedClass
     #------------------------------------------------------------
-    def __init__(self, parent=None, filepath=None, *args, **kwds):
+    def __init__(self, parent=None, *args, **kwds):
         super(BaseData, self).__init__()
-        self._filepath = Path(filepath)
-        self._parent = parent
-        self._children = []
+        Utils.synthesize(self, 'parent', parent)
+        Utils.synthesize(self, 'children', [])
+        Utils.synthesize(self, 'columnMap', [])
         
         if parent is not None:
             parent.addChild(self)
             
         if args or kwds :
-            raise Exception('Unhandled Args:\n' + str(a) + '\n' + str(kwds))
-            
+            raise Exception('Unhandled Args:\n{0}\n{1}'.format(str(args), str(kwds)))
     
     #------------------------------------------------------------
     def __repr__(self):
-        output = self.__class__.__name__ + '( '
+        output = '{0}( '.format(self.__class__.__name__)
         for key, prop in sorted(self.properties().items()):
-            output += str(key) + '=' + str(prop.get_value(self)) + ', '
+            output += '{0}={1}, '.format(key, prop.get_value(self))
         output = output[:-2] + ' )'
         return str(output)
     
@@ -192,43 +191,35 @@ class BaseData(object):
             
     #------------------------------------------------------------
     def addChild(self, child):
-        self._children.append(child)
-        child._parent = self
+        self.children().append(child)
+        child.setParent(self)
         
     #------------------------------------------------------------
     def insertChild(self, position, child):
-        if position < 0 or position > len(self._children):
+        if position < 0 or position > self.childCount():
             return False
         
-        self._children.insert(position, child)
-        child._parent = self
+        self.children().insert(position, child)
+        child.setParent(self)
         return True
     
     #------------------------------------------------------------
     def removeChild(self, position):
-        if position < 0 or position > len(self._children):
+        if position < 0 or position > self.childCount():
             return False
         
-        child = self._children.pop(position)
-        child._parent = None
+        child = self.children().pop(position)
+        child.setParent(None)
 
         return True
     
     #------------------------------------------------------------
     def child(self, row):
-        return self._children[row]
-    
-    #------------------------------------------------------------
-    def children(self):
-        return self._children
+        return self.children()[row]
     
     #------------------------------------------------------------
     def childCount(self):
-        return len(self._children)
-    
-    #------------------------------------------------------------
-    def parent(self):
-        return self._parent
+        return len(self.children())
     
     #------------------------------------------------------------
     def typeInfo(self):
@@ -240,34 +231,36 @@ class BaseData(object):
     
     #------------------------------------------------------------
     def row(self):
-        if self._parent is not None:
-            return self._parent._children.index(self)
+        if self.parent() is not None:
+            return self.parent().children().index(self)
         
     #------------------------------------------------------------
     def resource(self):
         return None
     
     #------------------------------------------------------------
-    def _getFile(self, ext=[]):
-        if not self._filepath :
-            self._filepath = Utils.getFileFromUser(ext=ext)
-            if not self._filepath :
-                return False
-        return True
+    def data(self, column):
+        try:
+            attr = self.columnMap()[column]
+            return attr.__get__()
+        except IndexError :
+            pass
+        except Exception, e :
+            raise Exception(e)
     
     #------------------------------------------------------------
-    def _getSaveFile(self, ext=[]):
-        if not self._filepath :
-            self._filepath = Utils.getSaveFileFromUser(ext=ext)
-            if not self._filepath :
-                return False
-        return True        
+    def setData(self, column, value):
+        try :
+            attr = self.columnMap()[column]
+            attr.__set__(self,value.toPyObject())
+        except IndexError :
+            pass
+        except Exception, e:
+            raise Exception(e)
     
     #------------------------------------------------------------
-    def readXml(self):
-        if self._getFile(ext='*.xml') is False:
-            return
-        with open(self._filepath,'r') as xml_file :
+    def readXml(self, filepath):
+        with open(filepath,'r') as xml_file :
             xml_data = xml_file.read()
         
         xml_doc = QtXml.QDomDocument()
@@ -277,38 +270,29 @@ class BaseData(object):
         self._readXml(xml_doc)
         
     #------------------------------------------------------------
-    def saveXml(self):
-        if self._getSaveFile(ext='*.xml') is False :
-            return        
-        self._filepath.makedirs()
+    def saveXml(self, filepath):
         xml_data = self._asXml(QtXml.QDomDocument(), None)
-        with open(self._filepath,'wb') as xml_file :
+        with open(filepath,'wb') as xml_file :
             xml_file.write(xml_data)
     
     #------------------------------------------------------------
-    def readJson(self):
-        if self._getFile(ext='*.json') is False:
-            return        
-        with open(self._filepath,'r') as json_file :
+    def readJson(self, filepath):     
+        with open(filepath,'r') as json_file :
             json_data = json.load(json_file)
         
         self._readJson(json_data)
         
     #------------------------------------------------------------
-    def saveJson(self):
-        '''Writes the dict data to the json file'''
-        if self._getSaveFile(ext='*.json') is False:
-            return           
-        self._filepath.makedirs()
-        with open(self._filepath,'wb') as json_file :
-            json_data = json.dumps(self._asJson(), sort_keys=True, indent=4, cls=JsonModelEncoder)
+    def saveJson(self, filepath):
+        with open(filepath,'wb') as json_file :
+            json_data = json.dumps(self._asJson(), sort_keys=True, indent=4, cls=JsonBaseDataEncoder)
             json_file.write(json_data)
     
     #------------------------------------------------------------
     def _readXml(self, current_node):
         for prop in self.properties().values():
-            if current_node.hasAttribute(prop.name):
-                attr_value = current_node.attribute(prop.name)
+            if current_node.hasAttribute(prop.name()):
+                attr_value = current_node.attribute(prop.name())
                 prop.__set__(self, attr_value)        
         
         nodeList = current_node.childNodes()
@@ -328,7 +312,7 @@ class BaseData(object):
         else:
             xml_doc.appendChild(node)
        
-        for k, v in self.properties_dict().items():
+        for k, v in self.properties().items():
             node.setAttribute(k, v)
         
         node.setAttribute('module_name', self.moduleInfo())
@@ -343,7 +327,7 @@ class BaseData(object):
     def _readJson(self, json_data):
         for prop in self.properties().values():
             if prop.name in json_data:
-                prop_data = json_data[prop.name]
+                prop_data = json_data[prop.name()]
                 prop.__set__(self, prop_data)        
 
         for child in json_data.get('children',[]):
@@ -355,7 +339,7 @@ class BaseData(object):
     
     #------------------------------------------------------------
     def _asJson(self):
-        dictionary = self.properties_dict()
+        dictionary = self.properties()
         dictionary['class_name'] = self.typeInfo()
         dictionary['module_name'] = self.moduleInfo()
         children_data = list()
@@ -369,13 +353,5 @@ class BaseData(object):
     #------------------------------------------------------------
     @classmethod
     def properties(cls):
-        """Returns a dictionary of all the properties defined for this model."""
+        """Returns a dictionary of all the properties defined for this data object."""
         return dict(cls._properties)
-    
-    #------------------------------------------------------------
-    def properties_dict(self):
-        dictionary = dict()
-        for key, prop in sorted(self.properties().items()):
-            dictionary[key] = prop.get_value(self)
-        
-        return dictionary

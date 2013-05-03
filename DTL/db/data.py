@@ -1,32 +1,18 @@
-import json
-import re
-from PyQt4 import QtXml
-
-from DTL.api import InternalError, Path
-
-
-from .base import BaseData
-from .properties import StringProperty, FloatProperty, IntegerProperty, BooleanProperty, ListProperty, CustomDataProperty
+from DTL.api import InternalError, Path, Utils
+from DTL.db.base import BaseData
+from DTL.db.properties import StringProperty, FloatProperty, IntegerProperty, BooleanProperty, ListProperty, CustomDataProperty
 
 
 #------------------------------------------------------------
 #------------------------------------------------------------
 class Node(BaseData):
-    name = StringProperty(default='', required=True)
+    name = StringProperty(default='Node')
     #------------------------------------------------------------
-    def __init__(self, name, **kwds):
+    def __init__(self, name='Node', **kwds):
         super(Node, self).__init__(**kwds)
         self.name = name
-    
-    #------------------------------------------------------------
-    def data(self, column):
-        if   column is 0: return self.name
-        elif column is 1: return self.typeInfo()
-    
-    #------------------------------------------------------------
-    def setData(self, column, value):
-        if   column is 0: self.name = str(value.toPyObject())
-        elif column is 1: pass
+        
+        self.setColumnMap([self.name])
 
 
 #------------------------------------------------------------
@@ -41,24 +27,10 @@ class FloatTransformNode(Node):
         self.x = x
         self.y = y
         self.z = z
-    
-    #------------------------------------------------------------
-    def data(self, column):
-        r = super(FloatTransformNode, self).data(column)
         
-        if   column is 2: r = self.x
-        elif column is 3: r = self.y
-        elif column is 4: r = self.z
-        
-        return r
-    
-    #------------------------------------------------------------
-    def setData(self, column, value):
-        super(FloatTransformNode, self).setData(column, value)
-        
-        if   column is 2: self.x = value.toPyObject()
-        elif column is 3: self.y = value.toPyObject()
-        elif column is 4: self.z = value.toPyObject()
+        self.columnMap().append(self.x)
+        self.columnMap().append(self.y)
+        self.columnMap().append(self.z)
         
 
 #------------------------------------------------------------
@@ -74,73 +46,49 @@ class IntTransformNode(Node):
         self.y = y
         self.z = z
     
-    #------------------------------------------------------------
-    def data(self, column):
-        r = super(IntTransformNode, self).data(column)
-        
-        if   column is 2: r = self.x
-        elif column is 3: r = self.y
-        elif column is 4: r = self.z
-        
-        return r
-    
-    #------------------------------------------------------------
-    def setData(self, column, value):
-        super(IntTransformNode, self).setData(column, value)
-        
-        if   column is 2: self.x = value.toPyObject()
-        elif column is 3: self.y = value.toPyObject()
-        elif column is 4: self.z = value.toPyObject()
+        self.columnMap().append(self.x)
+        self.columnMap().append(self.y)
+        self.columnMap().append(self.z)
 
 
 #------------------------------------------------------------
 #------------------------------------------------------------
 class Layer(Node):
     index = IntegerProperty(default=0)
-    
     #------------------------------------------------------------
     def __init__(self, index=0, **kwds):
         super(Layer, self).__init__(**kwds)
         self.index = index
     
-    #------------------------------------------------------------
-    def data(self, column):
-        r = super(Layer, self).data(column)
-        
-        if   column is 2: r = self.index
-        
-        return r
+        self.columnMap().append(self.index)       
     
-    #------------------------------------------------------------
-    def setData(self, column, value):
-        super(Layer, self).setData(column, value)
-        
-        if   column is 2: self.index = value.toPyObject()
-        
+
 #------------------------------------------------------------
 #------------------------------------------------------------
 class Progress(Node):
     total = IntegerProperty(default=1)
     current = IntegerProperty(default=0)
+    message = StringProperty(default='Loading...')
     
     #------------------------------------------------------------
-    def __init__(self, total=1, current=0, **kwds):
-        super(Progress, self).__init__(**kwds):
-            self.total = total
-            self.current = current
-            
+    def __init__(self, total=1, current=0, message='Loading...', **kwds):
+        super(Progress, self).__init__(**kwds)
+        self.total = total
+        self.current = current
+        self.message = message
+                
+        self.columnMap().append(self.total) 
+        self.columnMap().append(self.current)
+        
     #------------------------------------------------------------
-    def data(self, column):
-        r = super(Progress, self).data(column)
-        
-        if   column is 2: r = self.total
-        elif column is 3: r = self.current
-        
-        return r
+    def increment(self):
+        self.current += 1
     
     #------------------------------------------------------------
-    def setData(self, column, value):
-        super(Progress, self).setData(column, value)
+    def percent(self):
+        return 1.0 / self.total
+    
+    #------------------------------------------------------------
+    def value(self, recursive=True):
+        return (100 * self.current * self.percent())
         
-        if   column is 2: self.total = value.toPyObject()
-        elif column is 3: self.current = value.toPyObject()
