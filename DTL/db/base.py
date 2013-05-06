@@ -94,11 +94,6 @@ class BaseProperty(object):
     def __set__(self, instance, new_value):
         new_value = self.validate(new_value)
         setattr(instance, self._attr_name(), new_value)
-    
-    #------------------------------------------------------------
-    def get_value(self, model_instance):
-        """Looks for this property in the given model instance, and returns the value"""
-        return self.__get__(model_instance, model_instance.__class__)
         
     #------------------------------------------------------------
     def empty(self, value):
@@ -181,7 +176,7 @@ class BaseData(object):
     def __repr__(self):
         output = '{0}( '.format(self.__class__.__name__)
         for key, prop in sorted(self.properties().items()):
-            output += '{0}={1}, '.format(key, prop.get_value(self))
+            output += '{0}={1}, '.format(key, prop.__get__(self))
         output = output[:-2] + ' )'
         return str(output)
     
@@ -242,7 +237,7 @@ class BaseData(object):
     def data(self, column):
         try:
             attr = self.columnMap()[column]
-            return attr.__get__()
+            return attr.__get__(self)
         except IndexError :
             pass
         except Exception, e :

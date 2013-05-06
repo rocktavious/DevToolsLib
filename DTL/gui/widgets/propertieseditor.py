@@ -1,5 +1,6 @@
 import os
 from PyQt4 import QtCore, QtGui
+from PyQt4.QtCore import Qt
 
 from DTL.api import Utils
 from DTL.gui.base import BaseGUI
@@ -8,13 +9,13 @@ from DTL.gui.base import BaseGUI
 #------------------------------------------------------------
 #------------------------------------------------------------
 class PropertiesEditor(QtGui.QWidget, BaseGUI):
-    
     #------------------------------------------------------------
     def __init__(self, model=None, proxyModel=None, editors={}, *args, **kwds):
         self._qtclass = QtGui.QWidget
         Utils.synthesize(self, 'model', model)
         Utils.synthesize(self, 'proxyModel', proxyModel)
         Utils.synthesize(self, 'editors', editors)
+        Utils.synthesize(self, 'busy', False)
         
         BaseGUI.__init__(self, **kwds)
         
@@ -22,11 +23,16 @@ class PropertiesEditor(QtGui.QWidget, BaseGUI):
             self.setProxyModel(proxyModel)
         elif model :
             self.setModel(model)
-
-
     
     #------------------------------------------------------------
     def onFinalize(self):
+        self.main_splitter = QtGui.QSplitter()
+        
+        self.main_splitter.addWidget(self.treeView)
+        self.main_splitter.addWidget(self.scrollArea)        
+        
+        self.mainLayout.addWidget(self.main_splitter)
+        self.main_splitter.setSizes([150,250])     
         self.setEditors()
         for key, editor in self.editors().items() :
             self.properties_layout.addWidget(editor)
@@ -43,15 +49,27 @@ class PropertiesEditor(QtGui.QWidget, BaseGUI):
     #------------------------------------------------------------
     def setProxyModel(self, proxyModel):
         self._proxyModel = proxyModel
-        
+        self.treeView.setModel(proxyModel)
         for editor in self.editors().values() :
             editor.setProxyModel(proxyModel)
     
     #------------------------------------------------------------
     def setModel(self, model):
         self._model = model
+        self.treeView.setModel(model)
+        self.treeView.selectionModel().selectionChanged.connect(self.selectionChanged)
         for editor in self.editors().values() :
             editor.setModel(model)
+            
+    #------------------------------------------------------------
+    def selectionChanged(self):
+        if not self.busy():
+            self.setBusy(True)
+
+            selectedIndexes = self.treeView.selectionModel().selectedIndexes()
+            self.setSelection(selectedIndexes[-1])
+
+            self.setBusy(False)
             
     #------------------------------------------------------------
     def clearSelection(self):
@@ -173,15 +191,17 @@ class LayerEditor(Editor):
         
 if __name__ == '__main__' :
     from DTL.db.models import SceneGraphModel
-    from DTL.db.data import Node, FloatTransformNode, Layer
+    from DTL.db.data import Node, FloatTransformNode, IntTransformNode, Layer
     from DTL.gui import Core
-    print "Testing!"
     
     root = Layer()
-    node1 = Node(parent=root)
-    node2 = Node(parent=root)
-    trans1 = FloatTransformNode(parent=node2)
-    trans2 = FloatTransformNode(parent=trans1)
+    node1 = Node(name='Node1', parent=root)
+    node2 = Node(name='Node2', parent=root)
+    layer1 = Layer(name='Layer1', parent=node2)
+    node3 = Node(name='Node3', parent=layer1)
+    trans1 = FloatTransformNode(name='Trans1', parent=node2)
+    trans2 = FloatTransformNode(name='Trans2', parent=trans1)
+    trans3 = IntTransformNode(name='Trans3', parent=trans1)
     
     model = SceneGraphModel(root)
     

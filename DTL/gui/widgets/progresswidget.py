@@ -1,53 +1,54 @@
 from PyQt4 import QtGui
 
 from DTL.api import Utils
-from DTL.db.data import Progress
-from DTL.gui.base import BaseGUI
-from DTL.gui import Core
+from DTL.gui import Core, Dialog
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class ProgressWidget(QtGui.QDialog, BaseGUI):
+class ProgressWidget(Dialog):
     #------------------------------------------------------------
-    def __init__( self, progress, **kwds):
-        self._qtclass = QtGui.QDialog
-        Utils.synthesize(self, 'progress', progress)
-        BaseGUI.__init__(self, **kwds)
-        self.center()
+    def onFinalize(self, total=1, current=0, message='Loading...'):
+        Utils.synthesize(self, 'total', total)
+        Utils.synthesize(self, 'current', current)
+        Utils.synthesize(self, 'message', message)
         
-    #------------------------------------------------------------
-    def onFinalize(self):
-        self.message.setText(self.progress().message)
-        self.progressBar.setValue(10)
+        self.ui_ProgressBar.setValue(1)
+        self.ui_Label.setText(self.message())
+        
+        self.center()
+        self.show()
+        self.update()
         
     #------------------------------------------------------------
     def update(self):
-        self.progressBar.setValue(self.progress().value())
-        self.progressBar.update()
+        self.ui_ProgressBar.setValue(self.value())
+        self.ui_Label.setText(self.message())
         super(ProgressWidget, self).update()
     
     #------------------------------------------------------------
     def increment(self):
-        self.progress().increment()
+        self.setCurrent(self.current() + 1)
         self.update()
     
     #------------------------------------------------------------
-    @staticmethod
-    def start(parent=None, flags=0, *args, **kwds):
-        new_progress = Progress(*args, **kwds)
-        new_widget = ProgressWidget(progress=new_progress, flags=flags, parent=parent)
-        new_widget.show()
-        return new_widget
+    def percent(self):
+        return 1.0 / self.total()
+    
+    #------------------------------------------------------------
+    def value(self, recursive=True):
+        return (100 * self.current() * self.percent())
 
 
 #------------------------------------------------------------
 if __name__ == '__main__':
     import time
-    prg = ProgressWidget.start(total=5)
+    prg = ProgressWidget(total=5, message='Test Loading...')
     
     for i in range(5):
-        time.sleep(1)    
+        time.sleep(1)
+        prg.setMessage(str(i))
         prg.increment()
+        
         
     prg.close()
 

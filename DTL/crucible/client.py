@@ -93,13 +93,17 @@ class CrucibleClient(object):
             if self.verbose:
                 print xml
             message = ElementTree.fromstring(xml).findtext('.//message')
-            raise Exception(error_message+": "+message)
+            if message :
+                raise Exception(error_message+": "+message)
+            else:
+                print error_message
+                raise Exception()
         return resp
     
     #------------------------------------------------------------
     def get_credentials(self, msg='Please enter your crucible password.'):
-        success, username, password = LoginWidget.getCredentials(msg,
-                                                                 Utils.getTempFilepath('crucible_login.dat'))
+        success, username, password = LoginWidget.getCredentials(loginMsg=msg,
+                                                                 credentialsFile=Utils.getTempFilepath('crucible_login.dat'))
         if not success :
             return 1      
         self.username = username

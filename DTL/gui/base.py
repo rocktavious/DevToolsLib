@@ -9,13 +9,23 @@ from DTL.gui import Core, guiUtils
 #------------------------------------------------------------
 class BaseGUI(object):
     _qtclass = None  
+    _instance = None
+
+    #------------------------------------------------------------
+    @classmethod
+    def instance(cls, *args, **kwds):
+        """If you only want to have one instance of a GUI, use this method.
+        It will only create a new instance of the class if the class variable _instance is none."""
+        if cls._instance is None:
+            cls._instance = cls(*args, **kwds)
+        return cls._instance   
 
     #------------------------------------------------------------
     def __init__( self, parent=None, flags=0, *args, **kwds ):
         parent = self._validateParent(parent)
         
-        if args or kwds :
-            raise Exception('Unhandled Args:\n' + str(a) + '\n' + str(kwds))       
+        if args :
+            raise Exception('Unhandled Args:\n' + str(a))       
 
         if flags:
             self._qtclass.__init__(self, parent, flags)
@@ -23,10 +33,9 @@ class BaseGUI(object):
             self._qtclass.__init__(self, parent)
 
         self.logger = Logger.getSubLogger(self.__class__.__name__)
-        self.onInit()
         self.loadUi()
         self.setupStyle()
-        self.onFinalize()
+        self.onFinalize(**kwds)
 
     #------------------------------------------------------------
     def _validateParent(self, parent=None):
@@ -70,10 +79,6 @@ class BaseGUI(object):
 
     #------------------------------------------------------------
     # Begin Subclass Overrides
-    #------------------------------------------------------------
-    def onInit(self):
-        pass
-    
     #------------------------------------------------------------
     def loadUi(self):
         if issubclass(self.__class__, QtGui.QWizard) :

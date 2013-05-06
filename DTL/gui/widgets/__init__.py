@@ -1,4 +1,5 @@
 from colorpickerwidget import ColorPickerButton, ColorPickerWidget
 from pathwidget import PathWidget
 from loginwidget import LoginWidget
-from progresswidget import Progress
+from progresswidget import ProgressWidget
+from propertieseditor import PropertiesEditor

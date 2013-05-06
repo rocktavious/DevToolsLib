@@ -40,6 +40,16 @@ def isBinary(filepath):
     return is_binary_string(filepath) == has_binary_byte(filepath)
 
 #------------------------------------------------------------
+def execute(cmd, verbose=False):
+    '''Given an excutable command, will wrap it in a subprocess call and return the returncode, stdout and stderr'''
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    if verbose :
+        for line in stdout :
+            sys.stdout.write(line)
+    return process.returncode, stdout, stderr    
+
+#------------------------------------------------------------
 def quickReload(modulename):
     """
     Searches through the loaded sys modules and looks up matching module names 

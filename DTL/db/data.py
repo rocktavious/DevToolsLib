@@ -12,7 +12,7 @@ class Node(BaseData):
         super(Node, self).__init__(**kwds)
         self.name = name
         
-        self.setColumnMap([self.name])
+        self.setColumnMap([self.properties()['name']])
 
 
 #------------------------------------------------------------
@@ -28,9 +28,9 @@ class FloatTransformNode(Node):
         self.y = y
         self.z = z
         
-        self.columnMap().append(self.x)
-        self.columnMap().append(self.y)
-        self.columnMap().append(self.z)
+        self.columnMap().append(self.properties()['x'])
+        self.columnMap().append(self.properties()['y'])
+        self.columnMap().append(self.properties()['z'])
         
 
 #------------------------------------------------------------
@@ -46,9 +46,9 @@ class IntTransformNode(Node):
         self.y = y
         self.z = z
     
-        self.columnMap().append(self.x)
-        self.columnMap().append(self.y)
-        self.columnMap().append(self.z)
+        self.columnMap().append(self.properties()['x'])
+        self.columnMap().append(self.properties()['y'])
+        self.columnMap().append(self.properties()['z'])
 
 
 #------------------------------------------------------------
@@ -60,35 +60,4 @@ class Layer(Node):
         super(Layer, self).__init__(**kwds)
         self.index = index
     
-        self.columnMap().append(self.index)       
-    
-
-#------------------------------------------------------------
-#------------------------------------------------------------
-class Progress(Node):
-    total = IntegerProperty(default=1)
-    current = IntegerProperty(default=0)
-    message = StringProperty(default='Loading...')
-    
-    #------------------------------------------------------------
-    def __init__(self, total=1, current=0, message='Loading...', **kwds):
-        super(Progress, self).__init__(**kwds)
-        self.total = total
-        self.current = current
-        self.message = message
-                
-        self.columnMap().append(self.total) 
-        self.columnMap().append(self.current)
-        
-    #------------------------------------------------------------
-    def increment(self):
-        self.current += 1
-    
-    #------------------------------------------------------------
-    def percent(self):
-        return 1.0 / self.total
-    
-    #------------------------------------------------------------
-    def value(self, recursive=True):
-        return (100 * self.current * self.percent())
-        
+        self.columnMap().append(self.properties()['index'])

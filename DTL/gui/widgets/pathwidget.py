@@ -4,46 +4,41 @@ from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import Qt
 
 from DTL.api import Utils, Path, Enum
-from DTL.gui import Core, guiUtils
-from DTL.gui.base import BaseGUI
+from DTL.gui import Core, Widget, guiUtils
 
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class PathWidget(QtGui.QWidget, BaseGUI):
+class PathWidget(Widget):
     pickerTypes = Enum('File','Folder','Node')
     
     pathChanged	= QtCore.pyqtSignal(QtCore.QString)
     editingFinished = QtCore.pyqtSignal()
     
     #------------------------------------------------------------
-    def __init__(self, pickerType=None, ext='', **kwds):
-        self._qtclass = QtGui.QWidget
-        BaseGUI.__init__(self, **kwds)
-        if pickerType is None :
-            pickerType = PathWidget.pickerTypes.File
-        
-        Utils.synthesize(self, 'pickerType', pickerType)
+    def onFinalize(self, pickerType=None, ext='', label='', field=''):
+        Utils.synthesize(self, 'pickerType', PathWidget.pickerTypes.File)
+        self.setPickerType(pickerType)
         Utils.synthesize(self, 'ext', ext)
+        self.setLabel(label)
+        self.setField(field)
         
-    #------------------------------------------------------------
-    def onFinalize(self):
-        self.widgetField.contextMenuEvent = self.extendContextMenuEvent
+        self.ui_Field.contextMenuEvent = self.extendContextMenuEvent
         self.actionShow_in_explorer.triggered.connect(self.openPath)
-        self.widgetFieldPicker.clicked.connect(self.pickFile)
-        self.widgetField.textChanged.connect(self.emitPathChanged)
-        self.widgetField.editingFinished.connect(self.editingFinished)
+        self.ui_Picker.clicked.connect(self.pickFile)
+        self.ui_Field.textChanged.connect(self.emitPathChanged)
+        self.ui_Field.editingFinished.connect(self.editingFinished)
     
     #------------------------------------------------------------
     def extendContextMenuEvent(self, event):
-        menu = self.widgetField.createStandardContextMenu();
+        menu = self.ui_Field.createStandardContextMenu();
         menu.addAction(self.actionShow_in_explorer)
         menu.exec_(event.globalPos())
         del menu
         
     #------------------------------------------------------------
     def openPath(self):
-        userInputPath = Path(str(self.widgetField.text()))
+        userInputPath = Path(str(self.ui_Field.text()))
         if userInputPath :
             subprocess.call('explorer ' + userInputPath.dir().caseSensative())
         
@@ -57,13 +52,13 @@ class PathWidget(QtGui.QWidget, BaseGUI):
                 return
         else: #Begin Testing for path types
             if self.pickerType() == PathWidget.pickerTypes.File :
-                picked = guiUtils.getFileFromUser(ext=self._ext)
+                picked = guiUtils.getFileFromUser(ext=self.ext())
             if self.pickerType() == PathWidget.pickerTypes.Folder :
                 picked = guiUtils.getDirFromUser()
             if not picked :
                 return
         
-        self.widgetField.setText(picked)
+        self.ui_Field.setText(picked)
         
     #------------------------------------------------------------
     def setPickerType(self, pickerType):
@@ -75,6 +70,14 @@ class PathWidget(QtGui.QWidget, BaseGUI):
         
         if temp and PathWidget.pickerTypes.names[temp]:
             self._pickerType = temp
+    
+    #------------------------------------------------------------
+    def setLabel(self, label):
+        self.ui_Label.setText(label)
+        
+    #------------------------------------------------------------
+    def setField(self, field):
+        self.ui_Field.setText(field)
 
     #------------------------------------------------------------
     def emitPathChanged(self, path):
@@ -92,17 +95,19 @@ if ( __name__ == '__main__' ):
     dlg.setWindowTitle( 'Pathwidget Test' )
     
     layout = QVBoxLayout()
-    pathWidget = PathWidget(ext='*.py', parent=dlg)
-    pathWidget.widgetField.setText("c:/test/my/path.db")
+    pathWidget = PathWidget(ext='*.py',
+                            label='Pick File',
+                            parent=dlg)
     layout.addWidget(pathWidget)
     
-    pathWidget = PathWidget(parent=dlg)
-    pathWidget.widgetLabel.setText("Pick a Folder")
-    pathWidget.widgetField.setText("c:/test/my/path")
-    pathWidget.setPickerType(PathWidget.pickerTypes.Folder)
+    pathWidget = PathWidget(label='Pick Folder',
+                            pickerType=PathWidget.pickerTypes.Folder,
+                            field='c:/test/my/path',
+                            parent=dlg)
     layout.addWidget(pathWidget)
     
     dlg.setLayout(layout)
     dlg.show()
+    
     
     Core.Start()

@@ -21,7 +21,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="message">
+    <widget class="QLabel" name="ui_loginMessage">
      <property name="text">
       <string/>
      </property>
@@ -43,7 +43,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="username"/>
+      <widget class="QLineEdit" name="ui_username"/>
      </item>
     </layout>
    </item>
@@ -63,7 +63,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="password"/>
+      <widget class="QLineEdit" name="ui_password"/>
      </item>
     </layout>
    </item>
@@ -83,14 +83,14 @@
       </spacer>
      </item>
      <item>
-      <widget class="QCheckBox" name="saveCredentials">
+      <widget class="QCheckBox" name="ui_saveOption">
        <property name="text">
         <string>Rember Credentials</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="submit">
+      <widget class="QPushButton" name="ui_submit">
        <property name="text">
         <string>Submit</string>
        </property>
