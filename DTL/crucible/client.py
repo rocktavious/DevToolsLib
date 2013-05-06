@@ -101,7 +101,7 @@ class CrucibleClient(object):
         return resp
     
     #------------------------------------------------------------
-    def get_credentials(self, msg='Please enter your crucible password.'):
+    def get_credentials(self, msg='Please enter your Crucible password.'):
         success, username, password = LoginWidget.getCredentials(loginMsg=msg,
                                                                  credentialsFile=Utils.getTempFilepath('crucible_login.dat'))
         if not success :

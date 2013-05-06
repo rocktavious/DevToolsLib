@@ -40,13 +40,20 @@ def isBinary(filepath):
     return is_binary_string(filepath) == has_binary_byte(filepath)
 
 #------------------------------------------------------------
-def execute(cmd, verbose=False):
+def execute(cmd, verbose=False, catchError=False):
     '''Given an excutable command, will wrap it in a subprocess call and return the returncode, stdout and stderr'''
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
     if verbose :
         for line in stdout :
             sys.stdout.write(line)
+    if catchError:
+        if process.returncode == 1 :
+            if not verbose:
+                for line in stdout :
+                    sys.stdout.write(line)
+            raise Exception('[FAILED] {0}'.format(cmd))
+    
     return process.returncode, stdout, stderr    
 
 #------------------------------------------------------------

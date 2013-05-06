@@ -1,6 +1,5 @@
 from dropbox import session, client
 
-from DTL import __appdata__
 from DTL.api import Path, Utils, Logger
 
 class Dropbox(object):
@@ -10,7 +9,7 @@ class Dropbox(object):
         Utils.synthesize(self, "appKey", appKey)
         Utils.synthesize(self, "appSecret", appSecret)
         Utils.synthesize(self, "appAccessType", appAccessType)
-        self._tokenPath = Path(__appdata__).join(self.appKey() + '_token')
+        self._tokenPath = Utils.getTempFilepath(self.appKey() + '_token')
         
         self._accessKey = ''
         self._accessSecret = ''
