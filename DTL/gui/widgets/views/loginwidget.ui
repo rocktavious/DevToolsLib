@@ -85,7 +85,7 @@
      <item>
       <widget class="QCheckBox" name="ui_saveOption">
        <property name="text">
-        <string>Rember Credentials</string>
+        <string>Remember Credentials</string>
        </property>
       </widget>
      </item>
