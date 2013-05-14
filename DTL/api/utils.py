@@ -40,14 +40,25 @@ def isBinary(filepath):
     return is_binary_string(filepath) == has_binary_byte(filepath)
 
 #------------------------------------------------------------
-def execute(cmd, verbose=False):
+def write(*args):
+    '''This is here so the API can control where the output goes'''
+    sys.stdout.write(''.join(args))
+
+#------------------------------------------------------------
+def execute(cmd, verbose=False, catchError=False):
     '''Given an excutable command, will wrap it in a subprocess call and return the returncode, stdout and stderr'''
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
     if verbose :
-        for line in stdout :
-            sys.stdout.write(line)
+        write(*stdout)
+    if catchError and process.returncode:
+        if not verbose:
+            write(*stdout)
+        raise Exception('[FAILED] {0}'.format(cmd))
+    
     return process.returncode, stdout, stderr    
+
+
 
 #------------------------------------------------------------
 def quickReload(modulename):
