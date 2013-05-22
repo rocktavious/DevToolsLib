@@ -397,8 +397,10 @@ class Path(unicode):
         """ Validates if this path is a directory and returns it
         if not then it returns the parent of this path
         """
-        if not self.exists() :
+        if not self.exists() : #This is an atempt at best guess
             head, tail = self.splitpath()
+            if os.path.splitext(tail)[1] == '' :
+                return self
             return head
         if self.isdir():
             return self
