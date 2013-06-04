@@ -27,11 +27,16 @@ import socket
 import struct
 import time
 
-from DTL.api import Logger
+from DTL.api import Logger, Utils
 
-DEFAULT_PORT = 5489
-ADDRESS_FAMILY = socket.AF_INET
-SOCKET_TYPE = socket.SOCK_STREAM
+
+
+RESPONSE_TEST = 'response test'
+RESPONSE_TEST_FAIL = 'False'
+RESPONSE_TEST_SUCCESS = 'True'
+
+RESPONSE_TIMEOUT = 'timeout'
+RESPONSE_CLOSED_SOCKET = 'closed'
 
 #------------------------------------------------------------
 def getLocalIP():
@@ -43,37 +48,96 @@ def getLocalIP():
         addr = s.getsockname()[0]
     return addr
 
+
 #------------------------------------------------------------
 #------------------------------------------------------------
-class JsonSocket(object):
+class BaseSocket(object):
     __metaclass__ = Logger.getMetaClass()
+    ADDRESS_FAMILY = socket.AF_INET
+    SOCKET_TYPE = socket.SOCK_STREAM
+    DEFAULT_PORT = 5000
+    CONN_RETRY = 1
+    
     #------------------------------------------------------------
     def __init__(self, address=None, port=None):
-        self.socket = socket.socket(ADDRESS_FAMILY, SOCKET_TYPE)
+        self.socket = socket.socket(self.ADDRESS_FAMILY, self.SOCKET_TYPE)
         self.conn = self.socket
-        self._timeout = None
-        self._address = address or getLocalIP()
-        self._port = port or DEFAULT_PORT
-    
-    #------------------------------------------------------------
-    def send_obj(self, obj):
-        msg = json.dumps(obj)
-        if self.socket:
-            frmt = "=%ds" % len(msg)
-            packed_msg = struct.pack(frmt, msg)
-            packed_hdr = struct.pack('!I', len(packed_msg))
-
-            self._send(packed_hdr)
-            self._send(packed_msg)
+        Utils.synthesize(self, 'timeout', None)
+        Utils.synthesize(self, 'address', address or getLocalIP(), True)
+        Utils.synthesize(self, 'port', port or self.DEFAULT_PORT, True)
+        Utils.synthesize(self, 'networkAddress', (self.address(), self.port()), True)
         
     #------------------------------------------------------------
-    def _send(self, msg):
-        sent = 0
-        while sent < len(msg):
-            sent += self.conn.send(msg[sent:])
+    def setTimeout(self, timeout):
+        self._timeout = timeout
+        self.socket.settimeout(timeout)
     
     #------------------------------------------------------------
-    def _read(self, size):
+    def pack(self, data):
+        frmt = "=%ds" % len(data)
+        packed_hdr = struct.pack('!I', len(data))
+        packed_msg = struct.pack(frmt, data)
+        
+        return packed_hdr, packed_msg
+        
+    #------------------------------------------------------------
+    def unpack(self, frmt, data):
+        return struct.unpack(frmt, data)[0]
+        
+    #------------------------------------------------------------
+    def send_handshake(self):
+        try:
+            packed_hdr, packed_msg = self.pack(RESPONSE_TEST)
+            self._send(packed_hdr)
+            self._send(packed_msg)
+
+            response = self.recv_handler()
+            if response != RESPONSE_TEST_SUCCESS :
+                return False
+        except socket.timeout as e:
+            self.logger.info("socket.timeout: {0}".format(e))
+            return False
+        except Exception as e:
+            #This helps when debugging
+            #self.logger.exception(e)
+            self.logger.info("send handshake failed: {0}".format(e))
+            self._close_connection()
+            return False
+        return True
+        
+    #------------------------------------------------------------
+    def recv_handshake(self, data):
+        if data == RESPONSE_TEST :
+            try:
+                self._send(RESPONSE_TEST_SUCCESS)
+                data = self.recv_handler()
+            except socket.timeout as e:
+                self.logger.info("socket.timeout: {0}".format(e))
+                return ''
+            except Exception as e:
+                #This helps when debugging
+                #self.logger.exception(e)
+                self.logger.info("recv handshake failed: {0}".format(e))
+                self._close_connection()
+                return ''
+        return data
+        
+    #------------------------------------------------------------
+    def _send(self, data):
+        sent = 0
+        while sent < len(data):
+            sent += self.conn.send(data[sent:])
+    
+    #------------------------------------------------------------
+    def send_handler(self, data):
+        if self.socket:
+            if self.send_handshake():
+                packed_hdr, packed_msg = self.pack(data)
+                self._send(packed_hdr)
+                self._send(packed_msg)
+            
+    #------------------------------------------------------------
+    def _recv(self, size):
         data = ''
         while len(data) < size:
             data_tmp = self.conn.recv(size-len(data))
@@ -83,112 +147,86 @@ class JsonSocket(object):
         return data
     
     #------------------------------------------------------------
-    def _msg_length(self):
-        d = self._read(4)
-        s = struct.unpack('!I', d)
-        return s[0]
+    def recv_handler(self):
+        data = ''
+        try:
+            msg_size = self.unpack('!I', self._recv(4))
+            frmt = "=%ds" % msg_size
+            data = self.unpack(frmt, self._recv(msg_size))
+            data = self.recv_handshake(data)
+            return data
+        except Exception as e:
+            #This helps when debugging
+            #self.logger.exception(e)
+            self.logger.info("connection broken")
+            self._close_connection()
+        
+        return data
     
     #------------------------------------------------------------
-    def read_obj(self):
-        size = self._msg_length()
-        data = self._read(size)
-        frmt = "=%ds" % size
-        msg = struct.unpack(frmt, data)
-        return json.loads(msg[0])
+    def _close_socket(self):
+        self.logger.info("closing main socket")
+        self.socket.close()
+    
+    #------------------------------------------------------------
+    def _close_connection(self):
+        self.logger.info("closing the connection socket")
+        self.conn.close()
+    
+    #------------------------------------------------------------
+    def connect(self):
+        for i in range(self.CONN_RETRY):
+            try:
+                self.socket.connect( self.networkAddress() )
+            except socket.error as msg:
+                self.logger.error("SockThread Error: %s" % msg)
+                time.sleep(3)
+                continue
+            self.logger.info("...Socket Connected")
+            return True
+        return False
     
     #------------------------------------------------------------
     def close(self):
         self._close_socket()
         if self.socket is not self.conn:
             self._close_connection()
+            
+    #------------------------------------------------------------
+    def swap_socket(self, new_sock):
+        """ Swaps the existing socket with a new one. Useful for setting socket after a new connection.
+                @param - new_sock - socket to replace the existing default JsonSocket object"""
+        del self.socket
+        self.socket = new_sock
+        self.conn = self.socket
+        
+    # Subclass methods to override
+    #------------------------------------------------------------
+    def send(self, data):
+        self.send_handler(data)
+        
+    #------------------------------------------------------------
+    def recv(self):
+        return self.recv_handler()
+
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+class JsonSocket(BaseSocket):
+    __metaclass__ = Logger.getMetaClass()
+    CONN_RETRY = 1
     
     #------------------------------------------------------------
-    def _close_socket(self):
-        self.logger.debug("closing main socket")
-        self.socket.close()
+    def __init__(self, **kwds):
+        BaseSocket.__init__(self, **kwds)
     
     #------------------------------------------------------------
-    def _close_connection(self):
-        self.logger.debug("closing the connection socket")
-        self.conn.close()
+    def send(self, obj):
+        data = json.dumps(obj)
+        self.send_handler(data)
     
     #------------------------------------------------------------
-    def _get_timeout(self):
-        return self._timeout
-    
-    #------------------------------------------------------------
-    def _set_timeout(self, timeout):
-        self._timeout = timeout
-        self.socket.settimeout(timeout)
-    
-    #------------------------------------------------------------
-    def _get_address(self):
-        return self._address
-    
-    #------------------------------------------------------------
-    def _set_address(self, address):
-        pass
-    
-    #------------------------------------------------------------
-    def _get_port(self):
-        return self._port
-    
-    #------------------------------------------------------------
-    def _set_port(self, port):
-        pass
-
-    #------------------------------------------------------------
-    timeout = property(_get_timeout, _set_timeout,doc='Get/set the socket timeout')
-    address = property(_get_address, _set_address,doc='read only property socket address')
-    port = property(_get_port, _set_port,doc='read only property socket port')
-
-
-
-
-if __name__ == "__main__":
-    """ basic json echo server """
-    
-    logger = Logger.getSubLogger('JSONECHOTEST')
-
-    def server_thread():
-        logger.debug("starting JsonServer")
-        server = JsonServer()
-        server.accept_connection()
-        while 1:
-            try:
-                msg = server.read_obj()
-                logger.info("server received: %s" % msg)
-                server.send_obj(msg)
-            except socket.timeout as e:
-                logger.debug("server socket.timeout: %s" % e)
-                continue
-            except Exception as e:
-                logger.error("server: %s" % e)
-                break
-
-        server.close()
-
-    t = threading.Timer(1,server_thread)
-    t.start()
-
-    time.sleep(2)
-    logger.debug("starting JsonClient")
-
-    client = JsonClient()
-    client.connect()
-
-    i = 0
-    while i < 10:
-        client.send_obj({"i": i})
-        try:
-            msg = client.read_obj()
-            logger.info("client received: %s" % msg)
-        except socket.timeout as e:
-            logger.debug("client socket.timeout: %s" % e)
-            continue
-        except Exception as e:
-            logger.error("client: %s" % e)
-            break
-        i = i + 1
-
-    client.close()
+    def read(self):
+        data = self.recv_handler()
+        obj = json.loads(data)
+        return obj
