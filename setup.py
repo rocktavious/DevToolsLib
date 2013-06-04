@@ -5,16 +5,17 @@ from setuptools import setup, find_packages
 import DTL
 
 setup( 
-    name='DevTools',
+    name='DevToolsLib',
     version=DTL.__version__,
     author='Kyle Rockman',
     author_email='kyle.rockman@.com',
     packages = find_packages(),
     package_data = {
-        # If any package contains *.txt or *.rst files, include them:
+        # If any subfolder contains these extensions, include them:
         '': ['*.txt', '*.rst','*.stylesheet','*.ui','*views/*.ui']
         },
-    url='',
+    zip_safe=True,
+    url='https://github.com/rocktavious/DevToolsLib',
     license='LICENSE.txt',
     description='Multiplatform, multiapplication tools development api',
     long_description=open('README.txt').read(),
