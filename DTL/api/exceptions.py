@@ -6,10 +6,18 @@ class InternalError(Exception):
     
     :param msg: The error message.
     """
-    def __init__(self, msg):
+    def __init__(self, msg='Internal API Error'):
         Exception.__init__(self)
         self.msg = msg
 
     def __str__(self):
         return self.msg
+    
+class DeprecatedError(InternalError):
+    """
+    General framework deprecation error.
+    """
+    
+    def __str__(self):
+        return "Deprecated"
     

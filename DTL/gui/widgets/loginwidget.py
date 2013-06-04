@@ -47,7 +47,7 @@ class LoginWidget(Dialog):
     #------------------------------------------------------------
     def _saveCredentials(self, username, password):
         if self.credentialsFile() :
-            data = JsonDocument(self.credentialsFile())
+            data = JsonDocument(file_path=self.credentialsFile())
             data['Username'] = base64.b64encode(str(username))
             data['Password'] = base64.b64encode(str(password))
             data.save()
@@ -55,7 +55,7 @@ class LoginWidget(Dialog):
     #------------------------------------------------------------
     def _readCredentials(self):
         if self.credentialsFile() and self.credentialsFile().exists() :
-            data = JsonDocument(self.credentialsFile())
+            data = JsonDocument(file_path=self.credentialsFile())
             self.ui_username.setText(base64.b64decode(data['Username']))
             self.ui_password.setText(base64.b64decode(data['Password']))
             self.ui_saveOption.setCheckState(True)
@@ -79,7 +79,8 @@ class LoginWidget(Dialog):
 
 if __name__ == "__main__":
     from DTL.api import Utils
-    print Utils.getTempFilepath('code_review_crucible_login.dat')
-    print LoginWidget.getCredentials(loginMsg='This is my test message.')
+    credentialsFile = Utils.getTempFilepath('code_review_crucible_login.dat')
+    print credentialsFile
+    print LoginWidget.getCredentials(loginMsg='This is my test message.', credentialsFile=credentialsFile)
     
     

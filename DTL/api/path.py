@@ -49,7 +49,7 @@ class Path(unicode):
     module = os.path #The module to use for path operations.
     _branch = None
     #------------------------------------------------------------
-    def __init__(self, value):
+    def __init__(self, value=''):
         if not isinstance(value, basestring):
             raise TypeError("path must be a string")
 
@@ -397,8 +397,10 @@ class Path(unicode):
         """ Validates if this path is a directory and returns it
         if not then it returns the parent of this path
         """
-        if not self.exists() :
+        if not self.exists() : #This is an atempt at best guess
             head, tail = self.splitpath()
+            if os.path.splitext(tail)[1] == '' :
+                return self
             return head
         if self.isdir():
             return self

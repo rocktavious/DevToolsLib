@@ -18,11 +18,12 @@ class Dropbox(object):
         return session.DropboxSession(self.appKey(), self.appSecret(), self.appAccessType())
     
     def _readToken(self):
-        with open(self._tokenPath.caseSensative, 'r') as token_file :
+        with open(self._tokenPath.caseSensative(), 'r') as token_file :
             self._accessKey, self._accessSecret = token_file.read().split('|')
         
     def _saveToken(self, key, secret):
-        with open(self._tokenPath.caseSensative, 'w') as token_file :
+        print self._tokenPath
+        with open(self._tokenPath.caseSensative(), 'w') as token_file :
             token_file.write("%s|%s" % (key,secret) )
     
     def _requestToken(self):
@@ -56,9 +57,13 @@ class Dropbox(object):
 
     def uploadFile(self, srcPath, destPath):
         db = self.getClient()
-        result = db.put_file(destPath, open(srcPath,'rb'))
-        return result
-
+        srcPath = Path(srcPath)
+        destPath = Path(destPath)
+        destPath.makedirs()
+        if srcPath.exists():
+            result = db.put_file(destPath, open(srcPath,'rb'))
+            return result
+        return None
 
 if __name__ == '__main__':
     db = Dropbox('c2kqug22n304xh7',

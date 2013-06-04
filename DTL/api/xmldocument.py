@@ -1,18 +1,3 @@
-"""
-Custom Xml document class
-
-Description
-=============
-    Contains both the dictionary of data and the filepath for ease of saving, reading and accessing
-
-Usage Example
-=============
-    >>> xml_doc = XmlDocument('c:/temp/test.xml')
-    >>> print xml_doc['Node Tag']['@Nodes Attribute Name']
-    >>> print xml_doc['Node Tag']['#Nodes Text']
-
-"""
-
 from xml.parsers import expat
 from xml.sax.saxutils import XMLGenerator
 from xml.sax.xmlreader import AttributesImpl
@@ -37,74 +22,10 @@ try:
     _unicode = unicode
 except NameError:
     _unicode = str
-    
-from path import Path
 
-#------------------------------------------------------------
-#------------------------------------------------------------
-class dotdictify(dict):
-    #------------------------------------------------------------
-    def __init__(self, value=None):
-        if value is None:
-            pass
-        elif isinstance(value, dict):
-            for key in value:
-                self.__setitem__(key, value[key])
-        else:
-            raise TypeError, 'expected dict'
-    
-    #------------------------------------------------------------
-    def __setitem__(self, key, value):
-        if '.' in key:
-            myKey, restOfKey = key.split('.', 1)
-            target = self.setdefault(myKey, dotdictify())
-            if not isinstance(target, dotdictify):
-                raise KeyError, 'cannot set "%s" in "%s" (%s)' % (restOfKey, myKey, repr(target))
-            target[restOfKey] = value
-        else:
-            if isinstance(value, dict) and not isinstance(value, dotdictify):
-                value = dotdictify(value)
-            dict.__setitem__(self, key, value)
-    
-    #------------------------------------------------------------
-    def __getitem__(self, key):
-        if '.' not in key:
-            return dict.__getitem__(self, key)
-        myKey, restOfKey = key.split('.', 1)
-        target = dict.__getitem__(self, myKey)
-        if not isinstance(target, dotdictify):
-            raise KeyError, 'cannot get "%s" in "%s" (%s)' % (restOfKey, myKey, repr(target))
-        return target[restOfKey]
-    
-    #------------------------------------------------------------
-    def __contains__(self, key):
-        if '.' not in key:
-            return dict.__contains__(self, key)
-        myKey, restOfKey = key.split('.', 1)
-        target = dict.__getitem__(self, myKey)
-        if not isinstance(target, dotdictify):
-            return False
-        return restOfKey in target
-    
-    #------------------------------------------------------------
-    def get(self, key, default=None):
-        try:
-            return self.__getitem__(key)
-        except KeyError:
-            return default
-        except Exception, e:
-            raise Exception(e)
-    
-    #------------------------------------------------------------
-    def setdefault(self, key, default):
-        if key not in self:
-            self[key] = default
-        return self[key]
-    
-    #------------------------------------------------------------
-    __setattr__ = __setitem__
-    __getattr__ = __getitem__
-
+from DTL.api.path import Path
+from DTL.api.dotifydict import DotifyDict
+from DTL.api.document import Document
 
 
 #------------------------------------------------------------
@@ -212,52 +133,11 @@ class _DictSAXHandler(object):
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class XmlDocument(dict):
+class XmlDocument(Document):
     '''Custom Dictionary class that has an associated xml file for easy saving/reading'''
     #------------------------------------------------------------
-    def __init__(self, file_path=None):
-        super(XmlDocument, self).__init__()
-        self.setFilePath(file_path)
-        self.read()
-        
-    #------------------------------------------------------------
-    def filePath(self):
-        return self._file
-
-    #------------------------------------------------------------
-    def setFilePath(self, file_path):
-        if isinstance(file_path, Path):
-            self._file = file_path
-        else :
-            self._file = Path(file_path)
-            
-    #------------------------------------------------------------
-    def prettyprint(self):
-        print self._unparse(self)
-
-    #------------------------------------------------------------
-    def save(self):
-        '''Writes the dict data to the xml file'''
-        data = self._unparse(self)
-        with open(self._file,'wb') as xml_file :
-            xml_file.write(data)
-    
-    #------------------------------------------------------------
-    def read(self):
-        '''Reads from a xml file the dictionary data'''
-        if not self._file.exists() :
-            return
-        with open(self._file,'r') as xml_file :
-            data = self._parse(xml_file.read())
-        for key, value in data.items():
-            self.__setitem__(key, value)
-
-    #------------------------------------------------------------
-    def defaults(self, defaults={}):
-        '''Allows the user to specify default values that should appear in the data'''
-        for key, value in defaults.items():
-            if not self.has_key(key):
-                self.__setitem__(key, value)
+    def __init__(self, *args, **kwds):
+        super(XmlDocument, self).__init__(*args, **kwds)
     
     #------------------------------------------------------------
     def _emit(self, key, value, content_handler,
@@ -301,44 +181,41 @@ class XmlDocument(dict):
             content_handler.endElement(key)
                 
     #------------------------------------------------------------
-    def _parse(self, xml_input, encoding='utf-8', **kw):
-        handler = _DictSAXHandler(**kw)
+    def _parse(self, file_handle, **kwds):
+        data_stream = file_handle.read()
+        handler = _DictSAXHandler(**kwds)
         parser = expat.ParserCreate()
         parser.ordered_attributes = True
         parser.StartElementHandler = handler.startElement
         parser.EndElementHandler = handler.endElement
         parser.CharacterDataHandler = handler.characters
         try:
-            parser.ParseFile(xml_input)
+            parser.ParseFile(data_stream)
         except (TypeError, AttributeError):
-            if isinstance(xml_input, _unicode):
-                xml_input = xml_input.encode(encoding)
-            parser.Parse(xml_input, True)
+            if isinstance(data_stream, _unicode):
+                data_stream = data_stream.encode('utf-8')
+            parser.Parse(data_stream, True)
         return handler.item   
     
     #------------------------------------------------------------
-    def _unparse(self, dict_input, output=None, encoding='utf-8', **kwargs):
+    def _unparse(self, data_dict, **kwds):
         ((key, value),) = dict_input.items()
-        must_return = False
-        if output == None:
-            output = StringIO()
-            must_return = True
-        content_handler = XMLGenerator(output, encoding)
+        output = StringIO()
+        content_handler = XMLGenerator(output, 'utf-8')
         content_handler.startDocument()
-        self._emit(key, value, content_handler, **kwargs)
+        self._emit(key, value, content_handler, **kwds)
         content_handler.endDocument()
-        if must_return:
-            value = output.getvalue()
-            try:
-                value = value.decode(encoding)
-            except AttributeError:
-                pass
-            return parseString(value).toprettyxml(indent="\t")
+        value = output.getvalue()
+        try:
+            value = value.decode('utf-8')
+        except AttributeError:
+            pass
+        return parseString(value).toprettyxml(indent="\t")
     
     #------------------------------------------------------------
     @staticmethod
     def getValuesAsList(dictionary, keyList, allowNone=True, keyErrorMsg='Unable to find key'):
-        dotified = dotdictify(dictionary)
+        dotified = DotifyDict(dictionary)
         dot_key = '.'.join(keyList[:-1])
         if len(keyList) == 1 :
             data = dictionary
