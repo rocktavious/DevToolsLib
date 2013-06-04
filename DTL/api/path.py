@@ -49,7 +49,7 @@ class Path(unicode):
     module = os.path #The module to use for path operations.
     _branch = None
     #------------------------------------------------------------
-    def __init__(self, value):
+    def __init__(self, value=''):
         if not isinstance(value, basestring):
             raise TypeError("path must be a string")
 
