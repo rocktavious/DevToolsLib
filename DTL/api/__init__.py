@@ -11,6 +11,9 @@ from DTL.api.path import Path
 from DTL.api.dotifydict import DotifyDict
 from DTL.api.document import Document
 
+#I don't currently like this implementation but i'm not sure how to handle utils and other things like the functions below
+from DTL.api import utils as Utils
+
 #Objects
 from DTL.api.logger import Logger
 from DTL.api.importlib import ImportModule
@@ -18,15 +21,18 @@ from DTL.api.rollbackimporter import RollbackImporter
 from DTL.api.commandticker import CommandTicker
 from DTL.api.jsondocument import JsonDocument
 from DTL.api.xmldocument import XmlDocument
-from DTL.api import utils as Utils
-#if sys.platform == 'win32' :
-#    from DTL.api import envUtils
-
 from DTL.api.stopwatch import Stopwatch
 from DTL.api.decorators import SafeCall, TimerDecorator
 from DTL.api.threadlib import Process, ThreadedProcess, ThreadedProcessWithPrompt
+
+
+###
+# Things that need to be fixed
+###
 #from DTL.api.daemon import Daemon, DaemonThread
 #from DTL.api.mailer import Mailer
+#if sys.platform == 'win32' :
+#    from DTL.api import envUtils
 
 #------------------------------------------------------------
 def Run(modulename):

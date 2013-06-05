@@ -48,6 +48,18 @@ class Path(unicode):
     """
     module = os.path #The module to use for path operations.
     _branch = None
+    
+    #------------------------------------------------------------
+    def __new__(cls, value=''):
+        #Fixup incoming path seperators
+        if os.sep == "\\" :
+            value = value.replace("/", os.sep)
+        else:
+            value = value.replace("\\", os.sep)
+        
+        self = super(Path, cls).__new__(cls, value)
+        return self
+    
     #------------------------------------------------------------
     def __init__(self, value=''):
         if not isinstance(value, basestring):
@@ -482,6 +494,9 @@ class Path(unicode):
 
 
 if __name__ == "__main__" :
+    myPathSepTest = Path('c:\\Users/krockman/documents').join('mytest')
+    print myPathSepTest
+    
     myPath = Path(r'C:\Users\krockman\documents\StarCitizen\Client\blur3d.tgz.zip.bin'.lower())
     print "documents" in myPath
     print myPath != myPath

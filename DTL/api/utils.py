@@ -14,6 +14,10 @@ from DTL import __appdata__
 from DTL.api.path import Path
 
 #------------------------------------------------------------
+def getTempDir():
+    return Path(__appdata__)
+
+#------------------------------------------------------------
 def getTempFilepath(filename):
     return Path(__appdata__).join(filename)
 
