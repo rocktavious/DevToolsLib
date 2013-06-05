@@ -49,6 +49,8 @@ class Path(unicode):
     module = os.path #The module to use for path operations.
     _branch = None
     
+    '''
+    #This is not ready for prime time yet
     #------------------------------------------------------------
     def __new__(cls, value=''):
         #Fixup incoming path seperators
@@ -59,9 +61,9 @@ class Path(unicode):
         
         self = super(Path, cls).__new__(cls, value)
         return self
-    
+    '''
     #------------------------------------------------------------
-    def __init__(self, value=''):
+    def __init__(self, value):
         if not isinstance(value, basestring):
             raise TypeError("path must be a string")
 
@@ -494,6 +496,8 @@ class Path(unicode):
 
 
 if __name__ == "__main__" :
+    print Path.getMainDir()
+    
     myPathSepTest = Path('c:\\Users/krockman/documents').join('mytest')
     print myPathSepTest
     
