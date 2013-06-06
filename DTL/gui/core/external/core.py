@@ -2,7 +2,7 @@ import logging
 
 from DTL import __company__
 from DTL.api.logger import Logger
-from DTL.api import utils as Utils
+from DTL.api import apiUtils
 from DTL.api.enum import Enum
 
 #------------------------------------------------------------
@@ -24,9 +24,9 @@ class Core(object):
     def __init__(self):
         self.setupLogging()
         
-        Utils.synthesize(self, 'environment', Core.EnvironmentTypes.External)
-        Utils.synthesize(self, 'mfcApp', False)
-        Utils.synthesize(self, 'app', None)
+        apiUtils.synthesize(self, 'environment', Core.EnvironmentTypes.External)
+        apiUtils.synthesize(self, 'mfcApp', False)
+        apiUtils.synthesize(self, 'app', None)
         
         try:
             from DTL.gui import guiUtils

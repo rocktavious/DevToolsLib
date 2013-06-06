@@ -4,7 +4,7 @@ import base64
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import Qt
 
-from DTL.api import Path, JsonDocument, Utils
+from DTL.api import Path, JsonDocument, apiUtils
 from DTL.gui import Dialog, guiUtils
 
 #------------------------------------------------------------
@@ -14,9 +14,9 @@ class LoginWidget(Dialog):
     
     #------------------------------------------------------------
     def onFinalize(self, loginMsg='Login', credentialsFile=''):
-        Utils.synthesize(self, 'loginMsg', loginMsg)
-        Utils.synthesize(self, 'credentialsFile', Path(credentialsFile))
-        Utils.synthesize(self, 'submitted', False)
+        apiUtils.synthesize(self, 'loginMsg', loginMsg)
+        apiUtils.synthesize(self, 'credentialsFile', Path(credentialsFile))
+        apiUtils.synthesize(self, 'submitted', False)
         
         self.setModal(True)
         
@@ -78,8 +78,8 @@ class LoginWidget(Dialog):
     
 
 if __name__ == "__main__":
-    from DTL.api import Utils
-    print Utils.getTempFilepath('code_review_crucible_login.dat')
-    print LoginWidget.getCredentials(loginMsg='This is my test message.')
+    credentialsFile = apiUtils.getTempFilepath('code_review_crucible_login.dat')
+    print credentialsFile
+    print LoginWidget.getCredentials(loginMsg='This is my test message.', credentialsFile=credentialsFile)
     
     

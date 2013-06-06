@@ -2,7 +2,7 @@ import os
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 
-from DTL.api import Utils
+from DTL.api import apiUtils
 from DTL.gui.base import BaseGUI
 
 
@@ -12,10 +12,10 @@ class PropertiesEditor(QtGui.QWidget, BaseGUI):
     #------------------------------------------------------------
     def __init__(self, model=None, proxyModel=None, editors={}, *args, **kwds):
         self._qtclass = QtGui.QWidget
-        Utils.synthesize(self, 'model', model)
-        Utils.synthesize(self, 'proxyModel', proxyModel)
-        Utils.synthesize(self, 'editors', editors)
-        Utils.synthesize(self, 'busy', False)
+        apiUtils.synthesize(self, 'model', model)
+        apiUtils.synthesize(self, 'proxyModel', proxyModel)
+        apiUtils.synthesize(self, 'editors', editors)
+        apiUtils.synthesize(self, 'busy', False)
         
         BaseGUI.__init__(self, **kwds)
         
@@ -105,9 +105,9 @@ class Editor(QtGui.QWidget, BaseGUI):
     def __init__(self, model=None, proxyModel=None, **kwds):
         self._qtclass = QtGui.QWidget       
 
-        Utils.synthesize(self, 'model', model)
-        Utils.synthesize(self, 'proxyModel', proxyModel)
-        Utils.synthesize(self, 'dataMapper', QtGui.QDataWidgetMapper())        
+        apiUtils.synthesize(self, 'model', model)
+        apiUtils.synthesize(self, 'proxyModel', proxyModel)
+        apiUtils.synthesize(self, 'dataMapper', QtGui.QDataWidgetMapper())        
         #self._dataMapper.setSubmitPolicy(QtGui.QDataWidgetMapper.ManualSubmit)
         
         BaseGUI.__init__(self, **kwds) 

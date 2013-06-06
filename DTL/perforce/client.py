@@ -3,7 +3,7 @@ import traceback
 from functools import partial
 from P4 import P4, P4Exception
 
-from DTL.api import Path, Logger, Utils
+from DTL.api import Path, Logger, apiUtils
 
 from functools import wraps  # use this to preserve function signatures and docstrings
 
@@ -21,11 +21,11 @@ def requiresP4Conn(func):
 #------------------------------------------------------------
 class P4Client(object):
     #------------------------------------------------------------
-    def __init__(self, clientName='', verbose=False):
-        Utils.synthesize(self, 'p4Conn', None)
-        Utils.synthesize(self, 'p4Client', clientName)
-        Utils.synthesize(self, 'p4Info', {})
-        Utils.synthesize(self, 'verbose', verbose)
+    def __init__(self, clientName, verbose=False):
+        apiUtils.synthesize(self, 'p4Conn', None)
+        apiUtils.synthesize(self, 'p4Client', clientName)
+        apiUtils.synthesize(self, 'p4Info', {})
+        apiUtils.synthesize(self, 'verbose', verbose)
             
     #------------------------------------------------------------
     def _setupConnection(self):
@@ -74,17 +74,6 @@ class P4Client(object):
     def getChangeDescription(self, cl):
         return self.p4Conn().fetch_changelist(cl)
     
-    #------------------------------------------------------------
-    @requiresP4Conn
-    def makeClientSpec(self, name, root, view):
-        client_spec = self.p4Conn().fetch_client(name)
-        client_spec['Root'] = root
-        client_spec['View'] = view
-        self.p4Conn().save_client(client_spec)
-        
-    
-    
 if __name__ == '__main__':
-    #test_client = P4Client('krockman_CI-20125657_3896')
-    test_client = P4Client()
-    test_client.makeClientSpec("Launcher_Client","e:\\CIG_artist\\star_citizen\\",['//data/... //Launcher_Client/data/...'])
+    test_client = P4Client('krockman_CI-20125657_3896')
+    print test_client.getChangeDescription(1295)

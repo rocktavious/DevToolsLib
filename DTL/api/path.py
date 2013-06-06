@@ -48,22 +48,8 @@ class Path(unicode):
     """
     module = os.path #The module to use for path operations.
     _branch = None
-    
-    '''
-    #This is not ready for prime time yet
     #------------------------------------------------------------
-    def __new__(cls, value=''):
-        #Fixup incoming path seperators
-        if os.sep == "\\" :
-            value = value.replace("/", os.sep)
-        else:
-            value = value.replace("\\", os.sep)
-        
-        self = super(Path, cls).__new__(cls, value)
-        return self
-    '''
-    #------------------------------------------------------------
-    def __init__(self, value):
+    def __init__(self, value=''):
         if not isinstance(value, basestring):
             raise TypeError("path must be a string")
 
@@ -249,7 +235,7 @@ class Path(unicode):
         """ D.files() -> List of the files in this directory.
 
         The elements of the list are path objects.
-        This does not walk into subdirectories (see path.walkfiles).
+        This does not walk into subdirectories (see path.walk).
 
         With the optional 'pattern' argument, this only lists files
         whose names match the given pattern.  For example,
@@ -496,11 +482,6 @@ class Path(unicode):
 
 
 if __name__ == "__main__" :
-    print Path.getMainDir()
-    
-    myPathSepTest = Path('c:\\Users/krockman/documents').join('mytest')
-    print myPathSepTest
-    
     myPath = Path(r'C:\Users\krockman\documents\StarCitizen\Client\blur3d.tgz.zip.bin'.lower())
     print "documents" in myPath
     print myPath != myPath

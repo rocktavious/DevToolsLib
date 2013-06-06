@@ -3,7 +3,7 @@ import subprocess
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import Qt
 
-from DTL.api import Utils, Path, Enum
+from DTL.api import apiUtils, Path, Enum
 from DTL.gui import Core, Widget, guiUtils
 
 
@@ -17,9 +17,9 @@ class PathWidget(Widget):
     
     #------------------------------------------------------------
     def onFinalize(self, pickerType=None, ext='', label='', field=''):
-        Utils.synthesize(self, 'pickerType', PathWidget.pickerTypes.File)
+        apiUtils.synthesize(self, 'pickerType', PathWidget.pickerTypes.File)
         self.setPickerType(pickerType)
-        Utils.synthesize(self, 'ext', ext)
+        apiUtils.synthesize(self, 'ext', ext)
         self.setLabel(label)
         self.setField(field)
         

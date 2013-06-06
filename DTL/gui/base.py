@@ -2,7 +2,7 @@ import sys
 from PyQt4 import QtGui, uic
 from PyQt4.QtCore import Qt
 
-from DTL.api import Path, Logger, Utils
+from DTL.api import Path, Logger, apiUtils
 from DTL.gui import Core, guiUtils
 
 #------------------------------------------------------------
@@ -86,7 +86,7 @@ class BaseGUI(object):
         try:
             path = Path(sys.modules[self.__module__].__file__)
         except:
-            path = Path(Utils.getMainDir())
+            path = Path(apiUtils.getMainDir())
         
         if path :
             ui_file = path.dir().join('views','{0}.ui'.format(self.__class__.__name__))

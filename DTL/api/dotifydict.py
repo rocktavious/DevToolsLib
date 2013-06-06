@@ -17,7 +17,7 @@ class DotifyDict(dict, BaseStruct):
     def __setitem__(self, key, value):
         if '.' in key:
             myKey, restOfKey = key.split('.', 1)
-            target = self.setdefault(myKey, DotifyDict())
+            target = self.set_default(myKey, DotifyDict())
             if not isinstance(target, DotifyDict):
                 raise KeyError, 'cannot set "{0}" in "{1}" ({2})'.format(restOfKey, myKey, repr(target))
             target[restOfKey] = value
@@ -56,7 +56,7 @@ class DotifyDict(dict, BaseStruct):
             raise Exception(e)
     
     #------------------------------------------------------------
-    def setdefault(self, key, default):
+    def set_default(self, key, default):
         if key not in self:
             self[key] = default
         return self[key]

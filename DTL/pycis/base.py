@@ -1,5 +1,5 @@
 from functools import partial
-from DTL.api import Utils
+from DTL.api import apiUtils
 
 from DTL.pycis.core import pyCis
 
@@ -22,10 +22,10 @@ class pyCisCommand(object):
     '''The base class form which all pycis commands ultimately derive'''
     
     def __init__(self):
-        Utils.synthesize(self, "helpFlag", True)
-        Utils.synthesize(self, "args", '')
-        Utils.synthesize(self, "parentParser", '')
-        Utils.synthesize(self, "parser", '')
+        apiUtils.synthesize(self, "helpFlag", True)
+        apiUtils.synthesize(self, "args", '')
+        apiUtils.synthesize(self, "parentParser", '')
+        apiUtils.synthesize(self, "parser", '')
     
     def usage(self, subcommand):
         """

@@ -5,7 +5,7 @@ from xml.sax.saxutils import escape
 import urllib2
 import base64
 
-from DTL.api import Utils
+from DTL.api import apiUtils
 from DTL.gui.widgets import LoginWidget
 
 
@@ -103,7 +103,7 @@ class CrucibleClient(object):
     #------------------------------------------------------------
     def get_credentials(self, msg='Please enter your Crucible password.'):
         success, username, password = LoginWidget.getCredentials(loginMsg=msg,
-                                                                 credentialsFile=Utils.getTempFilepath('crucible_login.dat'))
+                                                                 credentialsFile=apiUtils.getTempFilepath('crucible_login.dat'))
         if not success :
             return 1      
         self.username = username

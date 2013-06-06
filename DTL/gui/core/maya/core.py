@@ -4,7 +4,7 @@ from PyQt4 import QtCore, QtGui
 import maya.OpenMayaUI as OM_UI
 import maya.cmds as cmds
 
-from DTL.api import Logger, Utils
+from DTL.api import Logger
 from DTL.gui.core.external.core import Core
 
 #  TO DO:

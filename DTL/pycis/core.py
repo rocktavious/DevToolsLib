@@ -4,7 +4,7 @@ import logging
 from functools import partial
 from argparse import ArgumentParser
 
-from DTL.api import Logger, Utils, ImportModule
+from DTL.api import Logger, apiUtils, ImportModule
 
 class pycisArgumentParser(ArgumentParser):
     """ArgumentParser that doesn't exit on error"""
@@ -28,8 +28,8 @@ class pyCis(object):
     
     #------------------------------------------------------------
     def __init__(self):
-        Utils.synthesize(self, 'commands', None)
-        Utils.synthesize(self, 'parser', None)
+        apiUtils.synthesize(self, 'commands', None)
+        apiUtils.synthesize(self, 'parser', None)
         
         self._setupLogging()
         self._setupParser()
@@ -72,7 +72,7 @@ class pyCis(object):
     def _getCommands(self):
         _commands = self.commands()
         if _commands is None :
-            _commands = dict([(name, 'DTL.pycis.commands') for name in self._findCommands(Utils.getMainDir())])
+            _commands = dict([(name, 'DTL.pycis.commands') for name in self._findCommands(apiUtils.getMainDir())])
             
             #Handle other pycis sub app commands
         
