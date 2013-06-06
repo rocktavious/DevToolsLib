@@ -56,7 +56,9 @@ def execute(cmd, verbose=False, catchError=False):
             write(*stdout)
         raise Exception('[FAILED] {0}'.format(cmd))
     
-    return process.returncode, stdout, stderr     
+    return process.returncode, stdout, stderr    
+
+
 
 #------------------------------------------------------------
 def quickReload(modulename):
@@ -80,7 +82,7 @@ def quickReload(modulename):
 
 
 #------------------------------------------------------------
-def synthesize(object, name, value):
+def synthesize(object, name, value, readonly=False):
     """
     Convenience method to create getters and setters for a instance. 
     Should be called from within __init__. Creates [name], set[Name], 
@@ -108,7 +110,8 @@ def synthesize(object, name, value):
         setattr(object, name, types.MethodType(customGetter, object))
     # add the setter to the object, if it does not exist
     if not hasattr(object, setterName):
-        setattr(object, setterName, types.MethodType(customSetter, object))
+        if readonly == False :
+            setattr(object, setterName, types.MethodType(customSetter, object))
 
 #------------------------------------------------------------
 def runFile( filepath, basePath=None, cmd=None, debug=False ):
