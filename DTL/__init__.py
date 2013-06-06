@@ -25,3 +25,9 @@ try:
 except:
     pass
 
+def cleanup():
+    from DTL.api.path import Path
+    local_path = Path(__file__).parent
+    for file_path in local_path.walk('*.pyc') :
+        file_path.remove()
+

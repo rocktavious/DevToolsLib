@@ -1,6 +1,6 @@
 from PyQt4 import QtGui
 
-from DTL.api import Utils
+from DTL.api import apiUtils
 from DTL.gui import Core, Dialog
 
 #------------------------------------------------------------
@@ -8,9 +8,9 @@ from DTL.gui import Core, Dialog
 class ProgressWidget(Dialog):
     #------------------------------------------------------------
     def onFinalize(self, total=1, current=0, message='Loading...'):
-        Utils.synthesize(self, 'total', total)
-        Utils.synthesize(self, 'current', current)
-        Utils.synthesize(self, 'message', message)
+        apiUtils.synthesize(self, 'total', total)
+        apiUtils.synthesize(self, 'current', current)
+        apiUtils.synthesize(self, 'message', message)
         
         self.ui_ProgressBar.setValue(1)
         self.ui_Label.setText(self.message())

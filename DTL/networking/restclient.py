@@ -4,7 +4,7 @@ from urlparse import urljoin
 import urllib2
 import base64
 
-from DTL.api import InternalError, Logger, Utils
+from DTL.api import InternalError, Logger, apiUtils
 from DTL.gui.widgets import LoginWidget
 
 #------------------------------------------------------------
@@ -39,7 +39,7 @@ class ExecClient(object):
     __metaclass__ = Logger.getMetaClass()
     #------------------------------------------------------------
     def __init__(self, auth_handler):
-        Utils.synthesize(self, 'opener', urllib2.build_opener(auth_handler))
+        apiUtils.synthesize(self, 'opener', urllib2.build_opener(auth_handler))
     
     #------------------------------------------------------------
     def _prep_request(self, client_request):
@@ -78,10 +78,10 @@ class RestClient(object):
             host += '/'
 
         auth_handler = urllib2.HTTPBasicAuthHandler()
-        Utils.synthesize(self, 'host', host)
-        Utils.synthesize(self, 'username', username)
-        Utils.synthesize(self, 'password', password)
-        Utils.synthesize(self, 'client', ExecClient(auth_handler))        
+        apiUtils.synthesize(self, 'host', host)
+        apiUtils.synthesize(self, 'username', username)
+        apiUtils.synthesize(self, 'password', password)
+        apiUtils.synthesize(self, 'client', ExecClient(auth_handler))        
         
         if requires_auth :
             if not self.get_credentials(login_msg=login_msg) :
@@ -90,7 +90,7 @@ class RestClient(object):
     #------------------------------------------------------------
     def get_credentials(self, login_msg):
         success, username, password = LoginWidget.getCredentials(loginMsg=login_msg,
-                                                                 credentialsFile=Utils.getTempFilepath(self.__class__.__name__ + '_login.dat'))
+                                                                 credentialsFile=apiUtils.getTempFilepath(self.__class__.__name__ + '_login.dat'))
         if not success :
             return False
         self.username = username

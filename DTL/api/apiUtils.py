@@ -168,9 +168,9 @@ def backup(path, suffix='.bak'):
     while True:
         if path.exists() :
             if count == -1:
-                new_path = Path("%s%s") % (path, suffix)
+                new_path = Path("{0}{1}".format(path, suffix))
             else:
-                new_path = Path("%s%s.%s") % (path, suffix, count)
+                new_path = Path("{0}{1}.{2}".format(path, suffix, count))
             if new_path.exists():
                 count += 1
                 continue
@@ -179,3 +179,51 @@ def backup(path, suffix='.bak'):
         else:
             break
     return new_path
+
+#------------------------------------------------------------
+def Run(modulename):
+    tool_mod = sys.modules.get(modulename, None)
+    if tool_mod is None :
+        __import__(modulename)
+        tool_mod = sys.modules.get(modulename, None)
+    else:
+        tool_mod.mainUI.instance().close()
+        quickReload(modulename)
+        tool_mod = sys.modules.get(modulename, None)
+    
+    Launch(tool_mod.mainUI.instance)
+
+#------------------------------------------------------------
+def Launch(ctor, modal=False):
+    """
+    This method is used to create an instance of a widget (dialog/window) to 
+    be run inside the blurdev system.  Using this function call, blurdev will 
+    determine what the application is and how the window should be 
+    instantiated, this way if a tool is run as a standalone, a new 
+    application instance will be created, otherwise it will run on top 
+    of a currently running application.
+
+    :param ctor: callable object that will return a widget instance, usually
+    			 a :class:`QWidget` or :class:`QDialog` or a function that
+    			 returns an instance of one.
+    :param modal: If True, widget will be created as a modal widget (ie. blocks
+    			  access to calling gui elements).
+    """
+    from PyQt4.QtGui import QWizard
+
+    # always run wizards modally
+    try:
+        modal = issubclass(ctor, QWizard)
+    except:
+        pass
+
+    # create the output instance from the class
+    widget = ctor(None)
+
+    # check to see if the tool is running modally and return the result
+    if modal:
+        return widget.exec_()
+    else:
+        widget.show()
+        # run the application if this item controls it and it hasnt been run before
+        return widget

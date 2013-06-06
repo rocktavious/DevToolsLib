@@ -3,7 +3,7 @@ import traceback
 from functools import partial
 from P4 import P4, P4Exception
 
-from DTL.api import Path, Logger, Utils
+from DTL.api import Path, Logger, apiUtils
 
 from functools import wraps  # use this to preserve function signatures and docstrings
 
@@ -22,10 +22,10 @@ def requiresP4Conn(func):
 class P4Client(object):
     #------------------------------------------------------------
     def __init__(self, clientName, verbose=False):
-        Utils.synthesize(self, 'p4Conn', None)
-        Utils.synthesize(self, 'p4Client', clientName)
-        Utils.synthesize(self, 'p4Info', {})
-        Utils.synthesize(self, 'verbose', verbose)
+        apiUtils.synthesize(self, 'p4Conn', None)
+        apiUtils.synthesize(self, 'p4Client', clientName)
+        apiUtils.synthesize(self, 'p4Info', {})
+        apiUtils.synthesize(self, 'verbose', verbose)
             
     #------------------------------------------------------------
     def _setupConnection(self):

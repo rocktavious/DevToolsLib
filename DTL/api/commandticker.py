@@ -1,30 +1,30 @@
 import sys
-import threading
+import time
 
-class CommandTicker(threading.Thread):
+from DTL.api.threadlib import ThreadedProcess
+
+class CommandTicker(ThreadedProcess):
     '''A threading class for command line operations that will take a long time and need a "i'm processing" gui type of bar'''
-    def __init__(self):
-        threading.Thread.__init__(self)
-        self.stop_event = threading.Event()
-
-    def stop(self):
-        self.stop_event.set()
-
+    TICKS = ['[.  ]', '[.. ]', '[...]', '[ ..]', '[  .]', '[   ]']
+    #------------------------------------------------------------
+    def __init__(self, **kwds):
+        ThreadedProcess.__init__(self, **kwds)
+        
+    #------------------------------------------------------------
     def run(self):
-        ticks = ['[.  ]', '[.. ]', '[...]', '[ ..]', '[  .]', '[   ]']
         i = 0
-        first = True
-        while True:
-            self.stop_event.wait(0.25)
-            if self.stop_event.isSet(): break
-            if i == len(ticks):
+        first = True        
+        while self.isMainloopAlive():
+            time.sleep(.25)
+            if i == len(self.TICKS):
                 first = False
                 i = 0
             if not first:
-                sys.stderr.write("\r%s\r" % ticks[i])
+                sys.stderr.write("\r%s\r" % self.TICKS[i])
                 sys.stderr.flush()
             i += 1
-        sys.stderr.flush()
+        
+        sys.stderr.flush()  
 
 
 #This example runs best standalone in a console
@@ -33,7 +33,6 @@ if __name__ == '__main__':
     # Start a ticker
     ticker_thread = CommandTicker()
     ticker_thread.start()
-
     # This is the potentially long-running call.
     try:
         for i in range(20):
@@ -45,4 +44,3 @@ if __name__ == '__main__':
     finally:
         # Tell the ticker to stop.
         ticker_thread.stop()
-        ticker_thread.join()

@@ -121,5 +121,6 @@ def getSaveFileFromUser(parent=None, ext=[]):
 def _return_file(file_dialog):
     if file_dialog.exec_():
         returned_file = str(file_dialog.selectedFiles()[0])
+        returned_file = Path(returned_file).expand()
         return Path(returned_file)
     return Path('')

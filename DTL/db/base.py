@@ -4,7 +4,7 @@ import re
 from copy import deepcopy
 from PyQt4 import QtXml
 
-from DTL.api import InternalError, Path, Utils
+from DTL.api import InternalError, Path, apiUtils
 from DTL.gui import guiUtils
 
 RESERVED_PROPERTY_NAME = re.compile('^__.*__$')
@@ -68,10 +68,10 @@ def check_reserved_word(attr_name):
 class BaseProperty(object):
     #------------------------------------------------------------
     def __init__(self, default=None, name=None, required=False, choices=None):
-        Utils.synthesize(self, 'default', default)
-        Utils.synthesize(self, 'name', name)
-        Utils.synthesize(self, 'required', required)
-        Utils.synthesize(self, 'choices', choices)
+        apiUtils.synthesize(self, 'default', default)
+        apiUtils.synthesize(self, 'name', name)
+        apiUtils.synthesize(self, 'required', required)
+        apiUtils.synthesize(self, 'choices', choices)
     
     #------------------------------------------------------------
     def __property_config__(self, property_name):
@@ -162,9 +162,9 @@ class BaseData(object):
     #------------------------------------------------------------
     def __init__(self, parent=None, *args, **kwds):
         super(BaseData, self).__init__()
-        Utils.synthesize(self, 'parent', parent)
-        Utils.synthesize(self, 'children', [])
-        Utils.synthesize(self, 'columnMap', [])
+        apiUtils.synthesize(self, 'parent', parent)
+        apiUtils.synthesize(self, 'children', [])
+        apiUtils.synthesize(self, 'columnMap', [])
         
         if parent is not None:
             parent.addChild(self)

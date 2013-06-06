@@ -2,7 +2,6 @@ import Py3dsMax
 from Py3dsMax import mxs
 
 from DTL.api.logger import Logger
-from DTL.api import utils as Utils
 from DTL.api.cores.external.core import Core
 
 #------------------------------------------------------------

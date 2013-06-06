@@ -3,7 +3,7 @@ import json
 
 from DTL.api.path import Path
 from DTL.api.document import Document
-from DTL.api import utils as Utils
+from DTL.api import apiUtils
 
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -12,7 +12,7 @@ class JsonDocument(Document):
     #------------------------------------------------------------
     def __init__(self, *args, **kwds):
         super(JsonDocument, self).__init__(*args, **kwds)
-        Utils.synthesize(self, 'encoder', None)
+        apiUtils.synthesize(self, 'encoder', None)
     
     #------------------------------------------------------------
     def _unparse(self, data_dict):

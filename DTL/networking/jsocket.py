@@ -27,7 +27,7 @@ import socket
 import struct
 import time
 
-from DTL.api import Logger, Utils
+from DTL.api import Logger, apiUtils
 
 
 
@@ -62,10 +62,10 @@ class BaseSocket(object):
     def __init__(self, address=None, port=None):
         self.socket = socket.socket(self.ADDRESS_FAMILY, self.SOCKET_TYPE)
         self.conn = self.socket
-        Utils.synthesize(self, 'timeout', None)
-        Utils.synthesize(self, 'address', address or getLocalIP(), True)
-        Utils.synthesize(self, 'port', port or self.DEFAULT_PORT, True)
-        Utils.synthesize(self, 'networkAddress', (self.address(), self.port()), True)
+        apiUtils.synthesize(self, 'timeout', None)
+        apiUtils.synthesize(self, 'address', address or getLocalIP(), True)
+        apiUtils.synthesize(self, 'port', port or self.DEFAULT_PORT, True)
+        apiUtils.synthesize(self, 'networkAddress', (self.address(), self.port()), True)
         
     #------------------------------------------------------------
     def setTimeout(self, timeout):

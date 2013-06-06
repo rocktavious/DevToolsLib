@@ -1,71 +1,28 @@
-"""
-Version class
-
-Usage Example
-=============
-    >>> version = Version()
-    >>> print version
-    Version( 1.0.0 - Alpha )
-    >>> version2 = Version()
-    >>> version.set((2,0,5,'Beta'))
-    >>> print version
-    Version( 2.0.5 - Beta )
-    >>> version2.set(version)
-    >>> version2.set({'status':Status.Gold})
-    >>> print version2
-    Version( 2.0.5 - Gold )
-    >>> print version == version2
-    False
-    
-"""
+from DTL.api import apiUtils
+from DTL.api.bases import BaseStruct
 from DTL.api.enum import Enum
 
-Status = Enum('Alpha','Beta','Gold')
+VersionStatus = Enum('Alpha','Beta','Gold')
 
-class Version(object):
+class Version(BaseStruct):
     #------------------------------------------------------------
-    def __init__(self, attitude):
-        self._major = 1
-        self._minor = 0
-        self._fix = 0
-        self._status = 0   
-        self.set(attitude)
-    
-    #------------------------------------------------------------
-    def __eq__(self, other):
-        if not isinstance(other, Version) :
-            return False
-        if not self._major == other._major :
-            return False
-        if not self._minor == other._minor :
-            return False
-        if not self._fix == other._fix :
-            return False
-        if not self._status == other._status :
-            return False
+    def __init__(self, attitude=None):
+        apiUtils.synthesize(self, 'major', 1)
+        apiUtils.synthesize(self, 'minor', 0)
+        apiUtils.synthesize(self, 'fix', 0)
+        apiUtils.synthesize(self, 'status', 0)
         
-        return True
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
+        self.__set(attitude)
     
     #------------------------------------------------------------
-    def __repr__(self):
-        return 'Version( %i.%i.%i - %s )' % (self._major, self._minor, self._fix, Status.names[self._status]) 
-
-    #------------------------------------------------------------
-    def __str__(self):
-        return self.__repr__()
-    
-    #------------------------------------------------------------
-    def get(self):
+    def __get(self):
         return {"major":self._major,
                 "minor":self._minor,
                 "fix":self._fix,
                 "status":self._status}        
     
     #------------------------------------------------------------
-    def set(self, value):
+    def __set(self, value):
         if isinstance(value, str):
             if len(value.split('.')) == 4:
                 value = value.split('.')
@@ -87,7 +44,19 @@ class Version(object):
             
             enum_value = value.get('status',self._status)
             if isinstance(enum_value, str):
-                self._status = Status.names.index(enum_value)
+                self._status = VersionStatus.names.index(enum_value)
             else:
-                self._status = Status.names.index(Status.names[enum_value])
+                self._status = VersionStatus.names.index(VersionStatus.names[enum_value])
 
+
+if __name__ == '__main__':
+    version = Version()
+    print version
+    version2 = Version()
+    version.set((2,0,5,'Beta'))
+    print version
+    version2.set(version)
+    version2.set({'status':VersionStatus.Gold})
+    print version2
+    print version == version2
+    print Version({'status': 0, 'major': 1, 'fix': 0, 'minor': 0})

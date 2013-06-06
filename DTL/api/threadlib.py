@@ -1,14 +1,14 @@
 import time
 import threading
 
-from DTL.api import Utils
+from DTL.api import apiUtils
 
 #------------------------------------------------------------
 class Process(object):
     #------------------------------------------------------------
     def __init__(self):
-        Utils.synthesize(self, 'isMainloopAlive', False)
-        Utils.synthesize(self, 'isPromptloopAlive', False)
+        apiUtils.synthesize(self, 'isMainloopAlive', False)
+        apiUtils.synthesize(self, 'isPromptloopAlive', False)
     
     #------------------------------------------------------------
     def run(self):
@@ -73,7 +73,7 @@ class ThreadedProcess(threading.Thread, Process):
     def __init__(self, daemon=True, **kwds):
         threading.Thread.__init__(self, **kwds)
         Process.__init__(self)
-        Utils.synthesize(self, 'threadLock', threading.Lock())
+        apiUtils.synthesize(self, 'threadLock', threading.Lock())
         self.setDaemon(daemon)
 
     #------------------------------------------------------------

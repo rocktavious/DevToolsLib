@@ -1,6 +1,6 @@
 from DTL.api.bases import BaseStruct
 from DTL.api.path import Path
-from DTL.api import utils as Utils
+from DTL.api import apiUtils
 
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -9,7 +9,7 @@ class Document(dict, BaseStruct):
     #------------------------------------------------------------
     def __init__(self, data_dict={}, file_path=None):
         super(Document, self).__init__()
-        Utils.synthesize(self, 'filePath', Path())
+        apiUtils.synthesize(self, 'filePath', Path())
         if file_path :
             self.setFilePath(file_path=file_path)
         self.read()

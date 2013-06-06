@@ -235,7 +235,7 @@ class Path(unicode):
         """ D.files() -> List of the files in this directory.
 
         The elements of the list are path objects.
-        This does not walk into subdirectories (see path.walkfiles).
+        This does not walk into subdirectories (see path.walk).
 
         With the optional 'pattern' argument, this only lists files
         whose names match the given pattern.  For example,
