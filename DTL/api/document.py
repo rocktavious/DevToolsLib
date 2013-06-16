@@ -4,7 +4,7 @@ from DTL.api import apiUtils
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class Document(dict, BaseStruct):
+class Document(BaseStruct, dict):
     '''Custom Dictionary class that has an associated file for easy saving/reading/printing'''
     #------------------------------------------------------------
     def __init__(self, data_dict={}, file_path=None):
@@ -20,8 +20,8 @@ class Document(dict, BaseStruct):
         self._filePath = Path(file_path)
             
     #------------------------------------------------------------
-    def prettyprint(self):
-        print self._unparse(self)
+    def serialize(self):
+        return (dict(self),)
 
     #------------------------------------------------------------
     def save(self):
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     new_doc = Document({'Testing':'min'})
     new_doc.setFilePath('/testing/file/path')
     new_doc2 = Document({'next doc':new_doc})
-    new_doc.prettyprint()
+    print new_doc
     print 'Filepath = "{0}"'.format(new_doc.filePath())
-    print [new_doc, new_doc2]
+    print [new_doc, new_doc2] == eval(str([new_doc, new_doc2]))
     print new_doc2['next doc'].filePath()
