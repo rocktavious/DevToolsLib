@@ -1,27 +1,28 @@
-from DTL.api.bases import BaseStruct
+from DTL.api.bases import BaseDict
 from DTL.api.path import Path
 from DTL.api import apiUtils
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class Document(BaseStruct, dict):
+class Document(BaseDict):
     '''Custom Dictionary class that has an associated file for easy saving/reading/printing'''
     #------------------------------------------------------------
-    def __init__(self, data_dict={}, file_path=None):
-        super(Document, self).__init__()
-        apiUtils.synthesize(self, 'filePath', Path())
-        if file_path :
-            self.setFilePath(file_path=file_path)
+    def __init__(self, *args, **kwds):
+        super(Document, self).__init__( *args, **kwds)
+        
+    #------------------------------------------------------------
+    def serialize(self):
+        return (dict(self),self.add_quotes(self.filePath()))
+    
+    #------------------------------------------------------------
+    def deserialize(self, data_dict={}, file_path=''):
+        apiUtils.synthesize(self, 'filePath', Path(file_path))
         self.read()
         self._set_data(data_dict=data_dict)
 
     #------------------------------------------------------------
     def setFilePath(self, file_path):
         self._filePath = Path(file_path)
-            
-    #------------------------------------------------------------
-    def serialize(self):
-        return (dict(self),)
 
     #------------------------------------------------------------
     def save(self):
@@ -39,18 +40,6 @@ class Document(BaseStruct, dict):
         with open(self.filePath(),'r') as file_handle :
             data_dict = self._parse(file_handle)
         self._set_data(data_dict)
-        
-    #------------------------------------------------------------
-    def setdefault(self, default={}):
-        '''Allows the user to specify default values that should appear in the data'''
-        for key, value in default.items():
-            if not self.has_key(key):
-                self.__setitem__(key, value)
-            
-    #------------------------------------------------------------
-    def _set_data(self, data_dict):
-        for key, value in data_dict.items():
-            self.__setitem__(key, value)
             
     #------------------------------------------------------------
     def _parse(self, data_stream):
@@ -61,6 +50,8 @@ class Document(BaseStruct, dict):
         return data_dict
     
 
+#------------------------------------------------------------
+#------------------------------------------------------------
 if __name__ == '__main__':
     new_doc = Document({'Testing':'min'})
     new_doc.setFilePath('/testing/file/path')

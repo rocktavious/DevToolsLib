@@ -2,7 +2,7 @@ import sys
 
 #Bases
 from DTL.api.exceptions import InternalError, DeprecatedError
-from DTL.api.bases import BaseStruct
+from DTL.api.bases import BaseStruct, BaseDict
 
 from DTL.api import apiUtils
 
