@@ -1,12 +1,12 @@
 import maya.cmds as cmds
 
-from DTL.api import Enum, apiUtils, BaseStruct
+from DTL.api import Enum, apiUtils, BaseDict
 
 SelectionTypes = Enum("Vertex","Edge","Face","UV","VertexFace","Polygon","Object")
 
 #--------------------------------------------------------
 #--------------------------------------------------------
-class ObjSelData(BaseStruct, dict):
+class ObjSelData(BaseDict):
     _compPrefixes = {SelectionTypes.Vertex:'vtx',
                      SelectionTypes.Edge:'e',
                      SelectionTypes.Face:'f',
@@ -17,34 +17,29 @@ class ObjSelData(BaseStruct, dict):
                         SelectionTypes.Edge:32,
                         SelectionTypes.Face:34,
                         SelectionTypes.UV:35,
-                        SelectionTypes.VertexFace:70,
-                        SelectionTypes.Polygon:12}
+                        SelectionTypes.VertexFace:70}
     
     #--------------------------------------------------------
-    def __init__(self, obj, hilite=False, compData={}, vtxFaceColorData={}):
-        super(ObjSelData, self).__init__()
-        apiUtils.synthesize(self, 'object', obj)
-        apiUtils.synthesize(self, 'hilite', hilite)
-        apiUtils.synthesize(self, 'vtxFaceColorData', vtxFaceColorData)
-        
+    def __init__(self, *args, **kwds):
         #For each type of component add list var for it
         for compPrefix in ObjSelData._compPrefixes.values():
             self.__setitem__(compPrefix, [])
-        
-        if compData:
-            self._set_data(data_dict=compData)
-            
-    #------------------------------------------------------------
-    def _set_data(self, data_dict):
-        for key, value in data_dict.items():
-            self.__setitem__(key, value)
+        super(ObjSelData, self).__init__(*args, **kwds)
     
     #------------------------------------------------------------
-    def __get(self):
-        return (self.object(),
+    def serialize(self):
+        return (self.add_quotes(self.object()),
                 self.hilite(),
-                super(dict, self).__repr__(),
+                dict(self),
                 self.vtxFaceColorData())
+    
+    #------------------------------------------------------------
+    def deserialize(self, obj='', hilite=False, compData={}, vtxFaceColorData={}):
+        apiUtils.synthesize(self, 'object', obj)
+        apiUtils.synthesize(self, 'hilite', hilite)
+        apiUtils.synthesize(self, 'vtxFaceColorData', vtxFaceColorData)
+        if compData:
+            self._set_data(data_dict=compData)
     
     #--------------------------------------------------------
     def populateSubSelection(self):
@@ -78,12 +73,12 @@ class ObjSelData(BaseStruct, dict):
         '''Populates a dictionary of selected components of the given type'''
         compType = ObjSelData._filterExpandMap[selType]
         compPrefix = ObjSelData._compPrefixes[selType]
-        selectedComp = cmds.filterExpand(ex=1,fp=1,sm=compType)
-        if selectedComp is None:
-            return
+        selectedComp = cmds.filterExpand(ex=1,fp=1,sm=compType) or []
         for comp in selectedComp :
-            compNum = comp.split('[')[-1].split(']')[0]
-            self.__getitem__(compPrefix).append(compNum)
+            parent_transform = comp.split('.')[0].rsplit('|',1)[0]
+            if parent_transform == self.object() :
+                compNum = comp.split('[')[-1].split(']')[0]
+                self.__getitem__(compPrefix).append(compNum)
             
 
     #--------------------------------------------------------
@@ -104,25 +99,44 @@ class ObjSelData(BaseStruct, dict):
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class Selection(dict):
+class Selection(BaseDict):
     '''Custom Class to handle selection data as well as helper commands to use/parse the selection data'''
     #--------------------------------------------------------
-    def __init__(self):
-        super(Selection, self).__init__()
+    def __init__(self, *args, **kwds):
+        super(Selection, self).__init__(*args, **kwds)
 
     #--------------------------------------------------------
-    def getSelection(self):
-        self = Selection()
+    def storeSelection(self):
         #Handle Object Selection
         for item in cmds.ls(sl=1,tr=1,l=1):
-            self.__setitem__(item,ObjSelData(item))
+            obj = ObjSelData(item)
+            self.__setitem__(item, obj)
         
         #Handle Component Selection
         for item in cmds.ls(hl=1,l=1):
-            self.__setitem__(item,ObjSelData(item, hilite=True))
-            
-    def __repr__(self):
-            return 'Selection({0})'.format(super(Selection, self).__repr__())
+            obj = ObjSelData(item, hilite=True)
+            obj.populateSubSelection()
+            self.__setitem__(item, obj)
+        
+        #Handle Components whose mesh is hilited
+        sel_comps = []
+        clean_set = set()
+        for compType in ObjSelData._filterExpandMap.values():
+            sel_comps += cmds.filterExpand(ex=0,fp=1,sm=compType) or []
+        for item in sel_comps:
+            shape = item.split('.')[0]
+            parent = shape.rsplit('|',1)[0]
+            clean_set.add(parent)
+        for item in list(clean_set) :
+            obj = ObjSelData(item, hilite=True)
+            obj.populateSubSelection()
+            self.__setitem__(item, obj)
+        
+    
+    #--------------------------------------------------------
+    def clear(self):
+        for key in self.keys():
+            self.pop(key, None)
 
     #--------------------------------------------------------
     def select(self,obj,compType,clearSel=1,addVal=0):

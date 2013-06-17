@@ -5,16 +5,16 @@ import inspect
 class BaseStruct(object):
     #------------------------------------------------------------
     def __init__(self, *args, **kwds):
-        self.__set(*args, **kwds)
+        self.deserialize(*args, **kwds)
     
     #------------------------------------------------------------
-    def __get_repr_format(self):
-        return '{0}({1})'.format(type(self).__name__, self.__get_init_params_format())
+    def _get_repr_format(self):
+        return '{0}({1})'.format(type(self).__name__, self._get_init_params_format())
     
     #------------------------------------------------------------
-    def __get_init_params_format(self):
+    def _get_init_params_format(self):
         param_format = ''
-        params = inspect.getargspec(self.__init__)[0]
+        params = inspect.getargspec(self.deserialize)[0]
         params_count = len(params[1:])
         for i in range(params_count):
             param_format += '{0}='.format(params[i+1]) +'{'+str(i)+'}'
@@ -23,19 +23,19 @@ class BaseStruct(object):
         return param_format
     
     #------------------------------------------------------------
-    def __get_repr(self):
+    def _get_repr(self):
         try:
-            return self.__get_repr_format().format(*self.serialize())
+            return self._get_repr_format().format(*self.serialize())
         except:
-            return '{0}({1})'.format(type(self).__name__, *self.serialize())
+            return '{0}({1})'.format(type(self).__name__, self.serialize())
     
     #------------------------------------------------------------
     def __str__(self):
-        return self.__get_repr()
+        return self._get_repr()
     
     #------------------------------------------------------------
     def __repr__(self):
-        return self.__get_repr()
+        return self._get_repr()
     
     #------------------------------------------------------------
     def __eq__(self, other):
@@ -49,16 +49,52 @@ class BaseStruct(object):
         return not self.__eq__(other)
     
     #------------------------------------------------------------
-    def serialize(self):
-        '''When subclassing get should return a format that __set can read to re-setup the object'''
-        return None
+    def add_quotes(self, data):
+        '''Convenience method to help in serialization of strings'''
+        return "'{0}'".format(data)
     
     #------------------------------------------------------------
-    def __set(self, *args, **kwds):
-        '''When sublclassing this method should setup the object'''
+    def serialize(self):
+        '''Returns the arg list in which deserialize can recreate this object'''
+        return (None,)
+    
+    #------------------------------------------------------------
+    def deserialize(self, *args, **kwds):
+        '''If provided the info from serialize, this should should beable to construct the object
+        deserialize must provide all of the args for the spec because the format is pulled from this function'''
         pass
 
 
+#------------------------------------------------------------
+#------------------------------------------------------------
+class BaseDict(BaseStruct, dict):
+    #------------------------------------------------------------
+    def __init__(self, *args, **kwds):
+        super(BaseDict, self).__init__(*args, **kwds)
+        
+    #------------------------------------------------------------
+    def _set_data(self, data_dict):
+        for key, value in data_dict.items():
+            self.__setitem__(key, value)
+            
+    #------------------------------------------------------------
+    def set_default(self, default={}):
+        '''Allows the user to specify default values that should appear in the data'''
+        for key, value in default.items():
+            if not self.has_key(key):
+                self.__setitem__(key, eval(value))
+                
+    #------------------------------------------------------------
+    def serialize(self):
+        return (dict(self),)
+    
+    #------------------------------------------------------------
+    def deserialize(self, data_dict={}):
+        self._set_data(data_dict=data_dict)
+
+
+#------------------------------------------------------------
+#------------------------------------------------------------
 if __name__ == "__main__":
     base1 = BaseStruct()
     base2 = BaseStruct()
