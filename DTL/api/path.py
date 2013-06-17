@@ -482,6 +482,11 @@ class Path(unicode):
 
 
 if __name__ == "__main__" :
+    print Path.getMainDir()
+    
+    myPathSepTest = Path('c:\\Users/krockman/documents').join('mytest')
+    print myPathSepTest    
+    
     myPath = Path(r'C:\Users\krockman\documents\StarCitizen\Client\blur3d.tgz.zip.bin'.lower())
     print "documents" in myPath
     print myPath != myPath
