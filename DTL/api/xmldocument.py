@@ -199,7 +199,7 @@ class XmlDocument(Document):
     
     #------------------------------------------------------------
     def _unparse(self, data_dict, **kwds):
-        ((key, value),) = dict_input.items()
+        ((key, value),) = data_dict.items()
         output = StringIO()
         content_handler = XMLGenerator(output, 'utf-8')
         content_handler.startDocument()
