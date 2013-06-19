@@ -82,7 +82,6 @@ class Core(object):
         Logger.setupStreamLogger()
         
 
-
     #------------------------------------------------------------
     def rootWindow(self):
         """returns the current applications root window"""
