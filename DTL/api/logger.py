@@ -59,7 +59,7 @@ class Logger(object):
     #------------------------------------------------------------
     @staticmethod
     def setupDatabaseLogger(filepath=None, level=None):
-        filepath = filepath or Logger.LOGFILE
+        filepath = filepath or Logger.DATABASEFILE
         level = level or logging.WARNING
         
         handler = SQLiteHandler(filepath)
