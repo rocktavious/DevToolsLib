@@ -1,18 +1,16 @@
 rm -rf build
 rmdir build
-rm -rf DevToolsLib.egg-info
-rmdir DevToolsLib.egg-info
+rm -rf DTL.egg-info
+rmdir DTL.egg-info
 rm -rf dist
 rmdir dist
 
-python setup.py bdist
-python setup.py bdist_rpm
-python setup.py bdist_egg
+python setup.py bdist bdist_rpm bdist_egg upload
 
 rm -rf build
 rmdir build
-rm -rf DevToolsLib.egg-info
-rmdir DevToolsLib.egg-info
+rm -rf DTL.egg-info
+rmdir DTL.egg-info
 
 echo "Press enter to finish"
 read -n 1 -s
