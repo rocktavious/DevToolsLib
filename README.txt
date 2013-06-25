@@ -1,5 +1,5 @@
-===========
+====================
 Dev Tools Library
 ====================
-Multiplatform, multiapplication tools development api
+Multiplatform tools development api
 

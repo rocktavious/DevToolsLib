@@ -5,7 +5,7 @@ import os
 import sys
 import getpass
 
-__version__ = '1.0.4'
+__version__ = '1.0.7'
 __company__ = 'Cloud Imperium'
 __user__ = getpass.getuser()
 __authors__ = ['Kyle Rockman', 'John Crocker']
@@ -16,9 +16,9 @@ __pkgresources__ = os.path.join(__pkgdir__, 'resources')
 __installers__ = os.path.join(__pkgdir__,'installers')
 
 if sys.platform == 'win32' :
-    __appdata__ = os.path.join(os.environ['APPDATA'], __company__, __pkgname__)
+    __appdata__ = os.path.join(os.environ['APPDATA'], __company__)
 else:
-    __appdata__ = os.path.join(os.environ['HOME'], 'Documents', __company__, __pkgname__)
+    __appdata__ = os.path.join(os.environ['HOME'], 'Documents', __company__)
     
 try:
     os.makedirs(__appdata__,0777)
