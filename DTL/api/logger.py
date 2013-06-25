@@ -59,12 +59,15 @@ class Logger(object):
     #------------------------------------------------------------
     @staticmethod
     def setupDatabaseLogger(filepath=None, level=None):
+        pass
+        '''
         filepath = filepath or Logger.DATABASEFILE
         level = level or logging.WARNING
         
         handler = SQLiteHandler(filepath)
         handler.setLevel(level)
         Logger.addHandler(handler)
+        '''
     
     #------------------------------------------------------------
     @staticmethod
