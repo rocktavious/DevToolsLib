@@ -5,7 +5,7 @@ rmdir DTL.egg-info
 rm -rf dist
 rmdir dist
 
-python setup.py bdist bdist_rpm bdist_egg upload
+python register setup.py bdist bdist_rpm bdist_egg upload
 
 rm -rf build
 rmdir build
