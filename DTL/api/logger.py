@@ -55,6 +55,8 @@ class Logger(object):
         handler = SafeRotatingFileHandler(filepath, **kwargs)
         handler.setFormatter(formatter)
         handler.setLevel(level)
+        
+        Logger.addHandler(handler)
     
     #------------------------------------------------------------
     @staticmethod
