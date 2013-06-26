@@ -25,13 +25,6 @@ import errno
 
 __all__ = ['Path']
 
-def mainIsFrozen():
-    """Returns whether we are frozen via py2exe.
-    This will affect how we find out where we are located."""
-    return (hasattr(sys, "frozen") or # new py2exe
-            hasattr(sys, "importers") # old py2exe
-            or imp.is_frozen("__main__")) # tools/freeze
-
 #------------------------------------------------------------
 #------------------------------------------------------------
 class ClassProperty(property):
@@ -63,19 +56,23 @@ class Path(unicode):
         What class should be used to construct new instances from this class
         """
         return cls
+    
     @classmethod
     def getcwd(cls):
         """ Return the current working directory as a path object. """
         return cls(os.getcwdu())
+    
     @classmethod
     def getMainDir(cls):
         """ This will get us the program's directory,
         even if we are frozen using py2exe"""
-        if mainIsFrozen():
-            return cls(os.path.dirname(sys.executable))
-        if sys.argv[0] == '' :
-            return cls.getcwd()
-        return cls(os.path.dirname(sys.argv[0]))
+        from DTL import getcwd
+        return cls(getcwd())
+    
+    @classmethod
+    def getHomeDir(cls):
+        """ This will get us the user's home directory"""
+        return cls('~').expand()
 
     #------------------------------------------------------------
     # Path object dunder methods

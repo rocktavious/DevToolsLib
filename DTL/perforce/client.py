@@ -1,10 +1,12 @@
+import os
 import sys
 import traceback
 from functools import partial
 from P4 import P4, P4Exception
 
 from DTL.api import Path, Logger, apiUtils
-from DTL.gui.widgets import P4LoginWidget
+from DTL.gui import guiUtils
+from DTL.gui.widgets import LoginWidget
 
 from functools import wraps  # use this to preserve function signatures and docstrings
 
@@ -29,14 +31,26 @@ class P4Client(object):
             
     #------------------------------------------------------------
     def _setupConnection(self):
-        success, user, password, port, client = P4LoginWidget.getCredentials(loginMsg='P4 Login', credentialsFile=apiUtils.getTempFilepath('p4_login.dat'))
+        success, user, password = LoginWidget.getCredentials(loginMsg='P4 Login', credentialsFile=apiUtils.getTempFilepath('p4_login.dat'))
         if not success:
             raise ValueError('Invalid Login Infomation!')
+        if os.getenv('P4PORT') is None:
+            success, port = guiUtils.getUserInput(msg='Please Enter P4PORT:')
+            if not success :
+                raise P4Exception('Unable to determine P4PORT')
+            apiUtils.setEnv('P4PORT', port)
+            
+        if os.getenv('P4CLIENT') is None:
+            success, client = guiUtils.getUserInput(msg='Please Enter P4CLIENT:')
+            if not success :
+                raise P4Exception('Unable to determine P4CLIENT')
+            apiUtils.setEnv('P4CLIENT', client)
+        
         p4conn = P4()
-        p4conn.port = port
-        p4conn.user = user
-        p4conn.password = password
-        p4conn.client = client
+        p4conn.port = os.getenv('P4PORT')
+        p4conn.user = os.getenv('P4USER') or user
+        p4conn.password = os.getenv('P4PASSWD') or password
+        p4conn.client = os.getenv('P4CLIENT')
         p4conn.connect()
         p4conn.prog = "DTL Perforce Python Tools"
         p4conn.exception_level = 1 # ignore warnings

@@ -10,9 +10,30 @@ import types
 import re
 import subprocess
 import inspect
+import string
+from ctypes import windll
 
 from DTL import __appdata__
 from DTL.api.path import Path
+
+#------------------------------------------------------------
+def setEnv(key, value):
+    os.environ[key] = value
+    if sys.platform == 'win32' :
+        os.system('SETX {0} "{1}"'.format(key, value))
+    else:
+        os.system('set {0}={1};export {0}'.format(key, value))
+
+#------------------------------------------------------------
+def getDrives():
+    drives = []
+    bitmask = windll.kernel32.GetLogicalDrives()
+    for letter in string.uppercase:
+        if bitmask & 1:
+            drives.append(letter)
+        bitmask >>= 1
+
+    return drives
 
 #------------------------------------------------------------
 def getTempFilepath(filename):
@@ -22,7 +43,7 @@ def getTempFilepath(filename):
 def isBinary(filepath):
     """Return true if the given filepath appears to be binary."""
     #------------------------------------------------------------
-    def has_binary_byte(filepath):
+    def hasBinaryByte(filepath):
         """File is considered to be binary if it contains a NULL byte."""
         with open(filepath, 'rb') as f:
             for block in f:
@@ -31,14 +52,14 @@ def isBinary(filepath):
         return False
 
     #------------------------------------------------------------
-    def is_binary_string(filepath):
+    def isBinaryString(filepath):
         """File is considered to be binary if the data is binary."""
         textchars = ''.join(map(chr, [7,8,9,10,12,13,27] + range(0x20, 0x100)))
         string_test = lambda bytes: bool(bytes.translate(None, textchars))
         return string_test(open(filepath).read(1024))
 
     #If information in the filepath has both binary data and the binary NULL byte then its safe to say its binary
-    return is_binary_string(filepath) == has_binary_byte(filepath)
+    return isBinaryString(filepath) == hasBinaryByte(filepath)
 
 #------------------------------------------------------------
 def write(*args):
