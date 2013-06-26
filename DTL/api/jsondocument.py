@@ -23,3 +23,7 @@ class JsonDocument(Document):
         '''Reads from a json file the dictionary data'''
         return json.load(file_handle)
 
+
+if __name__ == "__main__":
+    json_doc = JsonDocument({},'file/path/to/doc')
+    print json_doc == JsonDocument(data_dict={}, file_path='file/path/to/doc')
