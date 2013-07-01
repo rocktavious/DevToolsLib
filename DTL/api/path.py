@@ -16,6 +16,7 @@ import os
 import imp
 import sys
 import shutil
+import ctypes
 
 import re
 import fnmatch
@@ -24,6 +25,29 @@ import glob
 import errno
 
 __all__ = ['Path']
+
+#------------------------------------------------------------
+#Handle Symlink for any OS
+__CSL = None
+try :
+    __CSL = os.symlink
+    def symlink(source, link_name, flags=0):
+        __CSL(source, link_name)
+except:
+    __CSL = None
+    def symlink(source, link_name, flags=0):
+        '''symlink(source, link_name)
+           Creates a symbolic link pointing to source named link_name'''
+        global __CSL
+        if __CSL is None:
+            csl = ctypes.windll.kernel32.CreateSymbolicLinkW
+            csl.argtypes = (ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint32)
+            csl.restype = ctypes.c_ubyte
+            __CSL = csl
+        if __CSL(source, link_name, flags) == 0:
+            raise ctypes.WinError()
+    
+os.symlink = symlink
 
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -116,6 +140,8 @@ class Path(unicode):
     def chmod(self, mode): os.chmod(self, mode)
     def rename(self, new): os.rename(self, new); return self._next_class(new)
     def unlink(self): os.unlink(self)
+    def symlink(self, link): os.symlink(self, link, 0)
+    def symlinkdir(self, link): os.symlink(self, link, 1)
     
     #------------------------------------------------------------
     # os.path module wrappers
