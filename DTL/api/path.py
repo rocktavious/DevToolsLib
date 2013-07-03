@@ -140,8 +140,12 @@ class Path(unicode):
     def chmod(self, mode): os.chmod(self, mode)
     def rename(self, new): os.rename(self, new); return self._next_class(new)
     def unlink(self): os.unlink(self)
-    def symlink(self, link): os.symlink(self, link, 0)
-    def symlinkdir(self, link): os.symlink(self, link, 1)
+    def symlink(self, link): 
+        if not self.exists():
+            os.symlink(self, link, 0)
+    def symlinkdir(self, link):
+        if not self.exists():
+            os.symlink(self, link, 1)
     
     #------------------------------------------------------------
     # os.path module wrappers

@@ -16,55 +16,81 @@ def requiresP4Conn(func):
     #------------------------------------------------------------
     @wraps(func)
     def inner(*args, **kwargs):
-        args[0]._connect()
-        return func(*args, **kwargs)
+        try:
+            args[0]._connect()
+            return func(*args, **kwargs)
+        except P4Exception:
+            for e in args[0].p4Conn().errors:
+                print e
+        except:
+            traceback.print_exc()
     return inner
 
 #------------------------------------------------------------
 #------------------------------------------------------------
 class P4Client(object):
     #------------------------------------------------------------
-    def __init__(self, verbose=False):
+    def __init__(self, username=None, password=None, client=None, port=None, verbose=False):
         apiUtils.synthesize(self, 'p4Conn', None)
         apiUtils.synthesize(self, 'p4Info', {})
         apiUtils.synthesize(self, 'verbose', verbose)
-            
+        apiUtils.synthesize(self, 'p4User', username or os.getenv('P4USER'))
+        apiUtils.synthesize(self, 'p4Password', password or os.getenv('P4PASSWD'))
+        apiUtils.synthesize(self, 'p4Client', client or os.getenv('P4CLIENT'))
+        apiUtils.synthesize(self, 'p4Port', port or os.getenv('P4PORT'))
+    
     #------------------------------------------------------------
     def _setupConnection(self):
-        success, user, password = LoginWidget.getCredentials(loginMsg='P4 Login', credentialsFile=apiUtils.getTempFilepath('p4_login.dat'))
-        if not success:
-            raise ValueError('Invalid Login Infomation!')
-        if os.getenv('P4PORT') is None:
-            success, port = guiUtils.getUserInput(msg='Please Enter P4PORT:')
-            if not success :
-                raise P4Exception('Unable to determine P4PORT')
-            apiUtils.setEnv('P4PORT', port)
-            
-        if os.getenv('P4CLIENT') is None:
+        #Validate Credentials
+        if self.p4User() is None or self.p4Password() is None:
+            success, user, password = LoginWidget.getCredentials(loginMsg='P4 Login', credentialsFile=apiUtils.getTempFilepath('p4_login.dat'))
+            if not success:
+                raise ValueError('Invalid Login Infomation!')
+            self.setP4User(user)
+            self.setP4Password(password)
+            #Set the env's for next time
+            apiUtils.setEnv('P4USER', self.p4User())
+            apiUtils.setEnv('P4PASSWD', self.p4Password())
+        
+        #Validate Client Workspace
+        if self.p4Client() is None:
             success, client = guiUtils.getUserInput(msg='Please Enter P4CLIENT:')
             if not success :
                 raise P4Exception('Unable to determine P4CLIENT')
-            apiUtils.setEnv('P4CLIENT', client)
+            self.setP4Client(client)
+            #Set the env's for next time
+            apiUtils.setEnv('P4CLIENT', self.p4Client())
         
-        p4conn = P4()
-        p4conn.port = os.getenv('P4PORT')
-        p4conn.user = os.getenv('P4USER') or user
-        p4conn.password = os.getenv('P4PASSWD') or password
-        p4conn.client = os.getenv('P4CLIENT')
-        p4conn.connect()
-        p4conn.prog = "DTL Perforce Python Tools"
-        p4conn.exception_level = 1 # ignore warnings
+        #Validate P4 Port
+        if self.p4Port() is None:
+            success, port = guiUtils.getUserInput(msg='Please Enter P4PORT:')
+            if not success :
+                raise P4Exception('Unable to determine P4PORT')
+            self.setP4Port(port)
+            #Set the env's for next time
+            apiUtils.setEnv('P4PORT', self.p4Port())
+        
 
-            
-        p4info = p4conn.run("info")[0] # Run "p4 info" (returns a dict)
+        #Try Connecting
+        self.setP4Conn(P4())
+        self.p4Conn().user = self.p4User()
+        self.p4Conn().password = self.p4Password()
+        self.p4Conn().client = self.p4Client()
+        self.p4Conn().port = self.p4Port()
+        
+        self.p4Conn().connect()
+        self.p4Conn().prog = "DTL Perforce Python Tools"
+        self.p4Conn().exception_level = 1 # ignore warnings
+
+        #Grab p4Info
+        p4info = self.p4Conn().run("info")[0] # Run "p4 info" (returns a dict)
         if self.verbose() :
             for key, value in p4info.items() :
                 print key, '\t', value
         #Test Connection
-        if not p4conn.connected() :
+        if not self.p4Conn().connected() :
             raise P4Exception('Unable to validate connection')
         
-        self.setP4Conn(p4conn)
         self.setP4Info(p4info)
     
     #------------------------------------------------------------

@@ -17,15 +17,54 @@ from DTL import __appdata__
 from DTL.api.path import Path
 
 #------------------------------------------------------------
+def write(*args):
+    '''This is here so the API can control where the output goes, and how its goes
+    This allows users to make sure their scripts are non-buffering,
+    so if they are used by execute with verbose mode we can see the output'''
+    line = ''.join(args)
+    if not line.endswith('\n'):
+        line = line + '\n'
+    sys.stdout.write(line)
+    sys.stdout.flush()
+
+#------------------------------------------------------------
+def execute(cmd, verbose=False, catchError=False):
+    '''Given an excutable command, will wrap it in a subprocess call and return the returncode, stdout and stderr'''
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    if verbose :
+        while process.poll() is None:
+            out = process.stdout.readline()
+            if out != '' :
+                write(out)
+    
+    if catchError and process.returncode:
+        for line in process.stderr :
+            write(line)
+        write('[PROCESS FAILED]:{0}'.format(cmd))
+        sys.exit()
+    process.stdout.seek(0,0)
+    return process.returncode, process.stdout, process.stderr  
+
+#------------------------------------------------------------
 def setEnv(key, value):
+    '''method to set the env in a platform independent way'''
     os.environ[key] = value
     if sys.platform == 'win32' :
-        os.system('SETX {0} "{1}"'.format(key, value))
+        execute(['SETX',key,value], catchError=True)
     else:
-        os.system('set {0}={1};export {0}'.format(key, value))
+        execute(['set', '{0}={1}'.format(key,value)], catchError=True)
+        execute(['export', key], catchError=True)
+
+#------------------------------------------------------------
+def clearEnv(key):
+    '''Convenience method for clearing env's'''
+    setEnv(key, '')
 
 #------------------------------------------------------------
 def getDrives():
+    '''method to get the drive letters in a platform independant way
+    TODO: Make Unix Compatible'''
     drives = []
     bitmask = windll.kernel32.GetLogicalDrives()
     for letter in string.uppercase:
@@ -61,24 +100,7 @@ def isBinary(filepath):
     #If information in the filepath has both binary data and the binary NULL byte then its safe to say its binary
     return isBinaryString(filepath) == hasBinaryByte(filepath)
 
-#------------------------------------------------------------
-def write(*args):
-    '''This is here so the API can control where the output goes'''
-    sys.stdout.write(''.join(args))
-
-#------------------------------------------------------------
-def execute(cmd, verbose=False, catchError=False):
-    '''Given an excutable command, will wrap it in a subprocess call and return the returncode, stdout and stderr'''
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate()
-    if verbose :
-        write(*stdout)
-    if catchError and process.returncode:
-        if not verbose:
-            write(*stdout)
-        raise Exception('[FAILED] {0}'.format(cmd))
-
-    return process.returncode, stdout, stderr    
+  
 
 
 

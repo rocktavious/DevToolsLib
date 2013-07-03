@@ -29,10 +29,10 @@ def cleanup():
     for file_path in local_path.walk('*.pyc') :
         file_path.remove()
 
-__version__ = '1.0.5'
+__version__ = '1.0.6'
 __company__ = 'Cloud Imperium'
 __user__ = getpass.getuser()
-__authors__ = ['Kyle Rockman', 'John Crocker']
+__authors__ = ['Kyle Rockman']
 __docformat__ = 'restructuredtext en'
 __pkgdir__ = os.path.dirname(getcwd())
 __pkgname__ = os.path.basename(__pkgdir__)
