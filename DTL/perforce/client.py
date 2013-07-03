@@ -49,8 +49,8 @@ class P4Client(object):
             self.setP4User(user)
             self.setP4Password(password)
             #Set the env's for next time
-            apiUtils.setEnv('P4USER', self.p4User())
-            apiUtils.setEnv('P4PASSWD', self.p4Password())
+        apiUtils.setEnv('P4USER', self.p4User())
+        apiUtils.setEnv('P4PASSWD', self.p4Password())
         
         #Validate Client Workspace
         if self.p4Client() is None:
@@ -59,7 +59,7 @@ class P4Client(object):
                 raise P4Exception('Unable to determine P4CLIENT')
             self.setP4Client(client)
             #Set the env's for next time
-            apiUtils.setEnv('P4CLIENT', self.p4Client())
+        apiUtils.setEnv('P4CLIENT', self.p4Client())
         
         #Validate P4 Port
         if self.p4Port() is None:
@@ -68,7 +68,7 @@ class P4Client(object):
                 raise P4Exception('Unable to determine P4PORT')
             self.setP4Port(port)
             #Set the env's for next time
-            apiUtils.setEnv('P4PORT', self.p4Port())
+        apiUtils.setEnv('P4PORT', self.p4Port())
         
 
         #Try Connecting

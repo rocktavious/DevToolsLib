@@ -42,7 +42,7 @@ def execute(cmd, verbose=False, catchError=False):
         for line in process.stderr :
             write(line)
         write('[PROCESS FAILED]:{0}'.format(cmd))
-        sys.exit()
+        raise Exception('[PROCESS FAILED]:{0}'.format(cmd))
     process.stdout.seek(0,0)
     return process.returncode, process.stdout, process.stderr  
 
