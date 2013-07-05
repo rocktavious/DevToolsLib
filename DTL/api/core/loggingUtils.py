@@ -10,94 +10,75 @@ from DTL.api.core import Path
 
 _streamLoggerSetupComplete = False
 
+
+LOGFILE = os.path.join(__appdata__,'logs',__pkgname__ + '.log')
+DATABASEFILE = os.path.join(__appdata__,'logs',__pkgname__ + '.db')
+
+HUMANTIMEFORMAT = '%b %d %I:%M:%S %p'
+CODETIMEFORMAT = "%Y-%m-%d_%H:%M:%S"
+VERBOSE = logging.Formatter('[%(levelname)s]%(asctime)s | [%(name)s][%(module)s][%(funcName)s][line:%(lineno)s] \n\t %(message)s', HUMANTIMEFORMAT)
+SIMPLE = logging.Formatter('[%(levelname)s] %(message)s')
+
+
 #------------------------------------------------------------
+def getRootLogger():
+    return logging.getLogger('DTL')
+
 #------------------------------------------------------------
-class Logger(object):
-    LOGFILE = os.path.join(__appdata__,'logs',__pkgname__ + '.log')
-    DATABASEFILE = os.path.join(__appdata__,'logs',__pkgname__ + '.db')
+def getLogger(name):
+    return logging.getLogger(name)
+
+#------------------------------------------------------------
+def addHandler(handler):
+    logger = getRootLogger()
+    logger.addHandler(handler)
     
-    VERBOSE = logging.Formatter('[%(levelname)s]%(asctime)s | [%(name)s][%(module)s][%(funcName)s][line:%(lineno)s] \n\t %(message)s', '%b %d %I:%M:%S %p')
-    SIMPLE = logging.Formatter('[%(levelname)s] %(message)s')
+#------------------------------------------------------------
+def setupFileHandler(filepath=None, level=None, formatter=None):
+    filepath = filepath or LOGFILE
+    level = level or logging.INFO
+    formatter = formatter or VERBOSE
     
-    #------------------------------------------------------------
-    @staticmethod
-    def getMetaClass():
-        Logger.setupStreamLogger()
-        return LoggerMetaclass
+    kwargs = dict(maxBytes = 1024*1024, backupCount=64, delay=True)
+    handler = SafeRotatingFileHandler(filepath, **kwargs)
+    handler.setFormatter(formatter)
+    handler.setLevel(level)
     
-    #------------------------------------------------------------
-    @staticmethod
-    def getLogger():
-        Logger.setupStreamLogger()
-        return logging.getLogger(__pkgname__)
+    addHandler(handler)
+
+#------------------------------------------------------------
+def setupDatabaseHandler(filepath=None, level=None):
+    filepath = filepath or DATABASEFILE
+    level = level or logging.WARNING
     
-    #------------------------------------------------------------
-    @staticmethod
-    def getSubLogger(name):
-        Logger.setupStreamLogger()
-        return logging.getLogger('{0}.{1}'.format(__pkgname__, name))
-    
-    #------------------------------------------------------------
-    @staticmethod
-    def addHandler(handler):
-        logger = Logger.getLogger()
-        logger.setLevel(logging.DEBUG)
-        logger.addHandler(handler)
-    
-    #------------------------------------------------------------
-    @staticmethod
-    def setupFileLogger(filepath=None, level=None, formatter=None):
-        filepath = filepath or Logger.LOGFILE
+    handler = SQLiteHandler(filepath)
+    handler.setLevel(level)
+    addHandler(handler)
+
+#------------------------------------------------------------
+def setupStreamHandler(level=None, formatter=None):
+    global _streamLoggerSetupComplete
+    if _streamLoggerSetupComplete is False :
+        _streamLoggerSetupComplete = True
         level = level or logging.INFO
-        formatter = formatter or Logger.VERBOSE
+        formatter = formatter or SIMPLE
         
-        kwargs = dict(maxBytes = 1024*1024, backupCount=64, delay=True)
-        handler = SafeRotatingFileHandler(filepath, **kwargs)
+        handler = logging.StreamHandler()
         handler.setFormatter(formatter)
         handler.setLevel(level)
+        addHandler(handler)
         
-        Logger.addHandler(handler)
-    
-    #------------------------------------------------------------
-    @staticmethod
-    def setupDatabaseLogger(filepath=None, level=None):
-        pass
-        '''
-        filepath = filepath or Logger.DATABASEFILE
-        level = level or logging.WARNING
-        
-        handler = SQLiteHandler(filepath)
-        handler.setLevel(level)
-        Logger.addHandler(handler)
-        '''
-    
-    #------------------------------------------------------------
-    @staticmethod
-    def setupStreamLogger(level=None, formatter=None):
-        global _streamLoggerSetupComplete
-        if _streamLoggerSetupComplete is False :
-            _streamLoggerSetupComplete = True
-            level = level or logging.INFO
-            formatter = formatter or Logger.SIMPLE
-            
-            handler = logging.StreamHandler()
-            handler.setFormatter(formatter)
-            handler.setLevel(level)
-            Logger.addHandler(handler)
-            
-            
-
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class LoggerMetaclass(type):
+class LoggingMetaclass(type):
     """
-    Metaclass for Logging, will add self.logger to the class
+    Metaclass for Logging, will add self.log to the class
     """
     #------------------------------------------------------------
     def __init__(cls, name, bases, attrs):
-        super(LoggerMetaclass, cls).__init__(name, bases, attrs)
-        cls.logger = Logger.getLogger()
+        super(LoggingMetaclass, cls).__init__(name, bases, attrs)
+        cls.log = getLogger(cls.__module__)
 
 
 #------------------------------------------------------------
@@ -172,7 +153,7 @@ class SQLiteHandler(logging.Handler):
         else:
             self.db = Path(db)
             self.db.makedirs()
-            self.db = self.db
+            
         # Create table if needed:
         conn = sqlite3.connect(self.db)
         conn.execute(SQLiteHandler.initial_sql)
@@ -180,7 +161,7 @@ class SQLiteHandler(logging.Handler):
 
     #------------------------------------------------------------
     def formatDBTime(self, record):
-        record.dbtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(record.created))
+        record.dbtime = time.strftime(CODETIMEFORMAT, time.localtime(record.created))
 
     #------------------------------------------------------------
     def emit(self, record):

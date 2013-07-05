@@ -1,11 +1,10 @@
 import time
-from DTL.api.stopwatch import Stopwatch
-from DTL.api.logger import Logger
+from DTL.api import loggingUtils, Stopwatch
 
 #------------------------------------------------------------
 #------------------------------------------------------------
 class SafeCall(object):
-    __metaclass__ = Logger.getMetaClass()
+    __metaclass__ = loggingUtils.LoggingMetaclass
     #------------------------------------------------------------
     def __init__(self, func):
         self.func = func
@@ -39,7 +38,7 @@ class SafeCall(object):
 
     #------------------------------------------------------------
     def error(self, retval, *a, **kw):
-        self.logger.exception("")
+        self.log.exception("")
         
 
 #------------------------------------------------------------

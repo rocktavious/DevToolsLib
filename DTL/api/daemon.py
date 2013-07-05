@@ -11,7 +11,7 @@ import time
 import logging
 import logging.handlers
 
-from DTL.api.logger import Logger
+from DTL.api import loggingUtils
 
 
 if (hasattr(os, "devnull")):
@@ -41,7 +41,7 @@ class Daemon(object):
     
     Usage: subclass the Daemon class and override the mainloop() and shutdown() method
     """
-    __metaclass__ = Logger.getMetaClass()
+    __metaclass__ = loggingUtils.LoggingMetaclass
     #------------------------------------------------------------
     def __init__(self, serviceName, pidfile, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL):
         super(Daemon, self).__init__()
@@ -201,7 +201,7 @@ class Daemon(object):
     #------------------------------------------------------------
     def mainloop(self):
         while self._continue :
-            self.logger.info("Daemon is running!")
+            self.log.info("Daemon is running!")
             time.sleep(2)
     
     #------------------------------------------------------------

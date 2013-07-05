@@ -4,7 +4,7 @@ from urlparse import urljoin
 import urllib2
 import base64
 
-from DTL.api import InternalError, Logger, apiUtils
+from DTL.api import InternalError, apiUtils, loggingUtils
 from DTL.gui.widgets import LoginWidget
 
 #------------------------------------------------------------
@@ -36,7 +36,7 @@ class RequestWithMethod(urllib2.Request):
 #------------------------------------------------------------
 class ExecClient(object):
     """ This class actually implements the HTTP Request and Response packaging"""
-    __metaclass__ = Logger.getMetaClass()
+    __metaclass__ = loggingUtils.LoggingMetaclass
     #------------------------------------------------------------
     def __init__(self, auth_handler):
         apiUtils.synthesize(self, 'opener', urllib2.build_opener(auth_handler))
@@ -58,9 +58,9 @@ class ExecClient(object):
             response = self.opener().open(request)
         except urllib2.URLError, e:
             if hasattr(e, 'reason'):
-                self.logger.error('We failed to reach a server. Reason: {0}'.format(e.reason))
+                self.log.error('We failed to reach a server. Reason: {0}'.format(e.reason))
             elif hasattr(e, 'code'):
-                self.logger.error('The server could not fulfill the request. Status code: {0}'.format(e.code))
+                self.log.error('The server could not fulfill the request. Status code: {0}'.format(e.code))
             return ClientResponse(client_request.resource, e, client_request.resource.client)
         else:
             return ClientResponse(client_request.resource, response, client_request.resource.client)

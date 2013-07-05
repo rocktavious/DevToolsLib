@@ -1,11 +1,11 @@
 import datetime
 
-from DTL.api.logger import Logger
+from DTL.api import loggingUtils
 
 #------------------------------------------------------------
 #------------------------------------------------------------
 class Stopwatch(object):
-    __metaclass__ = Logger.getMetaClass()
+    __metaclass__ = loggingUtils.LoggingMetaclass
     #------------------------------------------------------------
     def __init__(self, name):
         self._name = str(name)
@@ -41,9 +41,9 @@ class Stopwatch(object):
         ttime = str(datetime.datetime.now() - self._starttime)
 
         # output the logs
-        self.logger.info('Time:{0} | {1} Stopwatch'.format(ttime,self._name))
+        self.log.info('Time:{0} | {1} Stopwatch'.format(ttime,self._name))
         for record in self._records :
-            self.logger.info(record)
+            self.log.info(record)
         
         return True
     

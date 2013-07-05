@@ -4,7 +4,7 @@ import logging
 from functools import partial
 from argparse import ArgumentParser
 
-from DTL.api import Logger, apiUtils, ImportModule
+from DTL.api import loggingUtils, apiUtils, ImportModule
 
 class pycisArgumentParser(ArgumentParser):
     """ArgumentParser that doesn't exit on error"""
@@ -24,7 +24,7 @@ class pycisArgumentParser(ArgumentParser):
 
 class pyCis(object):
     '''pyCis - Python Console Intelligence System'''
-    __metaclass__ = Logger.getMetaClass()
+    __metaclass__ = loggingUtils.LoggingMetaclass
     
     #------------------------------------------------------------
     def __init__(self):
@@ -37,7 +37,7 @@ class pyCis(object):
         
     #------------------------------------------------------------
     def _setupLogging(self):
-        Logger.setupStreamLogger(formatter=logging.Formatter('\t%(message)s'))
+        loggingUtils.setupStreamLogger(formatter=logging.Formatter('\t%(message)s'))
     
     #------------------------------------------------------------
     def _setupParser(self):

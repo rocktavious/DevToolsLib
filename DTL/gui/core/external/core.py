@@ -1,15 +1,13 @@
 import logging
 
 from DTL import __company__
-from DTL.api.logger import Logger
-from DTL.api import apiUtils
-from DTL.api.enum import Enum
+from DTL.api import Enum, apiUtils, loggingUtils
 
 #------------------------------------------------------------
 #------------------------------------------------------------
 class Core(object):
     '''Tool Environment Core'''
-    __metaclass__ = Logger.getMetaClass()
+    __metaclass__ = loggingUtils.LoggingMetaclass
     EnvironmentTypes = Enum("External","Maya","Max","MotionBuilder")
     
     _instance = None
@@ -76,10 +74,11 @@ class Core(object):
     # Begin Overriable methods
     #------------------------------------------------------------
     def setupLogging(self):
+        pass
         #Setup Defaults
-        Logger.setupFileLogger()
-        Logger.setupDatabaseLogger()
-        Logger.setupStreamLogger()
+        #Logger.setupFileLogger()
+        #Logger.setupDatabaseLogger()
+        #Logger.setupStreamLogger()
         
 
     #------------------------------------------------------------

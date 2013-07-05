@@ -27,7 +27,7 @@ import socket
 import struct
 import time
 
-from DTL.api import Logger, apiUtils
+from DTL.api import apiUtils, loggingUtils
 
 
 
@@ -52,7 +52,7 @@ def getLocalIP():
 #------------------------------------------------------------
 #------------------------------------------------------------
 class BaseSocket(object):
-    __metaclass__ = Logger.getMetaClass()
+    __metaclass__ = loggingUtils.LoggingMetaclass
     ADDRESS_FAMILY = socket.AF_INET
     SOCKET_TYPE = socket.SOCK_STREAM
     DEFAULT_PORT = 5000
@@ -95,12 +95,12 @@ class BaseSocket(object):
             if response != RESPONSE_TEST_SUCCESS :
                 return False
         except socket.timeout as e:
-            self.logger.info("socket.timeout: {0}".format(e))
+            self.log.info("socket.timeout: {0}".format(e))
             return False
         except Exception as e:
             #This helps when debugging
-            #self.logger.exception(e)
-            self.logger.info("send handshake failed: {0}".format(e))
+            #self.log.exception(e)
+            self.log.info("send handshake failed: {0}".format(e))
             self._close_connection()
             return False
         return True
@@ -112,12 +112,12 @@ class BaseSocket(object):
                 self._send(RESPONSE_TEST_SUCCESS)
                 data = self.recv_handler()
             except socket.timeout as e:
-                self.logger.info("socket.timeout: {0}".format(e))
+                self.log.info("socket.timeout: {0}".format(e))
                 return ''
             except Exception as e:
                 #This helps when debugging
-                #self.logger.exception(e)
-                self.logger.info("recv handshake failed: {0}".format(e))
+                #self.log.exception(e)
+                self.log.info("recv handshake failed: {0}".format(e))
                 self._close_connection()
                 return ''
         return data
@@ -157,20 +157,20 @@ class BaseSocket(object):
             return data
         except Exception as e:
             #This helps when debugging
-            #self.logger.exception(e)
-            self.logger.info("connection broken")
+            #self.log.exception(e)
+            self.log.info("connection broken")
             self._close_connection()
         
         return data
     
     #------------------------------------------------------------
     def _close_socket(self):
-        self.logger.info("closing main socket")
+        self.log.info("closing main socket")
         self.socket.close()
     
     #------------------------------------------------------------
     def _close_connection(self):
-        self.logger.info("closing the connection socket")
+        self.log.info("closing the connection socket")
         self.conn.close()
     
     #------------------------------------------------------------
@@ -179,10 +179,10 @@ class BaseSocket(object):
             try:
                 self.socket.connect( self.networkAddress() )
             except socket.error as msg:
-                self.logger.error("SockThread Error: %s" % msg)
+                self.log.error("SockThread Error: %s" % msg)
                 time.sleep(3)
                 continue
-            self.logger.info("...Socket Connected")
+            self.log.info("...Socket Connected")
             return True
         return False
     
@@ -213,7 +213,6 @@ class BaseSocket(object):
 #------------------------------------------------------------
 #------------------------------------------------------------
 class JsonSocket(BaseSocket):
-    __metaclass__ = Logger.getMetaClass()
     CONN_RETRY = 1
     
     #------------------------------------------------------------

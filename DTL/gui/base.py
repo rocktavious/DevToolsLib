@@ -2,7 +2,7 @@ import sys
 from PyQt4 import QtGui, uic
 from PyQt4.QtCore import Qt
 
-from DTL.api import Path, Logger, apiUtils
+from DTL.api import Path, loggingUtils, apiUtils
 from DTL.gui import Core, guiUtils
 
 #------------------------------------------------------------
@@ -22,6 +22,7 @@ class BaseGUI(object):
 
     #------------------------------------------------------------
     def __init__( self, parent=None, flags=0, *args, **kwds ):
+        self.log = loggingUtils.getLogger(self.__module__)
         parent = self._validateParent(parent)
         
         if args :
@@ -31,8 +32,7 @@ class BaseGUI(object):
             self._qtclass.__init__(self, parent, flags)
         else:
             self._qtclass.__init__(self, parent)
-
-        self.logger = Logger.getSubLogger(self.__class__.__name__)
+        
         self.loadUi()
         self.setupStyle()
         self.onFinalize(**kwds)
@@ -93,7 +93,7 @@ class BaseGUI(object):
             if ui_file.exists() :
                 self = uic.loadUi(ui_file, self)
             else:
-                self.logger.warning('Unable to load ui file | {0}'.format(ui_file))
+                self.log.warning('Unable to load ui file | {0}'.format(ui_file))
     
     #------------------------------------------------------------
     def setupStyle(self):
@@ -111,3 +111,6 @@ class BaseGUI(object):
     #------------------------------------------------------------
     def readSettings(self, settings):
         pass
+
+if __name__ == '__main__':
+    pass

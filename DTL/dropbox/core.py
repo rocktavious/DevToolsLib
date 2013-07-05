@@ -1,10 +1,10 @@
 from dropbox import session, client
 
 from DTL import __appdata__
-from DTL.api import Path, apiUtils, Logger
+from DTL.api import Path, apiUtils, loggingUtils
 
 class Dropbox(object):
-    __metaclass__ = Logger.getMetaClass()
+    __metaclass__ = loggingUtils.LoggingMetaclass
     
     def __init__(self, appKey, appSecret, appAccessType):
         apiUtils.synthesize(self, "appKey", appKey)

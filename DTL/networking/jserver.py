@@ -19,7 +19,7 @@ class JsonServer(JsonSocket):
     def _bind(self):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind( self.networkAddress() )
-        self.logger.info('Server running on {0}'.format(self.networkAddress()))
+        self.log.info('Server running on {0}'.format(self.networkAddress()))
     
     #------------------------------------------------------------
     def _listen(self):
@@ -34,7 +34,7 @@ class JsonServer(JsonSocket):
         self._listen()
         self.conn, addr = self._accept()
         self.conn.settimeout(self.timeout())
-        self.logger.info("connection accepted from ({0}:{1})".format(addr[0] ,addr[1]))
+        self.log.info("connection accepted from ({0}:{1})".format(addr[0] ,addr[1]))
 
 
 #------------------------------------------------------------
@@ -60,10 +60,10 @@ class JsonServerThreaded(ThreadedProcessWithPrompt, JsonServer):
             try:
                 self.accept_connection()
             except socket.timeout as e:
-                self.logger.info("socket.timeout: %s" % e)
+                self.log.info("socket.timeout: %s" % e)
                 continue
             except Exception as e:
-                self.logger.exception(e)
+                self.log.exception(e)
                 continue
 
             while self.isMainloopAlive():
@@ -71,10 +71,10 @@ class JsonServerThreaded(ThreadedProcessWithPrompt, JsonServer):
                     obj = self.recv()
                     self._process_message(obj)
                 except socket.timeout as e:
-                    self.logger.info("socket.timeout: %s" % e)
+                    self.log.info("socket.timeout: %s" % e)
                     continue
                 except Exception as e:
-                    self.logger.exception(e)
+                    self.log.exception(e)
                     self._close_connection()
                     break
             self.close()
@@ -93,12 +93,12 @@ class ServerFactoryThread(ThreadedProcess, JsonSocket):
                 obj = self.recv()
                 self._process_message(obj)
             except socket.timeout as e:
-                self.logger.info("socket.timeout: %s" % e)
+                self.log.info("socket.timeout: %s" % e)
                 continue
             except Exception as e:
                 #This helps when debugging
-                #self.logger.exception(e)
-                self.logger.info("client connection broken, closing socket")
+                #self.log.exception(e)
+                self.log.info("client connection broken, closing socket")
                 self._close_connection()
                 break
         self.close()
@@ -123,10 +123,10 @@ class ServerFactory(JsonServerThreaded):
                 try:
                     self.accept_connection()
                 except socket.timeout as e:
-                    self.logger.info("socket.timeout: %s" % e)
+                    self.log.info("socket.timeout: %s" % e)
                     continue
                 except Exception as e:
-                    self.logger.exception(e)
+                    self.log.exception(e)
                     continue
                 else:
                     tmp.swap_socket(self.conn)
@@ -180,7 +180,7 @@ if __name__ == '__main__':
                 if obj['message'] == "new connection":
                     self.send({'action':'new connections'})
                 
-                self.logger.info("Received: {0}".format(obj))
+                self.log.info("Received: {0}".format(obj))
     
     #------------------------------------------------------------
     class MyServerFactory(ServerFactory):

@@ -2,7 +2,7 @@ import time
 import json
 import socket
 
-from DTL.api import Logger
+from DTL.api import loggingUtils
 from DTL.networking.jsocket import JsonSocket
 
 from DTL.api import Process
@@ -27,7 +27,7 @@ class JsonClient(JsonSocket, Process):
         
         self.send({"message":msg})
         msg = self.recv()
-        self.logger.info("client received: %s" % msg)
+        self.log.info("client received: %s" % msg)
         
     #------------------------------------------------------------
     def start(self):

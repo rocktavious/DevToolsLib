@@ -4,7 +4,7 @@ import traceback
 from functools import partial
 from P4 import P4, P4Exception
 
-from DTL.api import Path, Logger, apiUtils
+from DTL.api import Path, apiUtils
 from DTL.gui import guiUtils
 from DTL.gui.widgets import LoginWidget
 

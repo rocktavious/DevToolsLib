@@ -1,7 +1,6 @@
 import Py3dsMax
 from Py3dsMax import mxs
 
-from DTL.api.logger import Logger
 from DTL.api.cores.external.core import Core
 
 #------------------------------------------------------------
@@ -15,5 +14,6 @@ class StudioMaxCore(Core):
     
     #------------------------------------------------------------
     def setupLogging(self):
-        Logger.setupFileLogger()
-        Logger.setupDatabaseLogger()
+        pass
+        #Logger.setupFileLogger()
+        #Logger.setupDatabaseLogger()
