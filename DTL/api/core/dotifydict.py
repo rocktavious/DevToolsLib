@@ -1,4 +1,4 @@
-from DTL.api.bases import BaseStruct
+from DTL.api.core import BaseStruct
 
 #------------------------------------------------------------
 #------------------------------------------------------------

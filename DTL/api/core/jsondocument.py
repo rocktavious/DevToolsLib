@@ -1,9 +1,7 @@
 import os.path
 import json
 
-from DTL.api.path import Path
-from DTL.api.document import Document
-from DTL.api import apiUtils
+from DTL.api.core import Path, Document, apiUtils
 
 #------------------------------------------------------------
 #------------------------------------------------------------

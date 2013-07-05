@@ -14,7 +14,7 @@ import string
 from ctypes import windll
 
 from DTL import __appdata__
-from DTL.api.path import Path
+from DTL.api.core import Path
 
 #------------------------------------------------------------
 def write(*args):
@@ -73,6 +73,22 @@ def getDrives():
         bitmask >>= 1
 
     return drives
+
+#------------------------------------------------------------
+def wildcardToRe(pattern):
+	"""Translate a wildcard pattern to a regular expression"""
+	i, n = 0, len(pattern)
+	res = '(?i)' #case insensitive re
+	while i < n:
+		c = pattern[i]
+		i = i+1
+		if c == '*':
+			res = res + r'[^\\]*'
+		elif c == '/':
+			res = res + re.escape('\\')
+		else:
+			res = res + re.escape(c)
+	return res + "$"
 
 #------------------------------------------------------------
 def getTempFilepath(filename):

@@ -6,7 +6,7 @@ import threading
 import time
 
 from DTL import __pkgname__, __appdata__
-from DTL.api.path import Path
+from DTL.api.core import Path
 
 _streamLoggerSetupComplete = False
 
@@ -250,3 +250,4 @@ class SafeRotatingFileHandler (logging.handlers.RotatingFileHandler):
             rename (self.baseFilename, dfn)
         self.mode = 'w'
         self.stream = self._open()
+

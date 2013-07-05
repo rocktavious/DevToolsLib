@@ -9,6 +9,8 @@ from DTL.api.core.document import Document
 from DTL.api.core.jsondocument import JsonDocument
 from DTL.api.core.xmldocument import XmlDocument
 
+print __name__
+
 
 
         

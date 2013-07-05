@@ -1,6 +1,4 @@
-from DTL.api.bases import BaseDict
-from DTL.api.path import Path
-from DTL.api import apiUtils
+from DTL.api.core import BaseDict, Path, apiUtils
 
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -26,7 +24,7 @@ class Document(BaseDict):
 
     #------------------------------------------------------------
     def save(self):
-        '''Writes the dict data to the xml file'''
+        '''Writes the dict data to the file'''
         data_dict = self._unparse(self)
         if self.filePath() != '' :
             with open(self.filePath(),'wb') as file_handle :
