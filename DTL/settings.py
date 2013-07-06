@@ -5,34 +5,21 @@ import getpass
 
 from DTL.api import JsonDocument, Path
 
-class _Settings(JsonDocument):
+class Settings(JsonDocument):
 
     #------------------------------------------------------------
-    def __init__(self, *args, **kwds):
-        super(_Settings, self).__init__(*args, **kwds)
+    def __init__(self):
+        super(Settings, self).__init__()
         
         self._setup()
         
     #------------------------------------------------------------
     def _setup(self):
         self._findOS()
-        
-        self['USERNAME'] = getpass.getuser()
-        self['PKG_DIR'] = self.getPkgDir()
-        self['PKG_NAME'] = os.path.basename(self['PKG_DIR'])
-        self['PKG_RESOURCE_PATH'] = os.path.join(self['PKG_DIR'],'resources')
-        
-        if self['OS_TYPE'] == 'Windows' :
-            self['PKG_DATA_DIR'] = os.path.join(os.environ['LOCALAPPDATA'], self['PKG_NAME'])
-        else:
-            self['PKG_DATA_DIR'] = os.path.join(os.environ['HOME'], '.' + self['PKG_NAME'])
-        if not os.path.exists(self['PKG_DATA_DIR']) :
-            os.makedirs(self['PKG_DATA_DIR'])
-        
-        self['PKG_SETTINGS_PATH'] = os.path.join(self['PKG_RESOURCE_PATH'],'settings.json')
-        self['LOCAL_SETTINGS_PATH'] = os.path.join(self['PKG_DATA_DIR'], 'settings.json')
-
-
+        self._findPkgVars()
+        self._readGlobalSettings()
+        self._readLocalSettings()
+    
     #------------------------------------------------------------
     def _findOS(self):
         key = 'OS_TYPE'
@@ -44,7 +31,29 @@ class _Settings(JsonDocument):
             self[key] = 'MacOS'
         else:
             self[key] = None
-            
+    
+    #------------------------------------------------------------
+    def _findPkgVars(self):
+        self['PKG_DIR'] = self.getPkgDir()
+        self['PKG_NAME'] = self['PKG_DIR'].name
+        self['PKG_RESOURCE_PATH'] = self['PKG_DIR'].join('resources')
+        
+        self['PKG_DATA_DIR'] = Path('~').join('.' + self['PKG_NAME']).expand()
+        if not self['PKG_DATA_DIR'].exists :
+            self['PKG_DATA_DIR'].makedirs()
+        
+        self['GLOBAL_SETTINGS_PATH'] = self['PKG_DIR'].join('settings.json')
+        self['LOCAL_SETTINGS_PATH'] = self['PKG_DATA_DIR'].join('settings.json')
+    
+    #------------------------------------------------------------
+    def _readGlobalSettings(self):
+        self['COMPANY'] = 'Rocktavious'
+        pass
+    
+    #------------------------------------------------------------
+    def _readLocalSettings(self):
+        pass
+    
     #------------------------------------------------------------
     def _unparse(self, data_dict):
         return json.dumps(data_dict, sort_keys=True, indent=4, cls=self.encoder())
@@ -66,15 +75,15 @@ class _Settings(JsonDocument):
         """ This will get us the program's directory,
         even if we are frozen using py2exe"""
         if self.mainIsFrozen():
-            return os.path.dirname(sys.executable)
-        if '__file__' in dir():
-            return os.path.dirname(__file__)
+            return Path(sys.executable).parent
+        if '__file__' in globals():
+            return Path(__file__).parent
         if sys.argv[0] == '' :
-            return os.getcwdu()
-        return os.path.dirname(sys.argv[0])
+            return Path(os.getcwdu())
+        return Path(sys.argv[0]).parent
 
 #------------------------------------------------------------
-Settings = _Settings()
+Settings = Settings()
 
 if __name__ == '__main__':
 

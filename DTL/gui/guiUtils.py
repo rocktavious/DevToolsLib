@@ -10,8 +10,8 @@ import subprocess
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 
-from DTL import __pkgname__, __company__, __pkgresources__
 from DTL.api import Path
+from DTL.settings import Settings
 
 #------------------------------------------------------------
 def getApp():
@@ -25,7 +25,7 @@ def getApp():
 
 #------------------------------------------------------------
 def getAppSettings():
-    return QtCore.QSettings(__company__, __pkgname__)
+    return QtCore.QSettings(Settings['COMPANY'], Settings['PKG_NAME'])
 
 #------------------------------------------------------------
 def getActiveWindow():
@@ -37,7 +37,7 @@ def getActiveWindow():
 
 #------------------------------------------------------------
 def getStyleSheet():
-    ss_file = os.path.join(__pkgresources__, 'darkorange.stylesheet')
+    ss_file = Settings['PKG_RESOURCE_PATH'].join('darkorange.stylesheet')
     data = ''
     with open(ss_file, 'r') as filespec :
         data = filespec.read()

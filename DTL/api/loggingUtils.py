@@ -5,14 +5,10 @@ import sqlite3
 import threading
 import time
 
-from DTL import __pkgname__, __appdata__
 from DTL.api import Path
+from DTL.settings import Settings
 
 _streamLoggerSetupComplete = False
-
-
-LOGFILE = os.path.join(__appdata__,'logs',__pkgname__ + '.log')
-DATABASEFILE = os.path.join(__appdata__,'logs',__pkgname__ + '.db')
 
 HUMANTIMEFORMAT = '%b %d %I:%M:%S %p'
 CODETIMEFORMAT = "%Y-%m-%d_%H:%M:%S"
@@ -35,7 +31,7 @@ def addHandler(handler):
     
 #------------------------------------------------------------
 def setupFileHandler(filepath=None, level=None, formatter=None):
-    filepath = filepath or LOGFILE
+    filepath = filepath or Settings['PKG_DATA_DIR'].join(Settings['PKG_NAME'] + '.log')
     level = level or logging.INFO
     formatter = formatter or VERBOSE
     
@@ -48,7 +44,7 @@ def setupFileHandler(filepath=None, level=None, formatter=None):
 
 #------------------------------------------------------------
 def setupDatabaseHandler(filepath=None, level=None):
-    filepath = filepath or DATABASEFILE
+    filepath = filepath or Settings['PKG_DATA_DIR'].join(Settings['PKG_NAME'] + '.db')
     level = level or logging.WARNING
     
     handler = SQLiteHandler(filepath)

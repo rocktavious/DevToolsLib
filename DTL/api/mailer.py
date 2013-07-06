@@ -5,7 +5,7 @@ from email.MIMEBase import MIMEBase
 from email import Encoders
 import smtplib
 
-from DTL import __pkgname__
+from DTL.settings import Settings
 
 #Emailing Options
 ENABLEMAILER = False
@@ -37,7 +37,7 @@ class Mailer(object):
         messageHTML += message + '</pre>'
         self._send(DISTROLIST,
                    CCDISTORLIST,
-                   "[" + __pkgname__ + "] - " + subject,
+                   "[" + Settings['PKG_NAME'] + "] - " + subject,
                    message,
                    messageHTML)
 

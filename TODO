@@ -1,15 +1,13 @@
-Resurrect Settings Class but in a friendlier way
+
 Pull out global settings and make them readable/setable by users of the package
 See if the basic structs like document, path etc etc can be used without settings
-    -Make a clear distinction between modules dependant on settings and modules that are not
 
-Cleanup api.__init__
+
 Cleanup entire package so that import DTL does nothing
 Cleanup/bullet proof package so GUI modules arn't loaded/crash when they don't have PyQT installed
    -Same goes for any/all external package dependancies
    
 GUI CORE needs to be refactored/make less confusing
-    -from DTL.gui import Core is confusing because it starts a PyQT app, but i think just going into DTL.gui should handle this
    
 Validate MacOSX support
 Validate Linux support
