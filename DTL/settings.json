@@ -1,9 +1,11 @@
 {
     'Windows':{
-        
+        'COMPANY':'Rocktavious-Windows'
     },
     'MacOS':{
+        'COMPANY':'Rocktavious-MacOs'
     },
     'Linux':{
+        'COMPANY':'Rocktavious-Linux'
     }
 }

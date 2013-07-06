@@ -3,8 +3,11 @@ import sys
 import imp
 import getpass
 
-from DTL.api import JsonDocument, Path
+from DTL.api.jsondocument import JsonDocument
+from DTL.api.path import Path
 
+#------------------------------------------------------------
+#------------------------------------------------------------
 class Settings(JsonDocument):
 
     #------------------------------------------------------------
@@ -47,20 +50,13 @@ class Settings(JsonDocument):
     
     #------------------------------------------------------------
     def _readGlobalSettings(self):
-        self['COMPANY'] = 'Rocktavious'
-        pass
+        self.setFilePath(self['GLOBAL_SETTINGS_PATH'])
+        self.read()
     
     #------------------------------------------------------------
     def _readLocalSettings(self):
-        pass
-    
-    #------------------------------------------------------------
-    def _unparse(self, data_dict):
-        return json.dumps(data_dict, sort_keys=True, indent=4, cls=self.encoder())
-    
-    #------------------------------------------------------------
-    def _parse(self, file_handle):
-        return json.load(file_handle)
+        self.setFilePath(self['LOCAL_SETTINGS_PATH'])
+        self.read()
     
     #------------------------------------------------------------
     def mainIsFrozen(self):

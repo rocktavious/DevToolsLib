@@ -1,9 +1,13 @@
 
 Pull out global settings and make them readable/setable by users of the package
-See if the basic structs like document, path etc etc can be used without settings
+
+Settings and/or sub module of Settings needs to be the one place for getting pkg related information
+
+Things in API shouldn't have any pkg specific code, and should be self contained as best as possible
+This allows us to add/remove things from the api and contain the pkg specific code in one location
+maybe we this by faciliating an apiUtils(generic) and a pkgUtils(specific)
 
 
-Cleanup entire package so that import DTL does nothing
 Cleanup/bullet proof package so GUI modules arn't loaded/crash when they don't have PyQT installed
    -Same goes for any/all external package dependancies
    
