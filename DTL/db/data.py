@@ -1,6 +1,6 @@
 from DTL.api import InternalError, Path
-from DTL.db.base import BaseData
-from DTL.db.properties import StringProperty, FloatProperty, IntegerProperty, BooleanProperty, ListProperty, CustomDataProperty
+from DTL.db import BaseData
+from DTL.db import StringProperty, FloatProperty, IntegerProperty, BooleanProperty, ListProperty, CustomDataProperty
 
 
 #------------------------------------------------------------

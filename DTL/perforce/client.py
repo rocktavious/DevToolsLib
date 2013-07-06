@@ -4,6 +4,7 @@ import traceback
 from functools import partial
 from P4 import P4, P4Exception
 
+from DTL.settings import Settings
 from DTL.api import Path, apiUtils
 from DTL.gui import guiUtils
 from DTL.gui.widgets import LoginWidget
@@ -43,7 +44,8 @@ class P4Client(object):
     def _setupConnection(self):
         #Validate Credentials
         if self.p4User() is None or self.p4Password() is None:
-            success, user, password = LoginWidget.getCredentials(loginMsg='P4 Login', credentialsFile=apiUtils.getTempFilepath('p4_login.dat'))
+            success, user, password = LoginWidget.getCredentials(loginMsg='P4 Login',
+                                                                 credentialsFile=Settings.getTempPath().join('p4_login.dat'))
             if not success:
                 raise ValueError('Invalid Login Infomation!')
             self.setP4User(user)

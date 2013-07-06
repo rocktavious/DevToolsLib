@@ -1,6 +1,5 @@
 import logging
 
-from DTL import __company__
 from DTL.api import Enum, apiUtils, loggingUtils
 
 #------------------------------------------------------------

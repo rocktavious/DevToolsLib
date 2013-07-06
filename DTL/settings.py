@@ -22,6 +22,7 @@ class Settings(JsonDocument):
         self._findPkgVars()
         self._readGlobalSettings()
         self._readLocalSettings()
+        self._applyOSSettings()
     
     #------------------------------------------------------------
     def _findOS(self):
@@ -39,7 +40,6 @@ class Settings(JsonDocument):
     def _findPkgVars(self):
         self['PKG_DIR'] = self.getPkgDir()
         self['PKG_NAME'] = self['PKG_DIR'].name
-        self['PKG_RESOURCE_PATH'] = self['PKG_DIR'].join('resources')
         
         self['PKG_DATA_DIR'] = Path('~').join('.' + self['PKG_NAME']).expand()
         if not self['PKG_DATA_DIR'].exists :
@@ -47,6 +47,16 @@ class Settings(JsonDocument):
         
         self['GLOBAL_SETTINGS_PATH'] = self['PKG_DIR'].join('settings.json')
         self['LOCAL_SETTINGS_PATH'] = self['PKG_DATA_DIR'].join('settings.json')
+        self['RESOURCE_PATH'] = self['PKG_DIR'].join('resources')
+    
+    #------------------------------------------------------------
+    def _applyOSSettings(self):
+        for k,v in self[self['OS_TYPE']].items():
+            self.__setitem__(k,v)
+        
+        self.pop('Windows')
+        self.pop('MacOS')
+        self.pop('Linux')
     
     #------------------------------------------------------------
     def _readGlobalSettings(self):
@@ -77,10 +87,18 @@ class Settings(JsonDocument):
         if sys.argv[0] == '' :
             return Path(os.getcwdu())
         return Path(sys.argv[0]).parent
+    
+    #------------------------------------------------------------
+    def getTempPath(self):
+        return Settings['PKG_DATA_DIR'].join('tmp')
+    
+    #------------------------------------------------------------
+    def getResourcePath(self):
+        return self['RESOURCE_PATH']
 
 #------------------------------------------------------------
-Settings = Settings()
+Settings = Settings() 
+
 
 if __name__ == '__main__':
-
     for k,v in Settings.items(): print k,':',v

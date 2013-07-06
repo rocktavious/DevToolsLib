@@ -14,7 +14,6 @@ import string
 from ctypes import windll
 
 from DTL.api import Path
-from DTL.settings import Settings
 
 #------------------------------------------------------------
 def write(*args):
@@ -89,10 +88,6 @@ def wildcardToRe(pattern):
         else:
             res = res + re.escape(c)
     return res + "$"
-
-#------------------------------------------------------------
-def getTempFilepath(filename):
-    return Settings['PKG_DATA_DIR'].join(filename)
 
 #------------------------------------------------------------
 def isBinary(filepath):

@@ -78,8 +78,6 @@ class LoginWidget(Dialog):
     
 
 if __name__ == "__main__":
-    credentialsFile = apiUtils.getTempFilepath('code_review_crucible_login.dat')
-    print credentialsFile
-    print LoginWidget.getCredentials(loginMsg='This is my test message.', credentialsFile=credentialsFile)
+    print LoginWidget.getCredentials(loginMsg='This is my test message.')
     
     

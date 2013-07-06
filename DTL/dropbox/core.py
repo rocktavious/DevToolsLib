@@ -9,7 +9,7 @@ class Dropbox(object):
         apiUtils.synthesize(self, "appKey", appKey)
         apiUtils.synthesize(self, "appSecret", appSecret)
         apiUtils.synthesize(self, "appAccessType", appAccessType)
-        self._tokenPath = apiUtils.getTempFilepath(self.appKey() + '_token')
+        self._tokenPath = apiUtils.getTempPath().join(self.appKey() + '_token')
         
         self._accessKey = ''
         self._accessSecret = ''

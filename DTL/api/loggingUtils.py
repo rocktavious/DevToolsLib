@@ -6,7 +6,6 @@ import threading
 import time
 
 from DTL.api import Path
-from DTL.settings import Settings
 
 _streamLoggerSetupComplete = False
 
@@ -30,8 +29,7 @@ def addHandler(handler):
     logger.addHandler(handler)
     
 #------------------------------------------------------------
-def setupFileHandler(filepath=None, level=None, formatter=None):
-    filepath = filepath or Settings['PKG_DATA_DIR'].join(Settings['PKG_NAME'] + '.log')
+def setupFileHandler(filepath, level=None, formatter=None):
     level = level or logging.INFO
     formatter = formatter or VERBOSE
     
@@ -43,8 +41,7 @@ def setupFileHandler(filepath=None, level=None, formatter=None):
     addHandler(handler)
 
 #------------------------------------------------------------
-def setupDatabaseHandler(filepath=None, level=None):
-    filepath = filepath or Settings['PKG_DATA_DIR'].join(Settings['PKG_NAME'] + '.db')
+def setupDatabaseHandler(filepath, level=None):
     level = level or logging.WARNING
     
     handler = SQLiteHandler(filepath)

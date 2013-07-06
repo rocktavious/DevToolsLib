@@ -4,6 +4,7 @@ from urlparse import urljoin
 import urllib2
 import base64
 
+from DTL.settings import Settings
 from DTL.api import InternalError, apiUtils, loggingUtils
 from DTL.gui.widgets import LoginWidget
 
@@ -90,7 +91,7 @@ class RestClient(object):
     #------------------------------------------------------------
     def get_credentials(self, login_msg):
         success, username, password = LoginWidget.getCredentials(loginMsg=login_msg,
-                                                                 credentialsFile=apiUtils.getTempFilepath(self.__class__.__name__ + '_login.dat'))
+                                                                 credentialsFile=Settings.getTempPath().join(self.__class__.__name__ + '_login.dat'))
         if not success :
             return False
         self.username = username

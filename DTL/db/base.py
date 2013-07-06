@@ -5,7 +5,6 @@ from copy import deepcopy
 from PyQt4 import QtXml
 
 from DTL.api import InternalError, Path, apiUtils
-from DTL.gui import guiUtils
 
 RESERVED_PROPERTY_NAME = re.compile('^__.*__$')
 
