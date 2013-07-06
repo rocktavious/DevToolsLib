@@ -31,13 +31,13 @@ def write(*args):
 def execute(cmd, verbose=False, catchError=False):
     '''Given an excutable command, will wrap it in a subprocess call and return the returncode, stdout and stderr'''
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    
+
     if verbose :
         while process.poll() is None:
             out = process.stdout.readline()
             if out != '' :
                 write(out)
-    
+
     if catchError and process.returncode:
         for line in process.stderr :
             write(line)
@@ -76,19 +76,19 @@ def getDrives():
 
 #------------------------------------------------------------
 def wildcardToRe(pattern):
-	"""Translate a wildcard pattern to a regular expression"""
-	i, n = 0, len(pattern)
-	res = '(?i)' #case insensitive re
-	while i < n:
-		c = pattern[i]
-		i = i+1
-		if c == '*':
-			res = res + r'[^\\]*'
-		elif c == '/':
-			res = res + re.escape('\\')
-		else:
-			res = res + re.escape(c)
-	return res + "$"
+    """Translate a wildcard pattern to a regular expression"""
+    i, n = 0, len(pattern)
+    res = '(?i)' #case insensitive re
+    while i < n:
+        c = pattern[i]
+        i = i+1
+        if c == '*':
+            res = res + r'[^\\]*'
+        elif c == '/':
+            res = res + re.escape('\\')
+        else:
+            res = res + re.escape(c)
+    return res + "$"
 
 #------------------------------------------------------------
 def getTempFilepath(filename):
@@ -116,7 +116,7 @@ def isBinary(filepath):
     #If information in the filepath has both binary data and the binary NULL byte then its safe to say its binary
     return isBinaryString(filepath) == hasBinaryByte(filepath)
 
-  
+
 
 
 
