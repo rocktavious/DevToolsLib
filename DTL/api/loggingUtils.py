@@ -6,7 +6,7 @@ import threading
 import time
 
 from DTL import __pkgname__, __appdata__
-from DTL.api.core import Path
+from DTL.api import Path
 
 _streamLoggerSetupComplete = False
 

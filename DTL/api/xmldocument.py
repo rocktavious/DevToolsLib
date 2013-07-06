@@ -23,7 +23,7 @@ try:
 except NameError:
     _unicode = str
 
-from DTL.api.core import Path, Document, DotifyDict
+from DTL.api import Path, Document, DotifyDict
 
 
 #------------------------------------------------------------

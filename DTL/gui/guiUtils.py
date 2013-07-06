@@ -11,7 +11,7 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 
 from DTL import __pkgname__, __company__, __pkgresources__
-from DTL.api.core import Path
+from DTL.api import Path
 
 #------------------------------------------------------------
 def getApp():

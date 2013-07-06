@@ -1,4 +1,4 @@
-from DTL.api.core import BaseStruct, Enum, apiUtils
+from DTL.api import BaseStruct, Enum, apiUtils
 
 VersionStatus = Enum('Alpha','Beta','Gold')
 

@@ -1,4 +1,4 @@
-from DTL.api.core import BaseDict, Path, apiUtils
+from DTL.api import BaseDict, Path, apiUtils
 
 #------------------------------------------------------------
 #------------------------------------------------------------

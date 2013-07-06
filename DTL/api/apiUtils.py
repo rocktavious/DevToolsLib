@@ -14,7 +14,7 @@ import string
 from ctypes import windll
 
 from DTL import __appdata__
-from DTL.api.core import Path
+from DTL.api import Path
 
 #------------------------------------------------------------
 def write(*args):
