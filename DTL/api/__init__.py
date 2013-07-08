@@ -3,6 +3,7 @@ from DTL.api.bases import BaseStruct, BaseDict
 from DTL.api.enum import Enum
 from DTL.api.path import Path
 from DTL.api import apiUtils
+from DTL.api import pkgUtils
 from DTL.api import loggingUtils
 from DTL.api import mathUtils
 from DTL.api.version import Version
