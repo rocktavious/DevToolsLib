@@ -1,8 +1,5 @@
 #Validate PyQt4
-try:
-    from PyQt4 import QtCore, QtGui, uic
-except:
-    return
+from PyQt4 import QtCore, QtGui, uic
 
 from core import Core
 
