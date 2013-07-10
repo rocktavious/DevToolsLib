@@ -11,7 +11,7 @@ setup(
     packages = find_packages(),
     package_data = {
         # If any subfolder contains these extensions, include them:
-        '': ['*.txt', '*.rst','*.stylesheet','*.ui','*views/*.ui'],
+        '': ['*.txt', '*.rst','*.stylesheet','*.ui','*views/*.ui','*.json'],
         },
     zip_safe=False,
     url='https://github.com/rocktavious/DevToolsLib',
