@@ -90,7 +90,9 @@ class Settings(JsonDocument):
     
     #------------------------------------------------------------
     def getTempPath(self):
-        return Settings['PKG_DATA_DIR'].join('tmp')
+        temp_path = Settings['PKG_DATA_DIR'].join('tmp')
+        temp_path.makedirs()
+        return temp_path
     
     #------------------------------------------------------------
     def getResourcePath(self):
