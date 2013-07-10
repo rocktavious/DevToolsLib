@@ -25,7 +25,7 @@ def getLogger(name):
 
 #------------------------------------------------------------
 def addHandler(handler):
-    logger = getRootLogger()
+    logger = logging.getLogger()
     logger.addHandler(handler)
     
 #------------------------------------------------------------

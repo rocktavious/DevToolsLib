@@ -87,13 +87,6 @@ class Path(unicode):
         return cls(os.getcwdu())
     
     @classmethod
-    def getMainDir(cls):
-        """ This will get us the program's directory,
-        even if we are frozen using py2exe"""
-        from DTL import getcwd
-        return cls(getcwd())
-    
-    @classmethod
     def getHomeDir(cls):
         """ This will get us the user's home directory"""
         return cls('~').expand()
