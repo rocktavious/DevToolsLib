@@ -7,7 +7,7 @@ setup(
     version=DTL.__version__,
     author='Kyle Rockman',
     author_email='kyle.rockman@mac.com',
-	install_requires=['requests==1.2.3'],
+	install_requires=open('requirements.txt').read().splitlines(),
     packages = find_packages(),
     package_data = {
         # If any subfolder contains these extensions, include them:
