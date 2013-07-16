@@ -3,9 +3,7 @@ python:
  - "2.7"
 
 install:
- - python setup.py sdist
- - ./sdist_local.sh
- - pip install package.tar.gz
+ - python setup.py sdist develop
 
 script:
  - "cd test && python test.py"

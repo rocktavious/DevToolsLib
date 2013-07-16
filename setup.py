@@ -17,7 +17,7 @@ setup(
     url='https://github.com/rocktavious/DevToolsLib',
     license=open('LICENSE.txt').read(),
     description='Multiplatform tools development api',
-    long_description=open('README.txt').read(),
+    long_description=open('README.md').read(),
     classifiers=[
         "Development Status :: 3 - Alpha",
         'Environment :: Console',
