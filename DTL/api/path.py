@@ -15,6 +15,7 @@ Special thanks to:
 import os
 import imp
 import sys
+import stat
 import shutil
 import ctypes
 
@@ -54,6 +55,15 @@ os.symlink = symlink
 class ClassProperty(property):
     def __get__(self, cls, owner):
         return self.fget.__get__(None, owner)()
+
+#------------------------------------------------------------
+def handleRemoveReadOnly(func, path, exe):
+    excvalue = exc[1]
+    if func in (os.rmdir, os.remove) and excvalue.errno == errno.EACCES:
+        os.chmod(path, stat.S_IRWXU| stat.S_IRWXG| stat.S_IRWXO) #0777
+        func(path)
+    else:
+        raise
 
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -132,13 +142,23 @@ class Path(unicode):
     def lstat(self): return os.lstat(self)
     def chmod(self, mode): os.chmod(self, mode)
     def rename(self, new): os.rename(self, new); return self._next_class(new)
-    def unlink(self): os.unlink(self)
     def symlink(self, link): 
         if not self.exists():
             os.symlink(self, link, 0)
     def symlinkdir(self, link):
         if not self.exists():
             os.symlink(self, link, 1)
+    def unlink(self): 
+        try:
+            os.unlink(self)
+        except OSError as exception:
+            if exception.errno == errno.EACCES:
+                os.chmod(self, stat.S_IRWXU| stat.S_IRWXG| stat.S_IRWXO) #0777
+                os.unlink(self)
+            else:
+                raise
+        except:
+            raise
     
     #------------------------------------------------------------
     # os.path module wrappers
@@ -352,7 +372,7 @@ class Path(unicode):
     #------------------------------------------------------------
     def rmtree(self):
         try:
-            shutil.rmtree(self)
+            shutil.rmtree(self, ignore_errors=False, onerror=handleRemoveReadOnly)
         except OSError, e:
             if e.errno != errno.ENOENT:
                 raise   
