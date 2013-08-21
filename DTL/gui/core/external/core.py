@@ -1,6 +1,10 @@
+import sys
 import logging
+from PyQt4 import QtCore, QtGui
+from PyQt4.QtCore import Qt
 
-from DTL.api import Enum, apiUtils, loggingUtils
+from DTL.api import Enum, Path, apiUtils, loggingUtils
+from DTL.settings import Settings
 
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -15,7 +19,32 @@ class Core(object):
     def instance(cls):
         if cls._instance is None:
             cls._instance = cls()
-        return cls._instance    
+        return cls._instance
+    
+    #------------------------------------------------------------
+    @staticmethod
+    def getAppSettings():
+        return QtCore.QSettings(Settings['COMPANY'], Settings['PKG_NAME'])
+    
+    #------------------------------------------------------------
+    @staticmethod
+    def getStyleSheet():
+        ss_file = Settings['RESOURCE_PATH'].join('darkorange.stylesheet')
+        data = ''
+        with open(ss_file, 'r') as file_handle :
+            data = file_handle.read()
+        return '%s' % data
+    
+    #------------------------------------------------------------
+    @staticmethod
+    def getApp():
+        app = QtGui.QApplication.instance()
+        if not app :
+            app = QtGui.QApplication(sys.argv)
+            app.setStyle( 'Plastique' )
+            #app.setStyleSheet(Core.getStyleSheet())
+        
+        return app
 
     #------------------------------------------------------------
     def __init__(self):
@@ -25,32 +54,25 @@ class Core(object):
         apiUtils.synthesize(self, 'mfcApp', False)
         apiUtils.synthesize(self, 'app', None)
         
-        try:
-            from DTL.gui import guiUtils
-            app = guiUtils.getApp()
-            self.setApp(app)
-            self._readSettings()
-            self.app.aboutToQuit.connect(self._saveSettings)
-        except:
-            pass
+        app = Core.getApp()
+        self.setApp(app)
+        self._readSettings()
+        self.app().aboutToQuit.connect(self._saveSettings)
+
 
     #------------------------------------------------------------
-    def _saveSettings(self):
-        from DTL.gui import guiUtils
-        
-        settings = guiUtils.getAppSettings()
-        settings.beginGroup(self.objectName())
+    def _saveSettings(self):        
+        settings = Core.getAppSettings()
+        settings.beginGroup(apiUtils.getClassName(self))
         
         self.saveSettings(settings)
 
         settings.endGroup()
 
     #------------------------------------------------------------
-    def _readSettings(self):
-        from DTL.gui import guiUtils
-        
-        settings = guiUtils.getAppSettings()
-        settings.beginGroup(self.objectName())
+    def _readSettings(self):        
+        settings = Core.getAppSettings()
+        settings.beginGroup(apiUtils.getClassName(self))
         
         self.readSettings(settings)
 
@@ -98,6 +120,35 @@ class Core(object):
                     window = window.parent()
 
         return window
+    
+    #------------------------------------------------------------
+    def getFileFromUser(self, parent=None, ext=''):
+        file_dialog = QtGui.QFileDialog(parent)
+        file_dialog.setViewMode(QtGui.QFileDialog.Detail)
+        file_dialog.setNameFilter(ext)
+        return _return_file(file_dialog)
+    
+    #------------------------------------------------------------
+    def getDirFromUser(self, parent=None):
+        file_dialog = QtGui.QFileDialog(parent)
+        file_dialog.setFileMode(QtGui.QFileDialog.Directory)
+        file_dialog.setOption(QtGui.QFileDialog.ShowDirsOnly)
+        file_dialog.setViewMode(QtGui.QFileDialog.Detail)
+        return self._return_file(file_dialog)    
+    
+    #------------------------------------------------------------
+    def getSaveFileFromUser(self, parent=None, ext=[]):
+        file_dialog = QtGui.QFileDialog(parent)
+        file_dialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
+        file_dialog.setViewMode(QtGui.QFileDialog.Detail)
+        return self._return_file(file_dialog)
+        
+    #------------------------------------------------------------
+    def _return_file(self, file_dialog):
+        if file_dialog.exec_():
+            returned_file = str(file_dialog.selectedFiles()[0])
+            return Path(returned_file).expand()
+        return Path()    
     
     #------------------------------------------------------------
     def saveSettings(self, settings):

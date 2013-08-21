@@ -5,6 +5,7 @@ import maya.OpenMayaUI as OM_UI
 import maya.cmds as cmds
 
 from DTL.gui.core.external.core import Core
+from DTL.api import Path
 
 #  TO DO:
 #      -MayaCore has a number of utility functions that should be in a mayaUtils module that can be accessed when you are in a maya environment
@@ -35,6 +36,30 @@ class MayaCore(Core):
         if ptr is not None:
             window = sip.wrapinstance(long(ptr), QtCore.QObject)
         return window
+    
+    #------------------------------------------------------------
+    def getFileFromUser(self, parent=None, ext=''):
+        output = cmds.fileDialog2(fm=1, caption='Choose...')
+        if output is None :
+            return Path()
+        else :
+            return Path(output[0])
+    
+    #------------------------------------------------------------
+    def getDirFromUser(self, parent=None):
+        output = cmds.fileDialog2(fm=3, caption='Choose...')
+        if output is None :
+            return Path()
+        else :
+            return Path(output[0])
+        
+    #------------------------------------------------------------
+    def getSaveFileFromUser(self, parent=None, ext=[]):
+        output = cmds.fileDialog2(fm=0, okc='Save', caption='Save...')
+        if output is None :
+            return Path()
+        else :
+            return Path(output[0])
         
     #------------------------------------------------------------
     @staticmethod

@@ -11,6 +11,8 @@ import re
 import subprocess
 import inspect
 import string
+import json
+from functools import wraps
 from ctypes import windll
 
 from DTL.api import Path
@@ -304,3 +306,39 @@ def inspectMethod(item):
     print "VALUE:   ", repr(item)
     print "DOC:     ", getattr(item, '__doc__') if hasattr(item, '__doc__') else ""
     print '#------------------------------------------------------------'
+    
+#------------------------------------------------------------
+def getClassName(x):
+    if not isinstance(x, basestring):
+        if type(x) in [types.FunctionType, types.TypeType, types.ModuleType] :
+            return x.__name__
+        else:
+            return x.__class__.__name__
+    else:
+        return x
+
+#------------------------------------------------------------
+def print_json(data):
+    print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+
+#------------------------------------------------------------
+class requires(object):
+    '''A simple networking decorator that allows you to
+    require methods to be run before and after making the function call'''
+
+    def __init__(self, func):
+        self.func = func
+        self.response = None
+        wraps(func)(self)
+
+    def __call__(self,*args, **kwargs):
+        self.before()
+        self.response = self.func(*args, **kwargs)
+        self.after()
+        return self.response
+    
+    def before(self):
+        pass
+    
+    def after(self):
+        pass

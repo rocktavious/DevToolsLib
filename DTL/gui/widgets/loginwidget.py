@@ -64,16 +64,17 @@ class LoginWidget(Dialog):
             
     #------------------------------------------------------------
     @staticmethod
-    def getCredentials(*args, **kwds):
+    def getCredentials(force=False, *args, **kwds):
         success, username, password = False, '', ''
         widget = LoginWidget(*args, **kwds)
-        if not widget.submitted() :
+        if not widget.submitted() or force :
+            if force:
+                widget.setSubmitted(False)
             widget.exec_()
         success = widget.submitted()
         if success :
             username = widget.ui_username.text()
             password = widget.ui_password.text()
-        
         return success, str(username), str(password)
     
 

@@ -32,7 +32,10 @@ class ProgressWidget(Dialog):
     
     #------------------------------------------------------------
     def percent(self):
-        return 1.0 / self.total()
+        if self.total() > 0 :
+            return 1.0 / self.total()
+        else:
+            return 0
     
     #------------------------------------------------------------
     def value(self, recursive=True):

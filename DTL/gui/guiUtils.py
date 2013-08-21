@@ -11,21 +11,8 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 
 from DTL.api import Path
+from DTL.gui import Core
 from DTL.settings import Settings
-
-#------------------------------------------------------------
-def getApp():
-    app = QtGui.QApplication.instance()
-    if not app :
-        app = QtGui.QApplication(sys.argv)
-        app.setStyle( 'Plastique' )
-        #app.setStyleSheet(Utils.getStyleSheet())
-    
-    return app
-
-#------------------------------------------------------------
-def getAppSettings():
-    return QtCore.QSettings(Settings['COMPANY'], Settings['PKG_NAME'])
 
 #------------------------------------------------------------
 def getActiveWindow():
@@ -34,14 +21,6 @@ def getActiveWindow():
         activeWindow = QtGui.QApplication.instance().activeWindow()
 
     return activeWindow
-
-#------------------------------------------------------------
-def getStyleSheet():
-    ss_file = Settings['PKG_RESOURCE_PATH'].join('darkorange.stylesheet')
-    data = ''
-    with open(ss_file, 'r') as filespec :
-        data = filespec.read()
-    return '%s' % data
 
 #------------------------------------------------------------
 def rootWindow():
@@ -97,30 +76,13 @@ def getUserInput(msg='', parent=None):
 
 #------------------------------------------------------------
 def getFileFromUser(parent=None, ext=''):
-    file_dialog = QtGui.QFileDialog(parent)
-    file_dialog.setViewMode(QtGui.QFileDialog.Detail)
-    file_dialog.setNameFilter(ext)
-    return _return_file(file_dialog)
+    return Core.getFileFromUser()
 
 #------------------------------------------------------------
 def getDirFromUser(parent=None):
-    file_dialog = QtGui.QFileDialog(parent)
-    file_dialog.setFileMode(QtGui.QFileDialog.Directory)
-    file_dialog.setOption(QtGui.QFileDialog.ShowDirsOnly)
-    file_dialog.setViewMode(QtGui.QFileDialog.Detail)
-    return _return_file(file_dialog)    
+    return Core.getDirFromUser()
 
 #------------------------------------------------------------
 def getSaveFileFromUser(parent=None, ext=[]):
-    file_dialog = QtGui.QFileDialog(parent)
-    file_dialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
-    file_dialog.setViewMode(QtGui.QFileDialog.Detail)
-    return _return_file(file_dialog)
+    return Core.getSaveFileFromUser()
 
-#------------------------------------------------------------
-def _return_file(file_dialog):
-    if file_dialog.exec_():
-        returned_file = str(file_dialog.selectedFiles()[0])
-        returned_file = Path(returned_file).expand()
-        return Path(returned_file)
-    return Path('')
