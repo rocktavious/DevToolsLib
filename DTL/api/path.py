@@ -383,6 +383,7 @@ class Path(unicode):
     copy = shutil.copy
     copy2 = shutil.copy2
     copytree = shutil.copytree
+    move = shutil.move
     #------------------------------------------------------------
     def touch(self):
         """ Set the access/modified times of this file to the current time.

@@ -13,7 +13,7 @@ import inspect
 import string
 import json
 from functools import wraps
-from ctypes import windll
+
 
 from DTL.api import Path
 
@@ -66,6 +66,7 @@ def clearEnv(key):
 def getDrives():
     '''method to get the drive letters in a platform independant way
     TODO: Make Unix Compatible'''
+    from ctypes import windll
     drives = []
     bitmask = windll.kernel32.GetLogicalDrives()
     for letter in string.uppercase:

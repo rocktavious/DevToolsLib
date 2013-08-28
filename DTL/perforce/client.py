@@ -7,25 +7,7 @@ from P4 import P4, P4Exception
 from DTL.settings import Settings
 from DTL.api import Path, apiUtils
 from DTL.gui import guiUtils
-from DTL.gui.widgets import LoginWidget
-
-from functools import wraps  # use this to preserve function signatures and docstrings
-
-#------------------------------------------------------------
-def requiresP4Conn(func):
-    '''Decorator for P4Client functions to require a test of the p4Connection'''
-    #------------------------------------------------------------
-    @wraps(func)
-    def inner(*args, **kwargs):
-        try:
-            args[0]._connect()
-            return func(*args, **kwargs)
-        except P4Exception:
-            for e in args[0].p4Conn().errors:
-                print e
-        except:
-            traceback.print_exc()
-    return inner
+from DTL.gui.widgets import LoginWidget, ChoiceWidget
 
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -53,10 +35,6 @@ class P4Client(object):
             self.setP4User(user)
             self.setP4Password(password)
         
-        #Set the env's for next time
-        #apiUtils.setEnv('P4USER', self.p4User())
-        #apiUtils.setEnv('P4PASSWD', self.p4Password())
-        
         self.p4Conn().user = self.p4User()
         self.p4Conn().password = self.p4Password()
         
@@ -76,6 +54,10 @@ class P4Client(object):
             if not success :
                 raise P4Exception('Unable to determine P4CLIENT')
             self.setP4Client(client)
+            
+        if self.p4Client() == '' :
+            self._tryWorkspace()
+            return
         
         #Set the env's for next time
         apiUtils.setEnv('P4CLIENT', self.p4Client())
@@ -89,23 +71,17 @@ class P4Client(object):
             if not success :
                 raise P4Exception('Unable to determine P4PORT')
             self.setP4Port(port)
+            
+        if self.p4Port() == '' :
+            self._tryWorkspace()
+            return
         
         #Set the env's for next time
         apiUtils.setEnv('P4PORT', self.p4Port())
         
         self.p4Conn().port = self.p4Port()
         
-    
-    def _setupConnection(self):
-        self.setP4Conn(P4())
-        self._tryWorkspace()
-        self._tryServer()
-        self.p4Conn().connect()
-        self.p4Conn().prog = "DTL Perforce Python Tools"
-        self.p4Conn().exception_level = 1 # ignore warnings
-        
-        self._tryCredentials()
-
+    def _tryInfo(self):
         #Grab p4Info
         p4info = self.p4Conn().run("info")[0] # Run "p4 info" (returns a dict)
         if self.verbose() :
@@ -113,9 +89,22 @@ class P4Client(object):
                 print key, '\t', value
         #Test Connection
         if not self.p4Conn().connected() :
-            raise P4Exception('Unable to validate connection')
+            raise P4Exception('Unable to validate p4 connection.')
         
         self.setP4Info(p4info)
+    
+    def _setupConnection(self):
+        self.setP4Conn(P4())
+        
+        self._tryWorkspace()
+        self._tryServer()
+        
+        self.p4Conn().connect()
+        self.p4Conn().prog = "DTL Perforce Python Tools"
+        self.p4Conn().exception_level = 1 # ignore warnings
+        
+        self._tryCredentials()
+        self._tryInfo()
     
     def _connect(self):
         try:
@@ -124,51 +113,62 @@ class P4Client(object):
         except AttributeError:
             #If unable to check connected then we don't have a P4 Obj so 
             self._setupConnection()
-        except Exception, e:
-            raise Exception(e)
+        except:
+            raise
         
-    @requiresP4Conn
     def run(self, *args, **kwds):
         return partial(self.p4Conn().run, *args, **kwds)()
     
-    @requiresP4Conn
-    def test_connection(self):
-        return self.p4Info()
-    
-    @requiresP4Conn
-    def sync(self, path):
-        self.run('sync', path)
+    def sync(self, path=None):
+        self.run('sync', path or (self.getWorkspaceRoot() + "\\..."))
         
-    @requiresP4Conn
     def getLatestChange(self):
         return self.run('changes', '-s', 'submitted', '-m', '1')[0]['change']
     
-    @requiresP4Conn
     def getWorkspaceRoot(self):
         return Path(self.p4Info()['clientRoot'])
     
     def getWorkspaceFiles(self):
         return self.getWorkspaceRoot().walk()
     
-    @requiresP4Conn
     def getCounterChange(self, counter_name):
         return self.run('counter', counter_name)[0]['value']
 
-    @requiresP4Conn
     def getWorkspacePath(self, path):
         return Path(path.replace("//" + self.p4Info()['clientName'],
                                  self.p4Info()['clientRoot']))
     
-    @requiresP4Conn
     def getChangeDescription(self, change_num):
-        return self.p4Conn().fetch_changelist(change_num)
+        try:
+            return self.p4Conn().fetch_changelist(change_num)
+        except P4Exception :
+            return None
+        except:
+            raise
     
-    @requiresP4Conn
-    def makeClientSpec(self, name, root, view):
-        client_spec = self.p4Conn().fetch_client(name)
-        client_spec['Root'] = root
-        client_spec['View'] = view
+    def updateWorkspace(self, mappings, root=[]):
+        if guiUtils.getConfirmDialog('Would you like to use your default workspace?\n{0}'.format(self.p4Client())) :
+            workspace_name = self.p4Client()
+        else:
+            sample = str(os.getenv('USERNAME') + '_' + os.getenv('COMPUTERNAME') + '_dev')
+            workspace_success, workspace_name = guiUtils.getUserInput('Please specify a name for the P4 workspace to update.\n EXAMPLE:  {0}'.format(os.getenv('P4CLIENT',sample)))
+            if not workspace_success:
+                return
+            workspace_name = workspace_name.replace(" ","_")
+        
+        client_spec = self.p4Conn().fetch_client(workspace_name)
+        if not client_spec.has_key('Update') or not client_spec.has_key('Access') : #NEW WORKSPACE
+            print client_spec
+            drives = apiUtils.getDrives()
+            success, choice = ChoiceWidget.getChoice(msg='Please specify a drive location for this P4 workspace.', choices=drives)
+            if not success:
+                return False
+            client_spec['Root'] = str(Path(drives[choice] + ':\\').join(*root))
+        
+        client_spec['View'] = [x.format(workspace_name) for x in mappings]
         self.p4Conn().save_client(client_spec)
+        return True
     
 if __name__ == '__main__':
     p4 = P4Client()
+    print p4.getChangeDescription(5688)
