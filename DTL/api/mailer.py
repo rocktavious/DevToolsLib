@@ -5,15 +5,14 @@ from email.MIMEBase import MIMEBase
 from email import Encoders
 import smtplib
 
-from DTL.settings import Settings
-
 #Emailing Options
-ENABLEMAILER = False
-SMTPSERVER = ''
-SMTPUSER = ''
+ENABLEMAILER = True
+SMTPSERVER = 'aus-fs1.ciaus.local'
+SMTPPORT = 25
+SMTPUSER = 'Jenkins'
 SMTPPASSWORD = ''
 #distrobution list for receiving e-mails
-DISTROLIST = ['kyle.rockman@cloudimperiumgames.com']
+DISTROLIST = ['builds@cloudimperiumgames.com','engineering@cloudimperiumgames.com']
 CC_DISTROLIST = []
 
 #------------------------------------------------------------
@@ -36,13 +35,13 @@ class Mailer(object):
         #Just inherit the regular message formatting
         messageHTML += message + '</pre>'
         self._send(DISTROLIST,
-                   CCDISTORLIST,
-                   "[" + Settings['PKG_NAME'] + "] - " + subject,
+                   CC_DISTROLIST,
+                   subject,
                    message,
                    messageHTML)
 
     #------------------------------------------------------------
-    def _send(self, toAddrs, ccAddrs, subject, textMsg, htmlMsg, attachments, highImportance=0):
+    def _send(self, toAddrs, ccAddrs, subject, textMsg, htmlMsg, attachments={}, highImportance=0):
         '''Sends E-mails with the given information'''
         # Create the root message and fill in the from, to, and subject headers
         msgRoot = MIMEMultipart('related')
@@ -62,7 +61,7 @@ class Mailer(object):
         msgAlternative.attach(MIMEText(textMsg))
         msgAlternative.attach(MIMEText(htmlMsg,'html'))
 
-        for name, filePath in attachments.iteritems():
+        for name, filePath in attachments.items():
             msgAttachment = MIMEBase('application', "octet-stream")
             msgAttachment.set_payload( open(filePath,"rb").read() )
             Encoders.encode_base64(msgAttachment)
@@ -71,7 +70,9 @@ class Mailer(object):
 
         # Send the email
         smtp = smtplib.SMTP()
-        smtp.connect(SMTPSERVER)
-        smtp.login(SMTPUSER, SMTPPASSWORD)
+        smtp.connect(SMTPSERVER, SMTPPORT)
+        if SMTPUSER and SMTPPASSWORD:
+            smtp.login(SMTPUSER, SMTPPASSWORD)
         smtp.sendmail(SMTPUSER, toAddrs, msgRoot.as_string())
         smtp.quit()
+        
