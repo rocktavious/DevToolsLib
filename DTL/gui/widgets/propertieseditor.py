@@ -34,7 +34,7 @@ class PropertiesEditor(QtGui.QWidget, BaseGUI):
         self.mainLayout.addWidget(self.main_splitter)
         self.main_splitter.setSizes([150,250])     
         self.setEditors()
-        for key, editor in self.editors().items() :
+        for key, editor in self.editors.items() :
             self.properties_layout.addWidget(editor)
             editor.setVisible(False)
         
@@ -50,7 +50,7 @@ class PropertiesEditor(QtGui.QWidget, BaseGUI):
     def setProxyModel(self, proxyModel):
         self._proxyModel = proxyModel
         self.treeView.setModel(proxyModel)
-        for editor in self.editors().values() :
+        for editor in self.editors.values() :
             editor.setProxyModel(proxyModel)
     
     #------------------------------------------------------------
@@ -58,12 +58,12 @@ class PropertiesEditor(QtGui.QWidget, BaseGUI):
         self._model = model
         self.treeView.setModel(model)
         self.treeView.selectionModel().selectionChanged.connect(self.selectionChanged)
-        for editor in self.editors().values() :
+        for editor in self.editors.values() :
             editor.setModel(model)
             
     #------------------------------------------------------------
     def selectionChanged(self):
-        if not self.busy():
+        if not self.busy:
             self.setBusy(True)
 
             selectedIndexes = self.treeView.selectionModel().selectedIndexes()
@@ -73,13 +73,13 @@ class PropertiesEditor(QtGui.QWidget, BaseGUI):
             
     #------------------------------------------------------------
     def clearSelection(self):
-        for editor in self.editors().values():
+        for editor in self.editors.values():
             editor.setVisible(False)          
     
     #------------------------------------------------------------
     def setSelection(self, index):
-        if self.proxyModel() is not None :
-            index = self.proxyModel().mapToSource(index)
+        if self.proxyModel is not None :
+            index = self.proxyModel.mapToSource(index)
 
         self.clearSelection()
 
@@ -87,15 +87,15 @@ class PropertiesEditor(QtGui.QWidget, BaseGUI):
         if node is None :
             return
         
-        for editor in self.editors().values():
+        for editor in self.editors.values():
             editor.setSelection(index)
             
         for item in node.__class__.__mro__ :
             if not hasattr(item, '__name__') :
                 continue
             
-            if self.editors().get(item.__name__, False):
-                self.editors()[item.__name__].setVisible(True)
+            if self.editors.get(item.__name__, False):
+                self.editors[item.__name__].setVisible(True)
 
 
 #------------------------------------------------------------
@@ -120,22 +120,22 @@ class Editor(QtGui.QWidget, BaseGUI):
     #------------------------------------------------------------
     def setModel(self, model):
         self._model = model
-        self.dataMapper().setModel(self._model)
+        self.dataMapper.setModel(self._model)
         
         self.setMappings()
     
     #------------------------------------------------------------
     def setMappings(self):
         '''For Subclass to implement to map the UI elements to the data'''
-        #self.dataMapper().addMapping(self.uiName, 0)
-        #self.dataMapper().addMapping(self.uiType, 1)
+        #self.dataMapper.addMapping(self.uiName, 0)
+        #self.dataMapper.addMapping(self.uiType, 1)
         pass
         
     #------------------------------------------------------------
     def setSelection(self, index):
         parent = index.parent()
-        self.dataMapper().setRootIndex(parent)
-        self.dataMapper().setCurrentModelIndex(index)
+        self.dataMapper.setRootIndex(parent)
+        self.dataMapper.setCurrentModelIndex(index)
 
 
 #------------------------------------------------------------
@@ -147,7 +147,7 @@ class NodeEditor(Editor):
     
     #------------------------------------------------------------
     def setMappings(self):
-        self.dataMapper().addMapping(self.prop_name, 0)
+        self.dataMapper.addMapping(self.prop_name, 0)
         
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -158,9 +158,9 @@ class FloatTransformNodeEditor(Editor):
     
     #------------------------------------------------------------
     def setMappings(self):
-        self.dataMapper().addMapping(self.prop_x, 1)
-        self.dataMapper().addMapping(self.prop_y, 2)
-        self.dataMapper().addMapping(self.prop_z, 3)
+        self.dataMapper.addMapping(self.prop_x, 1)
+        self.dataMapper.addMapping(self.prop_y, 2)
+        self.dataMapper.addMapping(self.prop_z, 3)
         
 
 #------------------------------------------------------------
@@ -172,9 +172,9 @@ class IntTransformNodeEditor(Editor):
     
     #------------------------------------------------------------
     def setMappings(self):
-        self.dataMapper().addMapping(self.prop_x, 1)
-        self.dataMapper().addMapping(self.prop_y, 2)
-        self.dataMapper().addMapping(self.prop_z, 3)
+        self.dataMapper.addMapping(self.prop_x, 1)
+        self.dataMapper.addMapping(self.prop_y, 2)
+        self.dataMapper.addMapping(self.prop_z, 3)
         
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -185,7 +185,7 @@ class LayerEditor(Editor):
     
     #------------------------------------------------------------
     def setMappings(self):
-        self.dataMapper().addMapping(self.prop_index, 1)
+        self.dataMapper.addMapping(self.prop_index, 1)
         
 
         

@@ -17,6 +17,7 @@ import imp
 import sys
 import stat
 import shutil
+import hashlib
 import ctypes
 
 import re
@@ -75,11 +76,14 @@ class Path(unicode):
     """
     module = os.path #The module to use for path operations.
     _branch = None
-    #------------------------------------------------------------
-    def __init__(self, value=''):
+    def __new__(cls, value):
         if not isinstance(value, basestring):
             raise TypeError("path must be a string")
-
+        value = value.replace('\\',os.sep)
+        value = value.replace('/',os.sep)
+        self = super(Path, cls).__new__(cls, value)
+        return self
+    
     #------------------------------------------------------------
     # Path object class methods
     #------------------------------------------------------------
@@ -105,7 +109,7 @@ class Path(unicode):
     # Path object dunder methods
     #------------------------------------------------------------
     def __repr__(self):
-        return '%s(%s)' % (type(self).__name__, super(Path, self).__repr__())
+        return '{0}({1})'.format(type(self).__name__, super(Path, self).__repr__())
     def __eq__(self, other):
         return self.lower() == other.lower()
     def __ne__(self, other):
@@ -132,6 +136,7 @@ class Path(unicode):
     def __enter__(self):
         self._old_dir = self.getcwd()
         os.chdir(self)
+        return self
     def __exit__(self, *_):
         os.chdir(self._old_dir)
 
@@ -337,19 +342,70 @@ class Path(unicode):
     def open(self, mode='r'):
         """ Open this file.  Return a file object. """
         return open(self, mode)
+    def chunks(self, size, *args, **kwargs):
+        """ Returns a generator yielding chunks of the file, so it can
+            be read piece by piece with a simple for loop.
+        
+           Any argument you pass after `size` will be passed to `open()`.
+        
+           :example:
+        
+               >>> for chunk in path("file.txt").chunk(8192):
+               ...    print(chunk)
+        
+            This will read the file by chunks of 8192 bytes.
+        """
+        with open(self, *args, **kwargs) as f:
+            while True:
+                d = f.read(size)
+                if not d:
+                    break
+                yield d
+    def _hash(self, hash_name):
+        """ Returns a hash object for the file at the current path.
 
+            `hash_name` should be a hash algo name such as 'md5' or 'sha1'
+            that's available in the `hashlib` module.
+        """
+        m = hashlib.new(hash_name)
+        for chunk in self.chunks(8192):
+            m.update(chunk)
+        return m
+
+    def read_hash(self, hash_name):
+        """ Calculate given hash for this file.
+
+        List of supported hashes can be obtained from hashlib package. This
+        reads the entire file.
+        """
+        return self._hash(hash_name).digest()
+
+    def read_hexhash(self, hash_name):
+        """ Calculate given hash for this file, returning hexdigest.
+
+        List of supported hashes can be obtained from hashlib package. This
+        reads the entire file.
+        """
+        return self._hash(hash_name).hexdigest()
+    def read_md5(self):
+        """ Calculate the md5 hash for this file.
+
+        This reads through the entire file.
+        """
+        return self.read_hash('md5')
+                
 
     #------------------------------------------------------------
     # Modifying operations on files and directories  
     #------------------------------------------------------------
-    def mkdir(self, mode=0777):
+    def mkdir(self, mode=511):
         try:
             os.mkdir(self.dir(), mode)
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
     #------------------------------------------------------------
-    def makedirs(self, mode=0777):
+    def makedirs(self, mode=511):
         try:
             os.makedirs(self.dir(), mode)
         except OSError as exception:
@@ -369,6 +425,14 @@ class Path(unicode):
         except OSError, e:
             if e.errno != errno.ENOTEMPTY and e.errno != errno.EEXIST:
                 raise
+
+    copyfile = shutil.copyfile
+    copymode = shutil.copymode
+    copystat = shutil.copystat
+    copy = shutil.copy
+    copy2 = shutil.copy2
+    copytree = shutil.copytree
+    move = shutil.move
     #------------------------------------------------------------
     def rmtree(self):
         try:
@@ -389,13 +453,13 @@ class Path(unicode):
         """ Set the access/modified times of this file to the current time.
         Create the file if it does not exist.
         """
-        fd = os.open(self, os.O_WRONLY | os.O_CREAT, 0666)
+        fd = os.open(self, os.O_WRONLY | os.O_CREAT, 438)
         os.close(fd)
         os.utime(self, None)
     #------------------------------------------------------------
     def remove(self):
         try:
-            self.unlink()
+            os.remove(self)
         except OSError, e:
             if e.errno != errno.ENOENT:
                 raise
@@ -501,7 +565,7 @@ class Path(unicode):
             return os.path.normpath(os.path.join(drive, path))
 
         if not last:
-            return Path.getCaseSensativePath(rest) + os.path.sep
+            return Path.getCaseSensativePath(rest) + os.sep
 
         if os.path.exists(rest):
             options = [x for x in os.listdir(rest) if x.lower() == last.lower()]
@@ -511,7 +575,7 @@ class Path(unicode):
             options = [last]
 
         path = os.path.join(Path.getCaseSensativePath(rest), options[0])
-        return os.path.normpath(path)
+        return path
 
     #------------------------------------------------------------
     @staticmethod
@@ -521,25 +585,3 @@ class Path(unicode):
             path = path.replace(Path.branch(),'')
         return os.path.normpath(path)
 
-
-if __name__ == "__main__" :
-    print Path.getMainDir()
-    
-    myPathSepTest = Path('c:\\Users/krockman/documents').join('mytest')
-    print myPathSepTest    
-    
-    myPath = Path(r'C:\Users\krockman\documents\StarCitizen\Client\blur3d.tgz.zip.bin'.lower())
-    print "documents" in myPath
-    print myPath != myPath
-    print myPath
-    print myPath.name
-    print "case sensative", myPath.caseSensative()
-    print myPath.drive
-    print "parent", myPath.parent
-    print myPath.ext
-    myPath = myPath.join("agent.rar")
-    print myPath
-    print myPath.ext
-    print {"MyVar": myPath} == {"MyVar":'c:/users/Krockman/Documents/sTaRcItIzeN/client/blur3d.tgz.zip.bin/agent.rar'}
-    print {"MyVar": myPath}
-    print Path.getMainDir()

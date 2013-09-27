@@ -5,7 +5,7 @@ from functools import partial
 #Needs refactoring
 from ..utils.funcs import selection
 
-from DTL.api import SafeCall
+from DTL.api import Safe
 
 """
 #------------------------------------------------------------
@@ -70,7 +70,7 @@ def vertColorAction(action='apply',rgba=[1,1,1,1],channelMatrix=[],blendMix=None
 
 
 #------------------------------------------------------------
-@SafeCall
+@Safe
 def vertexColorApply(vertList=None, red=1, green=1, blue=1, alpha=1 ):
     '''Straight Color/Alpha Apply'''
     if vertList == None or vertList == []:

@@ -9,7 +9,7 @@ class BaseStruct(object):
     
     #------------------------------------------------------------
     def _get_repr_format(self):
-        return '{0}({1})'.format(type(self).__name__, self._get_init_params_format())
+        return r'{0}({1})'.format(type(self).__name__, self._get_init_params_format())
     
     #------------------------------------------------------------
     def _get_init_params_format(self):
@@ -27,7 +27,7 @@ class BaseStruct(object):
         try:
             return self._get_repr_format().format(*self.serialize())
         except:
-            return '{0}({1})'.format(type(self).__name__, self.serialize())
+            return r'{0}({1})'.format(type(self).__name__, self.serialize())
     
     #------------------------------------------------------------
     def __str__(self):
@@ -39,10 +39,15 @@ class BaseStruct(object):
     
     #------------------------------------------------------------
     def __eq__(self, other):
-        if not isinstance(other, type(self)) :
-            return False
-        
-        return True
+        if isinstance(other, type(self)) :
+            return self.serialize() == other.serialize()
+        else:
+            try:
+                coerced = self.__class__()
+                coerced.deserialize(other)
+            except:
+                return False
+            return self == coerced
     
     #------------------------------------------------------------
     def __ne__(self, other):
@@ -51,7 +56,7 @@ class BaseStruct(object):
     #------------------------------------------------------------
     def add_quotes(self, data):
         '''Convenience method to help in serialization of strings'''
-        return "'{0}'".format(data)
+        return r"r'{0}'".format(data)
     
     #------------------------------------------------------------
     def serialize(self):
@@ -73,8 +78,8 @@ class BaseDict(BaseStruct, dict):
         super(BaseDict, self).__init__(*args, **kwds)
         
     #------------------------------------------------------------
-    def _set_data(self, data_dict):
-        for key, value in data_dict.items():
+    def _set_data(self, datadict):
+        for key, value in datadict.items():
             self.__setitem__(key, value)
             
     #------------------------------------------------------------
@@ -89,15 +94,5 @@ class BaseDict(BaseStruct, dict):
         return (dict(self),)
     
     #------------------------------------------------------------
-    def deserialize(self, data_dict={}):
-        self._set_data(data_dict=data_dict)
-
-
-#------------------------------------------------------------
-#------------------------------------------------------------
-if __name__ == "__main__":
-    base1 = BaseStruct()
-    base2 = BaseStruct()
-    print base1
-    print base1 == None
-    print base1 == base2
+    def deserialize(self, datadict={}):
+        self._set_data(datadict=datadict)

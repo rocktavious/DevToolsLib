@@ -225,8 +225,8 @@ class BaseData(object):
     
     #------------------------------------------------------------
     def row(self):
-        if self.parent() is not None:
-            return self.parent().children().index(self)
+        if self.parent is not None:
+            return self.parent.children.index(self)
         
     #------------------------------------------------------------
     def resource(self):
@@ -235,7 +235,7 @@ class BaseData(object):
     #------------------------------------------------------------
     def data(self, column):
         try:
-            attr = self.columnMap()[column]
+            attr = self.columnMap[column]
             return attr.__get__(self)
         except IndexError :
             pass
@@ -245,7 +245,7 @@ class BaseData(object):
     #------------------------------------------------------------
     def setData(self, column, value):
         try :
-            attr = self.columnMap()[column]
+            attr = self.columnMap[column]
             attr.__set__(self,value.toPyObject())
         except IndexError :
             pass

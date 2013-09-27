@@ -15,7 +15,7 @@ class Dropbox(object):
         self._accessSecret = ''
     
     def getSession(self):
-        return session.DropboxSession(self.appKey(), self.appSecret(), self.appAccessType())
+        return session.DropboxSession(self.appKey, self.appSecret, self.appAccessType)
     
     def _readToken(self):
         with open(self._tokenPath.caseSensative(), 'r') as token_file :

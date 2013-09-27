@@ -1,149 +1,200 @@
+import sys
 import time
-from DTL.api import loggingUtils, Stopwatch
+import cProfile
+import pstats
+import datetime
+from functools import wraps
+
+from DTL.api import loggingUtils, threadlib
+from DTL.settings import Settings
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class SafeCall(object):
+class PreAndPost(object):
     __metaclass__ = loggingUtils.LoggingMetaclass
-    #------------------------------------------------------------
     def __init__(self, func):
         self.func = func
+        wraps(func)(self)
 
-    #------------------------------------------------------------
     def __get__(self, obj, type=None):
         return self.__class__(self.func.__get__(obj, type))
 
-    #------------------------------------------------------------
-    def __call__(self, *a, **kw):
+    def __call__(self, *args, **kwds):
+        return self.call(*args, **kwds)
+        
+    def pre_call(self, *args, **kwds):
+        pass
+        
+    def call(self, *args, **kwds):
+        return self.func(*args, **kwds)
+
+    def post_call(self, *args, **kwds):
+        pass
+
+    def error(self, retval, *args, **kwds):
+        self.log.exception("")
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+class Safe(PreAndPost):
+    def __init__(self, func):
+        super(Safe, self).__init__(func)
+
+    def __call__(self, *args, **kwds):
         retval = None
         try:
-            self.pre_call(*a, **kw)
-            retval = self.func(*a, **kw)
+            self.pre_call(*args, **kwds)
+            retval = self.call(*args, **kwds)
+        except KeyboardInterrupt:
+            raise Exception("Keyboard interruption detected")
         except:
-            self.error(retval, *a, **kw)
+            self.error(retval, *args, **kwds)
         finally:
             try:
-                self.post_call(retval, *a, **kw)
+                self.post_call(retval, *args, **kwds)
             except:
-                self.error(retval, *a, **kw)
+                try:
+                    self.error(retval, *args, **kwds)
+                except:
+                    pass
             return retval
 
-    #------------------------------------------------------------
-    def pre_call(self, *a, **kw):
-        pass
-
-    #------------------------------------------------------------
-    def post_call(self, *a, **kw):
-        pass
-
-    #------------------------------------------------------------
-    def error(self, retval, *a, **kw):
-        self.log.exception("")
+    def error(self, retval, *args, **kwds):
+        if self.log.handlers :
+            self.log.exception("")
         
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class TimerDecorator(SafeCall):
-    #------------------------------------------------------------
+class Timer(Safe):
+    """A decorator which times a callable but also provides some timing functions
+    to the func through itself being passed as a param to the function call"""
     def __init__(self, func):
-        super(TimerDecorator, self).__init__(func)
-        self._stopwatch = None
+        super(Timer, self).__init__(func)
+        self._name = str(self.func.__name__)
+        self.reset()
+        
+    def reset(self):
+        self._starttime = datetime.datetime.now()
+        self._lapStack = []
+        self._records	= []
+        self._laps	= []
+        
+    def recordLap(self, elapsed, message):
+        self._records.append('\tlap: {0} | {1}'.format(elapsed, message))
+        
+    def startLap(self, message):
+        self._lapStack.append((message,datetime.datetime.now()))
+        return True
+    
+    def stopLap(self):
+        if not self._lapStack:
+            return False
 
-    #------------------------------------------------------------
-    def pre_call(self, *a, **kw):
-        self._stopwatch = Stopwatch(self.func.__name__)
+        curr = datetime.datetime.now()
+        message, start = self._lapStack.pop()
 
-    #------------------------------------------------------------
-    def post_call(self, *a, **kw):
-        self._stopwatch.stop()
+        #process the elapsed time
+        elapsed	= str(curr - start)
+        if not '.' in elapsed:
+            elapsed += '.'
 
-## {{{ http://code.activestate.com/recipes/577817/ (r1)
-"""
-A profiler decorator.
+        while len(elapsed) < 14 :
+            elapsed += '0'
 
-Author: Giampaolo Rodola' <g.rodola [AT] gmail [DOT] com>
-License: MIT
-"""
-try:
-    import cProfile
-    import tempfile
-    import pstats
-    def profile(sort='cumulative', lines=50, strip_dirs=False, fileName=r'c:\temp\profile.profile'):
-        """A decorator which profiles a callable. This uses cProfile which is not in Python2.4.
-        Example usage:
+        self.recordLap(elapsed, message)
+        
+    def newLap(self, message):
+        """ Convenience method to stop the current lap and create a new lap """
+        self.stopLap()
+        self.startLap(message)
+        
+    def stop(self):
+        #stop all the laps if not stopped
+        while self._lapStack:
+            self.stopLap()
 
-        >>> @profile
-        	def factorial(n):
-        		n = abs(int(n))
-        		if n < 1:
-        				n = 1
-        		x = 1
-        		for i in range(1, n + 1):
-        				x = i * x
-        		return x
-        ...
-        >>> factorial(5)
-        Thu Jul 15 20:58:21 2010    c:\temp\profile.profile
+        total = str(datetime.datetime.now() - self._starttime)
 
-        		 4 function calls in 0.000 CPU seconds
+        #output the logs
+        self.log.info('Time:{0} | {1} Stopwatch'.format(total,self._name))
+        for record in self._records :
+            self.log.info(record)
+        
+        return True
 
-           Ordered by: internal time, call count
+    def pre_call(self, *args, **kwds):
+        self.startLap(self.func.__name__)
+        
+    def call(self, *args, **kwds):
+        return self.func(timer=self, *args, **kwds)
 
-        	ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        		1    0.000    0.000    0.000    0.000 profiler.py:120(factorial)
-        		1    0.000    0.000    0.000    0.000 {range}
-        		1    0.000    0.000    0.000    0.000 {abs}
-
-        120
-        >>>
-        """
-        def outer(fun):
-            def inner(*args, **kwargs):
-                prof = cProfile.Profile()
-                ret = prof.runcall(fun, *args, **kwargs)
-
-                prof.dump_stats(fileName)
-                stats = pstats.Stats(fileName)
-                if strip_dirs:
-                    stats.strip_dirs()
-                if isinstance(sort, (tuple, list)):
-                    stats.sort_stats(*sort)
-                else:
-                    stats.sort_stats(sort)
-                stats.print_stats(lines)
-                return ret
-            return inner
-
-        # in case this is defined as "@profile" instead of "@profile()"
-        if hasattr(sort, '__call__'):
-            fun = sort
-            sort = 'cumulative'
-            outer = outer(fun)
-        return outer
-    ## end of http://code.activestate.com/recipes/577817/ }}}
-except ImportError:
-    def profile(sort='cumulative', lines=50, strip_dirs=False, fileName=r'c:\temp\profile.profile'):
-        def outer(fun):
-            def inner(*args, **kwargs):
-                print 'cProfile is unavailable in this version of python. Use Python 2.5 or later.'
-                return fun(*args, **kwargs)
-            return inner
-        # in case this is defined as "@profile" instead of "@profile()"
-        if hasattr(sort, '__call__'):
-            fun = sort
-            sort = 'cumulative'
-            outer = outer(fun)
-        return outer
+    def post_call(self, *args, **kwds):
+        self.stop()
 
 
-if __name__ == "__main__":
-    @TimerDecorator
-    def TestTime():
-        time.sleep(2)
+#------------------------------------------------------------
+#------------------------------------------------------------
+class CommandTicker(Safe):
+    TICKS = ['[.  ]', '[.. ]', '[...]', '[ ..]', '[  .]', '[   ]']
+    def __init__(self, func, *args, **kwds):
+        """A decorater that shows a command line progress bar for commandline operations that will take a long time"""
+        super(CommandTicker, self).__init__(func, *args, **kwds)
+        self.ticker_thread = threadlib.ThreadedProcess(*args, **kwds)
+        self.ticker_thread.run = self.run
+        
+    def run(self):
+        i = 0
+        first = True        
+        while self.ticker_thread.isMainloopAlive:
+            time.sleep(.25)
+            if i == len(self.TICKS):
+                first = False
+                i = 0
+            if not first:
+                sys.stderr.write("\r{0}\r".format(self.TICKS[i]))
+                sys.stderr.flush()
+            i += 1
+        
+        sys.stderr.flush()
+    
+    def pre_call(self, *args, **kwds):
+        self.ticker_thread.start()
+        
+    def post_call(self, retval, *args, **kwds):
+        self.ticker_thread.stop()
+        sys.stderr.flush()
+        sys.stderr.write("       ")
+        sys.stderr.flush()
+        
 
-    @SafeCall
-    def TestError():
-        1/0
 
-    myTime = TestTime()
-    myError = TestError()
+#------------------------------------------------------------
+class Profile(Safe):
+    """A decorator which profiles a callable."""
+    def __init__(self, func, sort='cumulative', strip_dirs=False):
+        super(Profile, self).__init__(func)
+        self.sort = sort
+        self.strip_dirs = strip_dirs
+        base_path = Settings.getTempPath().join('profile')
+        base_path.makedirs()
+        self.profile_path = base_path.join('{0}.{1}.profile'.format(func.__module__, func.__name__))
+        self.stats_path = base_path.join('{0}.{1}.log'.format(func.__module__, func.__name__))
+        self.profile = cProfile.Profile()
+        
+    def call(self, *args, **kwds):
+        return self.profile.runcall(self.func, *args, **kwds)
+    
+    def post_call(self, retval, *args, **kwds):
+        stream = open(self.stats_path, 'w')
+        self.profile.dump_stats(self.profile_path)
+        stats = pstats.Stats(self.profile_path, stream=stream)
+        if self.strip_dirs:
+            stats.strip_dirs()
+        if isinstance(self.sort, (tuple, list)):
+            stats.sort_stats(*self.sort)
+        else:
+            stats.sort_stats(self.sort)
+        
+        stats.print_stats()
+        self.profile_path.remove()

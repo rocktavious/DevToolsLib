@@ -19,7 +19,7 @@ class ChoiceWidget(Dialog):
         
         self.setModal(True)
         
-        self.ui_message.setText(self.msg())
+        self.ui_message.setText(self.msg)
         self.ui_submit.clicked.connect(self.emitChoiceSubmitted)
         for choice in choices :
             self.ui_choices.addItem(choice)
@@ -38,9 +38,9 @@ class ChoiceWidget(Dialog):
     def getChoice(*args, **kwds):
         success, choice = False, None
         widget = ChoiceWidget(*args, **kwds)
-        if not widget.submitted() :
+        if not widget.submitted :
             widget.exec_()
-        success = widget.submitted()
+        success = widget.submitted
         if success :
             choice = widget.ui_choices.currentIndex()
         

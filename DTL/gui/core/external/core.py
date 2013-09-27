@@ -57,7 +57,7 @@ class Core(object):
         app = Core.getApp()
         self.setApp(app)
         self._readSettings()
-        self.app().aboutToQuit.connect(self._saveSettings)
+        self.app.aboutToQuit.connect(self._saveSettings)
 
 
     #------------------------------------------------------------
@@ -81,15 +81,15 @@ class Core(object):
     #------------------------------------------------------------
     @staticmethod
     def Start():
-        if Core.instance().app() :
-            Core.instance().app().exec_()
+        if Core.instance().app :
+            Core.instance().app.exec_()
             
     #------------------------------------------------------------
     @staticmethod
     def Stop():
-        if Core.instance().app() :
-            Core.instance().app().closeAllWindows()
-            Core.instance().app().quit()
+        if Core.instance().app :
+            Core.instance().app.closeAllWindows()
+            Core.instance().app.quit()
         
     #------------------------------------------------------------
     # Begin Overriable methods
@@ -109,7 +109,7 @@ class Core(object):
         window = None
         
         #MFC apps there should be no root window
-        if self.mfcApp():
+        if self.mfcApp:
             return window
         
         if QtGui.QApplication.instance():

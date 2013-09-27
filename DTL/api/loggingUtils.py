@@ -1,4 +1,6 @@
 import os
+import sys
+import StringIO
 import logging
 import logging.handlers
 import sqlite3
@@ -7,6 +9,7 @@ import time
 
 from DTL.api import Path
 
+INTERNALSTREAM = StringIO.StringIO()
 _streamLoggerSetupComplete = False
 
 HUMANTIMEFORMAT = '%b %d %I:%M:%S %p'
@@ -49,7 +52,7 @@ def setupDatabaseHandler(filepath, level=None):
     addHandler(handler)
 
 #------------------------------------------------------------
-def setupStreamHandler(level=None, formatter=None):
+def setupStreamHandler(level=None, formatter=None, stream=None):
     global _streamLoggerSetupComplete
     if _streamLoggerSetupComplete is False :
         _streamLoggerSetupComplete = True

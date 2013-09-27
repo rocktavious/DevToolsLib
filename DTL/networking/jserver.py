@@ -18,8 +18,8 @@ class JsonServer(JsonSocket):
     #------------------------------------------------------------
     def _bind(self):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind( self.networkAddress() )
-        self.log.info('Server running on {0}'.format(self.networkAddress()))
+        self.socket.bind(self.networkAddress)
+        self.log.info('Server running on {0}'.format(self.networkAddress))
     
     #------------------------------------------------------------
     def _listen(self):
@@ -66,7 +66,7 @@ class JsonServerThreaded(ThreadedProcessWithPrompt, JsonServer):
                 self.log.exception(e)
                 continue
 
-            while self.isMainloopAlive():
+            while self.isMainloopAlive:
                 try:
                     obj = self.recv()
                     self._process_message(obj)
@@ -116,10 +116,10 @@ class ServerFactory(JsonServerThreaded):
     
     #------------------------------------------------------------
     def run(self):
-        while self.isMainloopAlive():
+        while self.isMainloopAlive:
             tmp = self._thread_type()
             self._purge_threads()
-            while self.conn and self.isMainloopAlive():
+            while self.conn and self.isMainloopAlive:
                 try:
                     self.accept_connection()
                 except socket.timeout as e:

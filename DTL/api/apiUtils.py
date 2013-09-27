@@ -18,6 +18,10 @@ from functools import wraps
 from DTL.api import Path
 
 #------------------------------------------------------------
+def random_string(length=10):
+    return ''.join(random.choice(string.ascii_lowercase) for i in range(length))
+
+#------------------------------------------------------------
 def write(*args):
     '''This is here so the API can control where the output goes, and how its goes
     This allows users to make sure their scripts are non-buffering,
@@ -201,36 +205,56 @@ def quickReload(modulename):
 
 
 #------------------------------------------------------------
-def synthesize(object, name, value, readonly=False):
+def synthesize(inst, name, value, readonly=False):
     """
-    Convenience method to create getters and setters for a instance. 
-    Should be called from within __init__. Creates [name], set[Name], 
-    _[name] on object.
+    Convenience method to create getters, setters and a property for the instance.
+    Should the instance already have the getters or setters defined this won't add them
+    and the property will reference the already defined getters and setters
+    Should be called from within __init__. Creates [name], get[Name], set[Name], 
+    _[name] on inst.
 
-    :param object: An instance of the class to add the methods to.
+    :param inst: An instance of the class to add the methods to.
     :param name: The base name to build the function names, and storage variable.
     :param value: The initial state of the created variable.
 
     """
+    cls = type(inst)
     storageName = '_{0}'.format(name)
+    getterName = 'get{0}{1}'.format(name[0].capitalize(), name[1:])
     setterName = 'set{0}{1}'.format(name[0].capitalize(), name[1:])
-    if hasattr(object, name):
-        raise KeyError('The provided attr {0} already exists'.format(name))
-    # add the storeage variable to the object
-    setattr(object, storageName, value)
-    # define the getter
+    deleterName = 'del{0}{1}'.format(name[0].capitalize(), name[1:])
+
+    setattr(inst, storageName, value)
+    
+    #We always define the getter
     def customGetter(self):
         return getattr(self, storageName)
-    # define the Setter
-    def customSetter(self, state):
-        setattr(self, storageName, state)
-    # add the getter to the object, if it does not exist
-    if not hasattr(object, name):
-        setattr(object, name, types.MethodType(customGetter, object))
-    # add the setter to the object, if it does not exist
-    if not hasattr(object, setterName):
-        if readonly == False :
-            setattr(object, setterName, types.MethodType(customSetter, object))
+
+    #Add the Getter
+    if not hasattr(inst, getterName):
+        setattr(cls, getterName, customGetter)
+    
+    #Handle Read Only
+    if readonly :
+        if not hasattr(inst, name):
+            setattr(cls, name, property(fget=getattr(cls, getterName, None) or customGetter, fdel=getattr(cls, getterName, None)))
+    else:
+        #We only define the setter if we arn't read only
+        def customSetter(self, state):
+            setattr(self, storageName, state)        
+        if not hasattr(inst, setterName):
+            setattr(cls, setterName, customSetter)
+        member = None
+        if hasattr(cls, name):
+            #we need to try to update the property fget, fset, fdel incase the class has defined its own custom functions
+            member = getattr(cls, name)
+            if not isinstance(member, property):
+                raise ValueError('Member "{0}" for class "{1}" exists and is not a property.'.format(name, cls.__name__))
+        #Reguardless if the class has the property or not we still try to set it with
+        setattr(cls, name, property(fget=getattr(member, 'fget', None) or getattr(cls, getterName, None) or customGetter,
+                                    fset=getattr(member, 'fset', None) or getattr(cls, setterName, None) or customSetter,
+                                    fdel=getattr(member, 'fdel', None) or getattr(cls, getterName, None)))
+
 
 #------------------------------------------------------------
 def runFile( filepath, basePath=None, cmd=None, debug=False ):
@@ -404,3 +428,35 @@ class requires(object):
     
     def after(self):
         pass
+    
+#------------------------------------------------------------        
+#------------------------------------------------------------
+class BitTracker(object):
+    '''A Management class that keeps a map of strings to bit values and bit indexes
+    The BitTracker keeps a cache that maps a string(key) to a BitMask(value)
+    The BitTracker has convience functions for getBit and getId and handles all the internal machinery
+    '''
+    bitMask = 1 #Bit Cache
+    bitCacheMap = {}
+    _hasInit = False
+    
+    @classmethod
+    def increment(cls):
+        cls.bitMask <<= 1
+        
+    @classmethod
+    def reset(cls):
+        cls.bitMask = BitMask()
+        cls.bitCacheMap = {}
+    
+    @classmethod
+    def getBit(cls, name):
+        name = getClassName(name)
+        try:
+            bit = cls.bitCacheMap[name]
+        except KeyError :
+            bit = cls.bitMask
+            cls.bitCacheMap[name] = bit
+            cls.increment()
+        
+        return bit

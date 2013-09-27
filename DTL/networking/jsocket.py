@@ -65,7 +65,7 @@ class BaseSocket(object):
         apiUtils.synthesize(self, 'timeout', None)
         apiUtils.synthesize(self, 'address', address or getLocalIP(), True)
         apiUtils.synthesize(self, 'port', port or self.DEFAULT_PORT, True)
-        apiUtils.synthesize(self, 'networkAddress', (self.address(), self.port()), True)
+        apiUtils.synthesize(self, 'networkAddress', (self.address, self.port), True)
         
     #------------------------------------------------------------
     def setTimeout(self, timeout):
@@ -177,7 +177,7 @@ class BaseSocket(object):
     def connect(self):
         for i in range(self.CONN_RETRY):
             try:
-                self.socket.connect( self.networkAddress() )
+                self.socket.connect(self.networkAddress)
             except socket.error as msg:
                 self.log.error("SockThread Error: %s" % msg)
                 time.sleep(3)

@@ -3,12 +3,11 @@ import sys
 import imp
 import getpass
 
-from DTL.api.jsondocument import JsonDocument
-from DTL.api.path import Path
+from DTL.api import Path, Document
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class Settings(JsonDocument):
+class Settings(Document):
 
     #------------------------------------------------------------
     def __init__(self):
@@ -60,12 +59,12 @@ class Settings(JsonDocument):
     
     #------------------------------------------------------------
     def _readGlobalSettings(self):
-        self.setFilePath(self['GLOBAL_SETTINGS_PATH'])
+        self.filepath = self['GLOBAL_SETTINGS_PATH']
         self.read()
     
     #------------------------------------------------------------
     def _readLocalSettings(self):
-        self.setFilePath(self['LOCAL_SETTINGS_PATH'])
+        self.filepath = self['LOCAL_SETTINGS_PATH']
         self.read()
     
     #------------------------------------------------------------

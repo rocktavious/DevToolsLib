@@ -13,7 +13,7 @@ class ProgressWidget(Dialog):
         apiUtils.synthesize(self, 'message', message)
         
         self.ui_ProgressBar.setValue(1)
-        self.ui_Label.setText(self.message())
+        self.ui_Label.setText(self.message)
         
         self.center()
         self.show()
@@ -22,24 +22,24 @@ class ProgressWidget(Dialog):
     #------------------------------------------------------------
     def update(self):
         self.ui_ProgressBar.setValue(self.value())
-        self.ui_Label.setText(self.message())
+        self.ui_Label.setText(self.message)
         super(ProgressWidget, self).update()
     
     #------------------------------------------------------------
     def increment(self):
-        self.setCurrent(self.current() + 1)
+        self.setCurrent(self.current + 1)
         self.update()
     
     #------------------------------------------------------------
     def percent(self):
-        if self.total() > 0 :
-            return 1.0 / self.total()
+        if self.total > 0 :
+            return 1.0 / self.total
         else:
             return 0
     
     #------------------------------------------------------------
     def value(self, recursive=True):
-        return (100 * self.current() * self.percent())
+        return (100 * self.current * self.percent())
 
 
 #------------------------------------------------------------

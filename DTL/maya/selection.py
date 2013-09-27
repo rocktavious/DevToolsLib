@@ -28,10 +28,10 @@ class ObjSelData(BaseDict):
     
     #------------------------------------------------------------
     def serialize(self):
-        return (self.add_quotes(self.object()),
-                self.hilite(),
+        return (self.add_quotes(self.object),
+                self.hilite,
                 dict(self),
-                self.vtxFaceColorData())
+                self.vtxFaceColorData)
     
     #------------------------------------------------------------
     def deserialize(self, obj='', hilite=False, compData={}, vtxFaceColorData={}):
@@ -54,12 +54,12 @@ class ObjSelData(BaseDict):
     def _populateVertColorData(self):
         '''Populates a dictionary of color/alpha key -> vtxFace list'''
         rgbaDict = dict()
-        if cmds.listRelatives(self.object(),s=1) :
+        if cmds.listRelatives(self.object,s=1) :
             for vtxFace in self.getVtxFaceList() :
                 try:
                     colorList = cmds.polyColorPerVertex(vtxFace,q=1,rgb=1)
                 except:
-                    cmds.polyColorPerVertex(self.object(),rgb=[0,0,0],a=1)
+                    cmds.polyColorPerVertex(self.object,rgb=[0,0,0],a=1)
                     colorList = cmds.polyColorPerVertex(vtxFace,q=1,rgb=1)
                 alpha = cmds.polyColorPerVertex(vtxFace,q=1,a=1)
                 rgba = (colorList[0],colorList[1],colorList[2],alpha[0])
@@ -76,7 +76,7 @@ class ObjSelData(BaseDict):
         selectedComp = cmds.filterExpand(ex=1,fp=1,sm=compType) or []
         for comp in selectedComp :
             parent_transform = comp.split('.')[0].rsplit('|',1)[0]
-            if parent_transform == self.object() :
+            if parent_transform == self.object :
                 compNum = comp.split('[')[-1].split(']')[0]
                 self.__getitem__(compPrefix).append(compNum)
             
@@ -84,7 +84,7 @@ class ObjSelData(BaseDict):
     #--------------------------------------------------------
     def getDescendents(self, obj=None):
         '''Return a list of all of the objects descendents(without shape nodes)'''
-        allChilden = set(cmds.listRelatives(self.object(), ad=1, f=1) or [])
+        allChilden = set(cmds.listRelatives(self.object, ad=1, f=1) or [])
         allShapes = set()
         for item in allChilden:
             allShapes.update(cmds.listRelatives(item, s=1, f=1) or [])
@@ -94,7 +94,7 @@ class ObjSelData(BaseDict):
     #--------------------------------------------------------
     def getVtxFaceList(self):
         '''Returns the objects vtxFace list'''
-        return list(cmds.ls(cmds.polyListComponentConversion(self.object(),tvf=1),l=1,fl=1))
+        return list(cmds.ls(cmds.polyListComponentConversion(self.object,tvf=1),l=1,fl=1))
             
 
 #------------------------------------------------------------

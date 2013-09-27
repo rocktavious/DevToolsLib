@@ -6,7 +6,7 @@ install:
  - python setup.py sdist develop
 
 script:
- - "cd test && python test.py"
+ - "cd DTL_tests && python test.py"
 
 branches:
   only:

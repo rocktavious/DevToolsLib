@@ -1,17 +1,11 @@
-from DTL.api import BaseStruct
+from DTL.api import BaseDict
 
 #------------------------------------------------------------
 #------------------------------------------------------------
-class DotifyDict(dict, BaseStruct):
+class DotifyDict(BaseDict):
     #------------------------------------------------------------
-    def __init__(self, value=None):
-        if value is None:
-            pass
-        elif isinstance(value, dict):
-            for key in value:
-                self.__setitem__(key, value[key])
-        else:
-            raise TypeError, 'expected dict'
+    def __eq__(self, other):
+        return dict.__eq__(self, other)
     
     #------------------------------------------------------------
     def __setitem__(self, key, value):
@@ -64,8 +58,3 @@ class DotifyDict(dict, BaseStruct):
     #------------------------------------------------------------
     __setattr__ = __setitem__
     __getattr__ = __getitem__
-    
-if __name__ == '__main__':
-    dot_dict = DotifyDict({'one':{'two':{'three':'value'}}})
-    print dot_dict
-    print dot_dict.one.two.three

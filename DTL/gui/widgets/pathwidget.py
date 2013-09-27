@@ -52,7 +52,7 @@ class PathWidget(Widget):
                 return
         else: #Begin Testing for path types
             if self.pickerType() == PathWidget.pickerTypes.File :
-                picked = guiUtils.getFileFromUser(ext=self.ext())
+                picked = guiUtils.getFileFromUser(ext=self.ext)
             if self.pickerType() == PathWidget.pickerTypes.Folder :
                 picked = guiUtils.getDirFromUser()
             if not picked :

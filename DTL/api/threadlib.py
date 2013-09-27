@@ -12,7 +12,7 @@ class Process(object):
     
     #------------------------------------------------------------
     def run(self):
-        while self.isMainloopAlive():
+        while self.isMainloopAlive:
             self.main_loop()
         
     #------------------------------------------------------------
@@ -21,7 +21,7 @@ class Process(object):
     
     #------------------------------------------------------------
     def prompt_loop(self):
-        while self.isPromptloopAlive():
+        while self.isPromptloopAlive:
             user_input = raw_input('Prompt>>>')
             
             #DEBUG
@@ -95,15 +95,15 @@ class ThreadedProcessWithPrompt(ThreadedProcess):
     def start(self):
         '''we override the start because we want the thread to handle calling run and we want to start our hidden prompt loop'''
         super(ThreadedProcessWithPrompt, self).start()
-        while self.isMainloopAlive():
+        while self.isMainloopAlive:
             try:
                 while True:
                     time.sleep(100)
             except KeyboardInterrupt:
                 self.setIsPromptloopAlive(True)
-                self.threadLock().acquire()
+                self.threadLock.acquire()
                 self.prompt_loop()
-                self.threadLock().release()
+                self.threadLock.release()
 
 
 

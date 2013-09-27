@@ -1,2 +1,4 @@
-dropbox==1.6
+dropbox>=1.6
 jenkinsapi>=0.2.10
+Django>=1.5.4
+requests>=1.2.3
