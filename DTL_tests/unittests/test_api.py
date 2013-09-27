@@ -1,3 +1,4 @@
+import os
 import time
 import unittest
 
@@ -60,8 +61,8 @@ class TestCasePath(unittest.TestCase):
         self.assertIn(self.filepath.parent.parent.name, self.filepath)
         
         myPathSepTest = Path('c:\\Users/krockman/documents').join('mytest')
-        self.assertEquals(myPathSepTest, 'c:\Users\krockman\documents\mytest')
-        self.assertEquals({'TestKey', myPathSepTest},{'TestKey',u'c:\\Users\\krockman\\documents\\mytest'})
+        self.assertEquals(myPathSepTest, os.path.join('c:','Users','krockman','documents','mytest'))
+        self.assertEquals({'TestKey', myPathSepTest},{'TestKey',os.path.join('c:','Users','krockman','documents','mytest')})
         
             
 class TestCaseDocument(unittest.TestCase):
