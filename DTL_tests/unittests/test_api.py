@@ -61,7 +61,7 @@ class TestCasePath(unittest.TestCase):
         self.assertIn(self.filepath.parent.parent.name, self.filepath)
         
         myPathSepTest = Path('c:\\Users/krockman/documents').join('mytest')
-        self.assertEquals(myPathSepTest, os.path.join('c:','Users','krockman','documents','mytest'))
+        self.assertEquals(myPathSepTest, os.path.abspath(os.path.join('c:','Users','krockman','documents','mytest')))
         self.assertEquals({'TestKey', myPathSepTest},{'TestKey',os.path.join('c:','Users','krockman','documents','mytest')})
         
             
