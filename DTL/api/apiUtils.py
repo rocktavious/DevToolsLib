@@ -119,8 +119,7 @@ def setEnv(key, value):
     if sys.platform == 'win32' :
         execute(['SETX',key,value], catchError=True)
     else:
-        execute(['set', '{0}={1}'.format(key,value)], catchError=True)
-        execute(['export', key], catchError=True)
+        raise Exception('Unable to set environment variables for non-windows systems!')
 
 #------------------------------------------------------------
 def clearEnv(key):
@@ -355,7 +354,7 @@ def Launch(ctor, modal=False):
     :param modal: If True, widget will be created as a modal widget (ie. blocks
     			  access to calling gui elements).
     """
-    from PyQt4.QtGui import QWizard
+    from DTL.qt.QtGui import QWizard
 
     # always run wizards modally
     try:
@@ -460,3 +459,33 @@ class BitTracker(object):
             cls.increment()
         
         return bit
+    
+def isInteractive():
+    # only False if stdin is redirected like "-t" in perl.
+    return sys.stdin.isatty()
+
+def isInteractivePython():
+    try:
+        ps = sys.ps1
+    except:
+        return False
+    return True
+
+def isInteractivePosix():
+    try:
+        import posix
+        tty = open("/dev/tty")
+        tpgrp = posix.tcgetpgrp(tty.fileno())
+        pgrp = posix.getpgrp()
+        tty.close()
+        return (tpgrp == pgrp)
+    finally:
+        return False
+    
+def isGUIAvailable():
+    if sys.platform != 'win32':
+        if isInteractivePython():
+            return False
+        if isInteractivePosix():
+            return False
+    return True

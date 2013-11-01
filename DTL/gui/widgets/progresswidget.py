@@ -1,4 +1,4 @@
-from PyQt4 import QtGui
+from DTL.qt import QtGui
 
 from DTL.api import apiUtils
 from DTL.gui import Core, Dialog

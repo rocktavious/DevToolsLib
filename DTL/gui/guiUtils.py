@@ -7,12 +7,9 @@ import imp
 import types
 import re
 import subprocess
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import Qt
-
+from DTL.qt import QtCore, QtGui
 from DTL.api import Path
 from DTL.gui import Core
-from DTL.settings import Settings
 
 #------------------------------------------------------------
 def getActiveWindow():

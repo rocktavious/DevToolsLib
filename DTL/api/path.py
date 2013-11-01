@@ -19,12 +19,14 @@ import stat
 import shutil
 import hashlib
 import ctypes
-
+import logging
 import re
 import fnmatch
 import glob
 
 import errno
+
+from DTL.conf import settings
 
 __all__ = ['Path']
 
@@ -104,6 +106,11 @@ class Path(unicode):
     def getHomeDir(cls):
         """ This will get us the user's home directory"""
         return cls('~').expand()
+    
+    @classmethod
+    def getTempPath(cls):
+        """ This will get us a temp directory location"""
+        return cls(settings.PKG_DATA_DIR).join('tmp')
 
     #------------------------------------------------------------
     # Path object dunder methods
@@ -288,17 +295,19 @@ class Path(unicode):
         """
         return [p for p in self.listdir(pattern) if p.isfile()]
     #------------------------------------------------------------
-    def walk(self, pattern=None, topdown=False):
+    def walk(self, pattern=None, topdown=False, return_files=True, return_dirs=True):
         """Returns children files and dirs recusively as path objects"""
         for root, dirs, files in os.walk(self, topdown=topdown):
-            for name in files:
-                next_path = self._next_class(os.path.join(root, name))
-                if pattern is None or next_path.fnmatch(pattern):
-                    yield next_path
-            for name in dirs:
-                next_path = self._next_class(os.path.join(root, name))
-                if pattern is None or next_path.fnmatch(pattern):
-                    yield next_path
+            if return_files :
+                for name in files:
+                    next_path = self._next_class(os.path.join(root, name))
+                    if pattern is None or next_path.fnmatch(pattern):
+                        yield next_path
+            if return_dirs :
+                for name in dirs:
+                    next_path = self._next_class(os.path.join(root, name))
+                    if pattern is None or next_path.fnmatch(pattern):
+                        yield next_path
     #------------------------------------------------------------
     def regex(self, pattern, inclusive=False, topdown=False):
         """ Return a list of path objects that match the pattern,
@@ -441,13 +450,6 @@ class Path(unicode):
             if e.errno != errno.ENOENT:
                 raise   
 
-    copyfile = shutil.copyfile
-    copymode = shutil.copymode
-    copystat = shutil.copystat
-    copy = shutil.copy
-    copy2 = shutil.copy2
-    copytree = shutil.copytree
-    move = shutil.move
     #------------------------------------------------------------
     def touch(self):
         """ Set the access/modified times of this file to the current time.
@@ -461,8 +463,85 @@ class Path(unicode):
         try:
             os.remove(self)
         except OSError, e:
+            if e.errno == errno.EACCES:
+                self.chmod(0777)
+                os.remove(self)
             if e.errno != errno.ENOENT:
                 raise
+            
+    def compare(self, target_filepath, size_only=False, time_only=False, time_window=2):
+        target_filepath = Path(target_filepath)
+        
+        source_stats = self.stat()
+        target_stats = target_filepath.stat()
+        
+        size_compare = bool(source_stats.st_size == target_stats.st_size)
+        time_compare = bool((source_stats.st_mtime - time_window) > target_stats.st_mtime)
+        if size_only :
+            return size_compare
+        if time_only:
+            return time_compare
+    
+        return bool(size_compare == time_compare)
+    
+    #------------------------------------------------------------
+    def rsync(self, other,
+              dry_run=False,
+              recursive=True, flatten=False,
+              delete=True,
+              update=True, existing=False, size_only=False, time_only=True, time_window=2):
+        target_root = Path(other)
+        if not self.isdir() or not target_root.isdir():
+            raise Exception('Source and Target paths must be directories!\nSOURCE:{0}\nTARGET:{1}'.format(self, target_root))
+        
+        #This incurs no speed cost because generators are returned
+        if recursive :
+            source_files = self.walk(return_dirs=False)
+            target_files = target_root.walk(return_dirs=False)
+        else:
+            source_files = self.files()
+            target_files = target_root.files()
+        
+        #Handle the source to target sync first
+        for source in source_files :
+            if flatten :
+                target = target_root.join(source.name)
+            else:
+                target = Path(source.replace(self, target_root))
+
+            if update:
+                #If we don't care about existing only and target doesn't exist copy it over
+                if not existing and not target.exists():
+                    logging.info('Copying {0} at {1}'.format(source, target))
+                    if not dry_run :
+                        target.makedirs()
+                        source.copy2(target)
+                #If the target does exist compare based on size and time to see if we need to update it
+                if target.exists() :
+                    if source.compare(target, size_only, time_only, time_window):
+                        logging.info('Updating {0} at {1}'.format(source, target))
+                        if not dry_run :
+                            source.copy2(target)
+            else :
+                logging.info('Copying {0} at {1}'.format(source, target))
+                if not dry_run :
+                    target.makedirs()
+                    source.copy2(target)
+                
+        #If the files on the target_root doesn't exist in the current path, then delete
+        if delete :
+            for target in target_files :
+                if flatten :
+                    matched_source = self.join(target.name)
+                else:
+                    matched_source = Path(target.replace(target_root, self))
+                
+                if not matched_source.exists():
+                    logging.info('Removeing {0}'.format(target))
+                    if not dry_run :
+                        target.remove()
+        
+            
 
     #------------------------------------------------------------
     # Path Object Properties
@@ -584,4 +663,3 @@ class Path(unicode):
         if Path.branch():
             path = path.replace(Path.branch(),'')
         return os.path.normpath(path)
-

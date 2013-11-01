@@ -9,22 +9,10 @@ import time
 
 from DTL.api import Path
 
-INTERNALSTREAM = StringIO.StringIO()
-_streamLoggerSetupComplete = False
-
 HUMANTIMEFORMAT = '%b %d %I:%M:%S %p'
 CODETIMEFORMAT = "%Y-%m-%d_%H:%M:%S"
 VERBOSE = logging.Formatter('[%(levelname)s]%(asctime)s | [%(name)s][%(module)s][%(funcName)s][line:%(lineno)s] \n\t %(message)s', HUMANTIMEFORMAT)
 SIMPLE = logging.Formatter('[%(levelname)s] %(message)s')
-
-
-#------------------------------------------------------------
-def getRootLogger():
-    return logging.getLogger('DTL')
-
-#------------------------------------------------------------
-def getLogger(name):
-    return logging.getLogger(name)
 
 #------------------------------------------------------------
 def addHandler(handler):
@@ -53,16 +41,10 @@ def setupDatabaseHandler(filepath, level=None):
 
 #------------------------------------------------------------
 def setupStreamHandler(level=None, formatter=None, stream=None):
-    global _streamLoggerSetupComplete
-    if _streamLoggerSetupComplete is False :
-        _streamLoggerSetupComplete = True
-        level = level or logging.INFO
-        formatter = formatter or SIMPLE
-        
-        handler = logging.StreamHandler()
-        handler.setFormatter(formatter)
-        handler.setLevel(level)
-        addHandler(handler)
+    logging.basicConfig(level=logging.DEBUG,
+                        format=SIMPLE._fmt,
+                        datefmt=HUMANTIMEFORMAT,
+                        stream=sys.stdout)
         
 
 #------------------------------------------------------------
@@ -74,7 +56,7 @@ class LoggingMetaclass(type):
     #------------------------------------------------------------
     def __init__(cls, name, bases, attrs):
         super(LoggingMetaclass, cls).__init__(name, bases, attrs)
-        cls.log = getLogger(cls.__module__)
+        cls.log = logging.getLogger(cls.__module__)
 
 
 #------------------------------------------------------------

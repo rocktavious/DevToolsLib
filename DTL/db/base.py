@@ -2,8 +2,7 @@ import sys
 import json
 import re
 from copy import deepcopy
-from PyQt4 import QtXml
-
+from DTL.qt import QtXml
 from DTL.api import InternalError, Path, apiUtils
 
 RESERVED_PROPERTY_NAME = re.compile('^__.*__$')

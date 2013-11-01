@@ -14,6 +14,6 @@ from DTL.api.importlib import ImportModule, RollbackImporter
 from DTL.api.decorators import PreAndPost, Safe, Timer, CommandTicker, Profile
 from DTL.api.threadlib import Process, ThreadedProcess, ThreadedProcessWithPrompt
 #from DTL.api.daemon import Daemon, DaemonThread
-#from DTL.api.mailer import Mailer
+from DTL.api.mailer import Mailer
 
         

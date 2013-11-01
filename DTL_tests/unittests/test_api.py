@@ -3,7 +3,6 @@ import time
 import unittest
 
 from DTL.api import *
-from DTL.settings import Settings
 
 class TestCaseApiUtils(unittest.TestCase):
     
@@ -51,17 +50,17 @@ class TestCaseDotifyDict(unittest.TestCase):
 class TestCasePath(unittest.TestCase):
     
     def setUp(self):
-        self.filepath = Settings.getTempPath()
+        self.filepath = Path.getTempPath()
         
     def test_path(self):
-        temp_path = Settings.getTempPath()
+        temp_path = Path.getTempPath()
         self.assertEquals(self.filepath, temp_path)
         self.assertEquals(self.filepath.name, temp_path.name)
         self.assertEquals(self.filepath.parent, temp_path.parent)
         self.assertIn(self.filepath.parent.parent.name, self.filepath)
         
         myPathSepTest = Path('c:\\Users/krockman/documents').join('mytest')
-        self.assertEquals(myPathSepTest, os.path.abspath(os.path.join('c:','Users','krockman','documents','mytest')))
+        self.assertEquals(myPathSepTest, os.path.join('c:','Users','krockman','documents','mytest'))
         self.assertEquals({'TestKey', myPathSepTest},{'TestKey',os.path.join('c:','Users','krockman','documents','mytest')})
         
             
@@ -69,10 +68,10 @@ class TestCaseDocument(unittest.TestCase):
     
     def setUp(self):
         self.doc = Document({'Testing':'min'})
-        self.doc.filepath = Settings.getTempPath().join('document.dat')
+        self.doc.filepath = Path.getTempPath().join('document.dat')
     
     def test_document(self):
-        self.assertEquals(self.doc.filepath, Settings.getTempPath().join('document.dat'))
+        self.assertEquals(self.doc.filepath, Path.getTempPath().join('document.dat'))
         self.assertEquals(self.doc, eval(str(self.doc)))
         self.doc.save()
         self.assertTrue(self.doc.filepath.exists())

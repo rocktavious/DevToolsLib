@@ -1,5 +1,5 @@
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import Qt
+from DTL.qt import QtCore, QtGui
+from DTL.qt.QtCore import Qt
 
 #------------------------------------------------------------
 #------------------------------------------------------------

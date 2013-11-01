@@ -1,9 +1,9 @@
 import os.path
-from PyQt4 import QtGui
-from PyQt4.QtCore import Qt
+from DTL.qt import QtGui
 
+from DTL.conf import settings
 from DTL.gui.base import BaseGUI
-from DTL.settings import Settings
+
 #------------------------------------------------------------
 #------------------------------------------------------------
 class Wizard(QtGui.QWizard, BaseGUI):
@@ -18,7 +18,7 @@ class Wizard(QtGui.QWizard, BaseGUI):
     #------------------------------------------------------------
     def setupStyle(self):
         self.setWizardStyle( QtGui.QWizard.ModernStyle )
-        imgfilepath = Settings['PKG_RESOURCE_PATH']('images', 'Logo_lg.png' )
+        imgfilepath = Path(settings.PKG_RESOURCE_PATH).join('images', 'Logo_lg.png' )
         self.setPixmap( QtGui.QWizard.WatermarkPixmap, QtGui.QPixmap(imgfilepath))
 
     #------------------------------------------------------------

@@ -1,16 +1,15 @@
 import os.path
 import subprocess
 import base64
-from PyQt4 import QtGui, QtCore
-from PyQt4.QtCore import Qt
 
-from DTL.api import Path, JsonDocument, apiUtils
+from DTL.qt import QtGui, QtCore
+from DTL.api import Path, Document, apiUtils
 from DTL.gui import Dialog, guiUtils
 
 #------------------------------------------------------------
 #------------------------------------------------------------
 class LoginWidget(Dialog):
-    loginSubmitted = QtCore.pyqtSignal(QtCore.QString, QtCore.QString)
+    loginSubmitted = QtCore.pyqtSignal(str, str)
     
     #------------------------------------------------------------
     def onFinalize(self, loginMsg='Login', credentialsFile=''):
@@ -47,7 +46,7 @@ class LoginWidget(Dialog):
     #------------------------------------------------------------
     def _saveCredentials(self, username, password):
         if self.credentialsFile :
-            data = JsonDocument(file_path=self.credentialsFile)
+            data = Document(filepath=self.credentialsFile)
             data['Username'] = base64.b64encode(str(username))
             data['Password'] = base64.b64encode(str(password))
             data.save()
@@ -55,7 +54,7 @@ class LoginWidget(Dialog):
     #------------------------------------------------------------
     def _readCredentials(self):
         if self.credentialsFile and self.credentialsFile.exists() :
-            data = JsonDocument(file_path=self.credentialsFile)
+            data = Document(filepath=self.credentialsFile)
             self.ui_username.setText(base64.b64decode(data['Username']))
             self.ui_password.setText(base64.b64decode(data['Password']))
             self.ui_saveOption.setCheckState(True)

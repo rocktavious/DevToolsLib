@@ -1,8 +1,8 @@
 #Written by Blur Studios
 
 # used in painting, faster to do global import
-from PyQt4.QtCore 	import Qt, pyqtSlot, pyqtProperty, pyqtSignal, QPoint, QRect
-from PyQt4.QtGui 	import QPainter, QColor, QWidget, QLinearGradient, QPushButton, QConicalGradient, QRadialGradient
+from DTL.qt.QtCore 	import Qt, pyqtSlot, pyqtProperty, pyqtSignal, QPoint, QRect
+from DTL.qt.QtGui 	import QPainter, QColor, QWidget, QLinearGradient, QPushButton, QConicalGradient, QRadialGradient
 
 class ColorPickerWidget( QWidget ):
     BarWidth		= 15
@@ -359,7 +359,7 @@ class ColorPickerButton( QPushButton ):
 
 
 if ( __name__ == '__main__' ):
-    from PyQt4.QtGui import QVBoxLayout
+    from DTL.qt.QtGui import QVBoxLayout
     from DTL.gui import Core, Dialog
     dlg = Dialog()
     dlg.setWindowTitle('Color Test')

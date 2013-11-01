@@ -42,3 +42,6 @@ class Document(BaseDict):
     def parse(self, file_handle):
         return json.load(file_handle)
     
+    def prettyprint(self):
+        print self.unparse(self.serialize()[0])
+    

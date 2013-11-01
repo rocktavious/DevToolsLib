@@ -4,7 +4,6 @@ import traceback
 from functools import partial
 from P4 import P4, P4Exception
 
-from DTL.settings import Settings
 from DTL.api import Path, apiUtils
 from DTL.gui import guiUtils
 from DTL.gui.widgets import LoginWidget, ChoiceWidget
@@ -28,7 +27,7 @@ class P4Client(object):
         #Validate Credentials
         if self.p4User is None or self.p4Password is None:
             success, user, password = LoginWidget.getCredentials(loginMsg=msg,
-                                                                 credentialsFile=Settings.getTempPath().join('p4_login.dat'),
+                                                                 credentialsFile=Path.getTempPath().join('p4_login.dat'),
                                                                  force=force)
             if not success:
                 raise ValueError('Invalid Login Infomation!')
@@ -55,12 +54,13 @@ class P4Client(object):
                 raise P4Exception('Unable to determine P4CLIENT')
             self.setP4Client(client)
             
-        if self.p4Client() == '' :
+        if self.p4Client == '' :
             self._tryWorkspace()
             return
         
         #Set the env's for next time
-        apiUtils.setEnv('P4CLIENT', self.p4Client)
+        if not os.environ.has_key('P4CLIENT'):
+            apiUtils.setEnv('P4CLIENT', self.p4Client)
         
         self.p4Conn.client = self.p4Client
         
@@ -77,7 +77,8 @@ class P4Client(object):
             return
         
         #Set the env's for next time
-        apiUtils.setEnv('P4PORT', self.p4Port)
+        if not os.environ.has_key('P4PORT'):
+            apiUtils.setEnv('P4PORT', self.p4Port)
         
         self.p4Conn.port = self.p4Port
         
@@ -96,7 +97,7 @@ class P4Client(object):
     def _setupConnection(self):
         self.setP4Conn(P4())
         
-        self._tryWorkspace()
+        #self._tryWorkspace()
         self._tryServer()
         
         self.p4Conn.connect()

@@ -1,6 +1,4 @@
-from PyQt4 import QtGui
-from PyQt4.QtCore import Qt
-
+from DTL.qt import QtGui
 from DTL.gui.base import BaseGUI
 
 #------------------------------------------------------------

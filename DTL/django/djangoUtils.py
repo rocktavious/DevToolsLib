@@ -1,8 +1,7 @@
-from DTL.api import apiUtils, Path
+from django.conf import settings
 
-LOCAL_PATH = Path(__file__).parent
-DJANGO_MANAGE_PATH = LOCAL_PATH.join('manage.py')
-
-def runserver():
-    cmd = 'python {0} runserver'.format(DJANGO_MANAGE_PATH)
-    apiUtils.execute(cmd, verbose=True, catchError=True)
+def print_settings():
+    for k, v in settings._wrapped.__dict__.items():
+        print k, '||', v
+        
+print_settings()

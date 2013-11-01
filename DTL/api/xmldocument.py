@@ -1,3 +1,4 @@
+import json
 from xml.parsers import expat
 from xml.sax.saxutils import XMLGenerator
 from xml.sax.xmlreader import AttributesImpl
@@ -179,7 +180,7 @@ class XmlDocument(Document):
             content_handler.endElement(key)
                 
     #------------------------------------------------------------
-    def _parse(self, file_handle, **kwds):
+    def parse(self, file_handle, **kwds):
         data_stream = file_handle.read()
         handler = _DictSAXHandler(**kwds)
         parser = expat.ParserCreate()
@@ -196,7 +197,7 @@ class XmlDocument(Document):
         return handler.item   
     
     #------------------------------------------------------------
-    def _unparse(self, data_dict, **kwds):
+    def unparse(self, data_dict, **kwds):
         ((key, value),) = data_dict.items()
         output = StringIO()
         content_handler = XMLGenerator(output, 'utf-8')
@@ -228,7 +229,10 @@ class XmlDocument(Document):
         else:
             data = data.get(keyList[-1],[])
         
-        return data        
+        return data
+    
+    def print_json(self):
+        print json.dumps(self.serialize()[0], sort_keys=True, indent=4, cls=self.encoder)
 
 
 

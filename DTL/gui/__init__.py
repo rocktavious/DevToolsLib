@@ -1,7 +1,8 @@
-#Validate PyQt4
-from PyQt4 import QtCore, QtGui, uic
+from DTL.qt import QtCore, QtGui, loadUi, wrapinstance
 
 from core import Core
+
+from colorset import ColorSet, PaletteColorSet
 
 import guiUtils
 

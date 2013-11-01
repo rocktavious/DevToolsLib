@@ -5,8 +5,7 @@ import pstats
 import datetime
 from functools import wraps
 
-from DTL.api import loggingUtils, threadlib
-from DTL.settings import Settings
+from DTL.api import loggingUtils, threadlib, Path
 
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -176,7 +175,7 @@ class Profile(Safe):
         super(Profile, self).__init__(func)
         self.sort = sort
         self.strip_dirs = strip_dirs
-        base_path = Settings.getTempPath().join('profile')
+        base_path = Path.getTempPath().join('profile')
         base_path.makedirs()
         self.profile_path = base_path.join('{0}.{1}.profile'.format(func.__module__, func.__name__))
         self.stats_path = base_path.join('{0}.{1}.log'.format(func.__module__, func.__name__))

@@ -1,10 +1,8 @@
 import sys
 import logging
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import Qt
-
+from DTL.qt import QtCore, QtGui
 from DTL.api import Enum, Path, apiUtils, loggingUtils
-from DTL.settings import Settings
+from DTL.conf import settings
 
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -23,13 +21,8 @@ class Core(object):
     
     #------------------------------------------------------------
     @staticmethod
-    def getAppSettings():
-        return QtCore.QSettings(Settings['COMPANY'], Settings['PKG_NAME'])
-    
-    #------------------------------------------------------------
-    @staticmethod
     def getStyleSheet():
-        ss_file = Settings['RESOURCE_PATH'].join('darkorange.stylesheet')
+        ss_file = Path(settings.PKG_RESOURCE_PATH).join('darkorange.stylesheet')
         data = ''
         with open(ss_file, 'r') as file_handle :
             data = file_handle.read()
@@ -37,10 +30,12 @@ class Core(object):
     
     #------------------------------------------------------------
     @staticmethod
-    def getApp():
+    def getQTApp():
+        QtCore.QCoreApplication.setOrganizationName(settings.COMPANY)
+        QtCore.QCoreApplication.setApplicationName(settings.PKG_NAME)        
         app = QtGui.QApplication.instance()
         if not app :
-            app = QtGui.QApplication(sys.argv)
+            app = QtGui.QApplication(sys.argv, apiUtils.isGUIAvailable())
             app.setStyle( 'Plastique' )
             #app.setStyleSheet(Core.getStyleSheet())
         
@@ -54,7 +49,7 @@ class Core(object):
         apiUtils.synthesize(self, 'mfcApp', False)
         apiUtils.synthesize(self, 'app', None)
         
-        app = Core.getApp()
+        app = Core.getQTApp()
         self.setApp(app)
         self._readSettings()
         self.app.aboutToQuit.connect(self._saveSettings)
@@ -62,7 +57,8 @@ class Core(object):
 
     #------------------------------------------------------------
     def _saveSettings(self):        
-        settings = Core.getAppSettings()
+        settings = QtCore.QSettings(Path.getTempPath().join('ui_settings', apiUtils.getClassName(self) + '.ini'),
+                                    QtCore.QSettings.IniFormat)
         settings.beginGroup(apiUtils.getClassName(self))
         
         self.saveSettings(settings)
@@ -71,7 +67,8 @@ class Core(object):
 
     #------------------------------------------------------------
     def _readSettings(self):        
-        settings = Core.getAppSettings()
+        settings = QtCore.QSettings(Path.getTempPath().join('ui_settings', apiUtils.getClassName(self) + '.ini'),
+                                    QtCore.QSettings.IniFormat)
         settings.beginGroup(apiUtils.getClassName(self))
         
         self.readSettings(settings)
@@ -105,7 +102,6 @@ class Core(object):
     #------------------------------------------------------------
     def rootWindow(self):
         """returns the current applications root window"""
-        from PyQt4 import QtGui
         window = None
         
         #MFC apps there should be no root window
@@ -126,7 +122,7 @@ class Core(object):
         file_dialog = QtGui.QFileDialog(parent)
         file_dialog.setViewMode(QtGui.QFileDialog.Detail)
         file_dialog.setNameFilter(ext)
-        return _return_file(file_dialog)
+        return self._return_file(file_dialog)
     
     #------------------------------------------------------------
     def getDirFromUser(self, parent=None):
@@ -148,7 +144,7 @@ class Core(object):
         if file_dialog.exec_():
             returned_file = str(file_dialog.selectedFiles()[0])
             return Path(returned_file).expand()
-        return Path()    
+        return Path('')    
     
     #------------------------------------------------------------
     def saveSettings(self, settings):

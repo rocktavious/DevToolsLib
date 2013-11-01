@@ -1,7 +1,6 @@
 import sys
-from PyQt4 import QtGui, uic
-from PyQt4.QtCore import Qt
-
+import logging
+from DTL.qt import QtCore, QtGui, loadUi
 from DTL.api import Path, loggingUtils, apiUtils
 from DTL.gui import Core, guiUtils
 
@@ -22,7 +21,6 @@ class BaseGUI(object):
 
     #------------------------------------------------------------
     def __init__( self, parent=None, flags=0, *args, **kwds ):
-        self.log = loggingUtils.getLogger(self.__module__)
         parent = self._validateParent(parent)
         
         if args :
@@ -33,9 +31,10 @@ class BaseGUI(object):
         else:
             self._qtclass.__init__(self, parent)
         
-        self.loadUi()
+        self.loadUi(parent)
         self.setupStyle()
         self.onFinalize(**kwds)
+        self._readSettings()
 
     #------------------------------------------------------------
     def _validateParent(self, parent=None):
@@ -53,6 +52,7 @@ class BaseGUI(object):
 
     #------------------------------------------------------------
     def closeEvent( self, event ):
+        self._saveSettings()
         self._qtclass.closeEvent(self, event)
 
     #------------------------------------------------------------
@@ -61,7 +61,8 @@ class BaseGUI(object):
 
     #------------------------------------------------------------
     def _saveSettings(self):
-        settings = guiUtils.getAppSettings()
+        settings = QtCore.QSettings(Path.getTempPath().join('ui_settings', apiUtils.getClassName(self) + '.ini'),
+                                    QtCore.QSettings.IniFormat)
         settings.beginGroup(self.objectName())
 
         self.saveSettings(settings)
@@ -70,7 +71,8 @@ class BaseGUI(object):
 
     #------------------------------------------------------------
     def _readSettings(self):
-        settings = guiUtils.getAppSettings()
+        settings = QtCore.QSettings(Path.getTempPath().join('ui_settings', apiUtils.getClassName(self) + '.ini'),
+                                    QtCore.QSettings.IniFormat)
         settings.beginGroup(self.objectName())
 
         self.readSettings(settings)
@@ -80,7 +82,7 @@ class BaseGUI(object):
     #------------------------------------------------------------
     # Begin Subclass Overrides
     #------------------------------------------------------------
-    def loadUi(self):
+    def loadUi(self, parent=None):
         if issubclass(self.__class__, QtGui.QWizard) :
             return
         try:
@@ -91,9 +93,20 @@ class BaseGUI(object):
         if path :
             ui_file = path.dir().join('views','{0}.ui'.format(self.__class__.__name__))
             if ui_file.exists() :
-                self = uic.loadUi(ui_file, self)
+                self = loadUi(ui_file, parent, self, self.customWidgets())
             else:
-                self.log.warning('Unable to load ui file | {0}'.format(ui_file))
+                print 'Unable to load ui file | {0}'.format(ui_file)
+                #self.log.warning('Unable to load ui file | {0}'.format(ui_file))
+                
+    def customWidgets(self):
+        from DTL.gui.widgets import LoginWidget, PathWidget, ColorPickerWidget, ColorPickerButton, ChoiceWidget, ProgressWidget, PropertiesEditor
+        return {'LoginWidget':LoginWidget,
+                'PathWidget':PathWidget,
+                'ColorPickerWidget':ColorPickerWidget,
+                'ColorPickerButton':ColorPickerButton,
+                'ChoiceWidget':ChoiceWidget,
+                'ProgressWidget':ProgressWidget,
+                'PropertiesEditor':PropertiesEditor}
     
     #------------------------------------------------------------
     def setupStyle(self):

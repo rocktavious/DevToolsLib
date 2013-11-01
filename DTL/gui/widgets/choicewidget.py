@@ -1,9 +1,7 @@
 import os.path
 import subprocess
 import base64
-from PyQt4 import QtGui, QtCore
-from PyQt4.QtCore import Qt
-
+from DTL.qt import QtGui, QtCore
 from DTL.api import apiUtils
 from DTL.gui import Dialog, guiUtils
 
